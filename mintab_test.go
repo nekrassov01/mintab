@@ -339,7 +339,7 @@ func TestOut(t *testing.T) {
 		input                 any
 		format                TableFormat
 		theme                 TableTheme
-		disableHeader         bool
+		hasHeader             bool
 		emptyFieldPlaceholder string
 		wordDelimitter        string
 		mergeFields           []int
@@ -356,7 +356,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Markdown,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -382,7 +382,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Markdown,
 				theme:                 NoneTheme,
-				disableHeader:         true,
+				hasHeader:             false,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -406,7 +406,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Markdown,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           []int{0, 1},
@@ -432,7 +432,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Markdown,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -458,7 +458,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Markdown,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: "NULL",
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -484,7 +484,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Markdown,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        ",",
 				mergeFields:           nil,
@@ -510,7 +510,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Markdown,
 				theme:                 NoneTheme,
-				disableHeader:         true,
+				hasHeader:             false,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           []int{0, 1},
@@ -534,7 +534,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Backlog,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -559,7 +559,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Backlog,
 				theme:                 NoneTheme,
-				disableHeader:         true,
+				hasHeader:             false,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -583,7 +583,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Backlog,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           []int{0, 1},
@@ -608,7 +608,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Backlog,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -633,7 +633,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Backlog,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: "NULL",
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           nil,
@@ -658,7 +658,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Backlog,
 				theme:                 NoneTheme,
-				disableHeader:         false,
+				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        ",",
 				mergeFields:           nil,
@@ -683,7 +683,7 @@ func TestOut(t *testing.T) {
 				input:                 samples,
 				format:                Backlog,
 				theme:                 NoneTheme,
-				disableHeader:         true,
+				hasHeader:             false,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimitter:        defaultWordDelimitter,
 				mergeFields:           []int{0, 1},
@@ -704,29 +704,16 @@ func TestOut(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			var table *Table
-			if tt.args.disableHeader {
-				table = New(
-					tt.args.input,
-					WithMergeFields(tt.args.mergeFields),
-					WithIgnoreFields(tt.args.ignoreFields),
-					WithTableFormat(tt.args.format),
-					WithTableTheme(tt.args.theme),
-					WithDisableHeader(),
-					WithEmptyFieldPlaceholder(tt.args.emptyFieldPlaceholder),
-					WithWordDelimitter(tt.args.wordDelimitter),
-				)
-			} else {
-				table = New(
-					tt.args.input,
-					WithMergeFields(tt.args.mergeFields),
-					WithIgnoreFields(tt.args.ignoreFields),
-					WithTableFormat(tt.args.format),
-					WithTableTheme(tt.args.theme),
-					WithEmptyFieldPlaceholder(tt.args.emptyFieldPlaceholder),
-					WithWordDelimitter(tt.args.wordDelimitter),
-				)
-			}
+			table := New(
+				tt.args.input,
+				WithTableFormat(tt.args.format),
+				WithTableTheme(tt.args.theme),
+				WithTableHeader(tt.args.hasHeader),
+				WithEmptyFieldPlaceholder(tt.args.emptyFieldPlaceholder),
+				WithWordDelimitter(tt.args.wordDelimitter),
+				WithMergeFields(tt.args.mergeFields),
+				WithIgnoreFields(tt.args.ignoreFields),
+			)
 			got := table.Out()
 			fmt.Println(got)
 			if got != tt.want {
@@ -738,8 +725,8 @@ func TestOut(t *testing.T) {
 
 func Test_getOffset(t *testing.T) {
 	type args struct {
-		format        TableFormat
-		disableHeader bool
+		format    TableFormat
+		hasHeader bool
 	}
 	tests := []struct {
 		name string
@@ -749,32 +736,32 @@ func Test_getOffset(t *testing.T) {
 		{
 			name: "markdown",
 			args: args{
-				format:        Markdown,
-				disableHeader: false,
+				format:    Markdown,
+				hasHeader: true,
 			},
 			want: 2,
 		},
 		{
 			name: "backlog",
 			args: args{
-				format:        Backlog,
-				disableHeader: false,
+				format:    Backlog,
+				hasHeader: true,
 			},
 			want: 1,
 		},
 		{
 			name: "markdown+disableHeader",
 			args: args{
-				format:        Markdown,
-				disableHeader: true,
+				format:    Markdown,
+				hasHeader: false,
 			},
 			want: 0,
 		},
 		{
 			name: "backlog+disableHeader",
 			args: args{
-				format:        Backlog,
-				disableHeader: true,
+				format:    Backlog,
+				hasHeader: false,
 			},
 			want: 0,
 		},
@@ -788,7 +775,7 @@ func Test_getOffset(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getOffset(tt.args.format, tt.args.disableHeader)
+			got := getOffset(tt.args.format, tt.args.hasHeader)
 			if got != tt.want {
 				t.Errorf("got: %v, want: %v", got, tt.want)
 			}
