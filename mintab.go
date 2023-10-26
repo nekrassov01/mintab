@@ -10,7 +10,7 @@ import (
 )
 
 // Version of mintab.
-const Version = "0.0.0"
+const Version = "0.0.1"
 
 // defaultEmptyFieldPlaceholder is a placeholder if the field has no value.
 const defaultEmptyFieldPlaceholder = "N/A"
