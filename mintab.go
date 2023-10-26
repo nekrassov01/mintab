@@ -10,22 +10,16 @@ import (
 )
 
 // Version of mintab.
-const Version = "0.0.2"
-
-// defaultEmptyFieldPlaceholder is a placeholder if the field has no value.
-const defaultEmptyFieldPlaceholder = "N/A"
-
-// The defaultWordDelimiter is the delimiter for multiple field values.
-const defaultWordDelimitter = "<br>"
+const Version = "0.0.3"
 
 // TableFormat represents the format of the table.
 type TableFormat string
 
-// Markdown represents markdown table format.
-const Markdown TableFormat = "markdown"
+// MarkdownFormat represents markdown table format.
+const MarkdownFormat TableFormat = "markdown"
 
-// Backlog represents backlog table format.
-const Backlog TableFormat = "backlog"
+// BacklogFormat represents backlog table format.
+const BacklogFormat TableFormat = "backlog"
 
 // TableTheme represents the theme of the table.
 type TableTheme string
@@ -41,70 +35,51 @@ const NoneTheme TableTheme = "none"
 
 // Table represents a table in a matrix of strings.
 type Table struct {
-	Data                  [][]string  // Data holds the table data in a matrix of strings.
+	data                  [][]string  // Data holds the table data in a matrix of strings.
 	headers               []string    // headers holds the name of each field in the table header.
 	format                TableFormat // format specifies the format of the table.
 	theme                 TableTheme  // theme specifies the theme of the table.
 	hasHeader             bool        // hasHeader indicates whether to enable header or not.
 	emptyFieldPlaceholder string      // emptyFieldPlaceholder specifies the placeholder if the field is empty.
-	wordDelimitter        string      // wordDelimitter specifies the word delimiter of the field.
+	wordDelimiter         string      // wordDelimiter specifies the word delimiter of the field.
 	mergeFields           []int       // mergeFields holds indices of the field to be grouped.
 	ignoreFields          []int       // ignoreFields holds indices of the fields to be ignored.
 	colorFlags            []bool      // colorFlags holds flags indicating whether to color each row or not.
 }
 
 // New instantiates a table struct.
-func New(input any, opts ...Option) *Table {
-	v := reflect.ValueOf(input)
-	if v.Kind() != reflect.Slice {
-		return nil
-	}
-	if v.Len() == 0 {
-		return nil
-	}
-	elem := v.Index(0).Interface()
-	if reflect.TypeOf(elem).Kind() != reflect.Struct {
-		return nil
-	}
-	t := &Table{
-		Data:                  nil,
-		headers:               nil,
-		format:                Markdown,
-		theme:                 NoneTheme,
-		hasHeader:             true,
-		emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-		wordDelimitter:        defaultWordDelimitter,
-		mergeFields:           nil,
-		ignoreFields:          nil,
-		colorFlags:            getColorFlags(input),
-	}
+func NewTable(opts ...Option) (t *Table) {
+	t = &Table{}
+	t.format = MarkdownFormat
+	t.theme = NoneTheme
+	t.hasHeader = true
+	t.emptyFieldPlaceholder = "N/A"
+	t.wordDelimiter = "<br>"
 	for _, opt := range opts {
 		opt(t)
 	}
-	t.headers = createHeaders(reflect.TypeOf(elem), t.ignoreFields)
-	t.Data = createDataRows(input, t.headers, t.mergeFields, t.emptyFieldPlaceholder, t.wordDelimitter)
 	return t
 }
 
 // Option is the type for passing options when instantiating Table.
 type Option func(*Table)
 
-// WithTableFormat specifies the table format.
-func WithTableFormat(format TableFormat) Option {
+// WithFormat specifies the table format.
+func WithFormat(format TableFormat) Option {
 	return func(t *Table) {
 		t.format = format
 	}
 }
 
-// WithTableTheme specifies the table theme.
-func WithTableTheme(theme TableTheme) Option {
+// WithTheme specifies the table theme.
+func WithTheme(theme TableTheme) Option {
 	return func(t *Table) {
 		t.theme = theme
 	}
 }
 
-// WithTableHeader enables/disables the header.
-func WithTableHeader(has bool) Option {
+// WithHeader enables/disables the header.
+func WithHeader(has bool) Option {
 	return func(t *Table) {
 		t.hasHeader = has
 	}
@@ -118,14 +93,14 @@ func WithEmptyFieldPlaceholder(emptyFieldPlaceholder string) Option {
 }
 
 // WithWordDelimiter specifies the delimiter when a field has multiple values.
-func WithWordDelimitter(wordDelimitter string) Option {
+func WithWordDelimiter(wordDelimiter string) Option {
 	return func(t *Table) {
-		t.wordDelimitter = wordDelimitter
+		t.wordDelimiter = wordDelimiter
 	}
 }
 
 // WithMergeFields specifies the column numbers to be used for grouping.
-// It depends on whether the first field value is the same as the previous row.
+// determined by whether the value in the first column is the same as in the previous row.
 func WithMergeFields(mergeFields []int) Option {
 	return func(t *Table) {
 		t.mergeFields = mergeFields
@@ -133,45 +108,66 @@ func WithMergeFields(mergeFields []int) Option {
 }
 
 // WithIgnoreFields specifies the column numbers to be ignored.
-// It depends on whether the first field value is the same as the previous row.
 func WithIgnoreFields(ignoreFields []int) Option {
 	return func(t *Table) {
 		t.ignoreFields = ignoreFields
 	}
 }
 
+// Load validates input and converts them to table data.
+// Returns error if not struct slice.
+func (t *Table) Load(input any) (err error) {
+	v := reflect.ValueOf(input)
+	if v.Kind() != reflect.Slice {
+		return fmt.Errorf("cannot parse input: must be slice")
+	}
+	if v.Len() == 0 {
+		return fmt.Errorf("cannot parse input: no elements in slice")
+	}
+	elem := v.Index(0).Interface()
+	e := reflect.TypeOf(elem)
+	if e.Kind() != reflect.Struct {
+		return fmt.Errorf("cannot parse input: must be struct")
+	}
+	t.colorFlags = getColorFlags(input)
+	t.headers = t.setHeader(e)
+	t.data, err = t.setData(input)
+	if err != nil {
+		return err
+	}
+	return nil
+}
+
 // Out outputs the table as a string.
 // It can be used as a markdown table or backlog table by copying and pasting.
 func (t *Table) Out() string {
-	if t == nil {
-		return ""
-	}
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
 	if t.hasHeader {
 		table.SetHeader(t.headers)
+		table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 		table.SetAutoFormatHeaders(false)
 	}
-	if t.format == Backlog {
+	if t.format == BacklogFormat {
 		table.SetHeaderLine(false)
 	}
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
 	table.SetCenterSeparator("|")
 	table.SetAutoWrapText(false)
-	table.AppendBulk(t.Data)
+	table.AppendBulk(t.data)
 	table.Render()
-	s := colorize(tableString.String(), t.colorFlags, t.format, t.theme, t.hasHeader)
-	if t.format == Backlog {
-		s = backlogify(s, t.hasHeader)
+	s := t.colorize(tableString.String())
+	if t.format == BacklogFormat {
+		s = t.backlogify(s)
 	}
 	return s
 }
 
-// createHeaders uses reflect to extract field names and create headers.
-func createHeaders(typ reflect.Type, ignoreFields []int) (headers []string) {
+// setHeader uses reflect to extract field names and create headers.
+func (t *Table) setHeader(typ reflect.Type) (headers []string) {
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if contains(ignoreFields, i) || field.PkgPath != "" {
+		if contains(t.ignoreFields, i) || field.PkgPath != "" {
 			continue
 		}
 		headers = append(headers, field.Name)
@@ -179,21 +175,21 @@ func createHeaders(typ reflect.Type, ignoreFields []int) (headers []string) {
 	return headers
 }
 
-// createDataRows checks whether what is passed using reflect is a slice of the structure,
+// setData checks whether what is passed using reflect is a slice of struct,
 // formats the field values, and converts them to a string table.
-func createDataRows(input any, headers []string, mergeFields []int, emptyFieldPlaceholder string, wordDelimitter string) (data [][]string) {
+func (t *Table) setData(input any) (data [][]string, err error) {
 	v := reflect.ValueOf(input)
-	if v.Kind() != reflect.Slice {
-		return nil
-	}
-	prev := make([]string, len(headers))
+	prev := make([]string, len(t.headers))
 	for i := 0; i < v.Len(); i++ {
-		item := v.Index(i).Interface()
 		var values []string
+		item := v.Index(i).Interface()
 		merge := true
-		for i, header := range headers {
-			value := formatValue(reflect.ValueOf(item).FieldByName(header), emptyFieldPlaceholder, wordDelimitter)
-			if contains(mergeFields, i) {
+		for i, header := range t.headers {
+			value, err := t.formatValue(reflect.ValueOf(item).FieldByName(header))
+			if err != nil {
+				return nil, fmt.Errorf("cannot parse field: %w", err)
+			}
+			if contains(t.mergeFields, i) {
 				if value != prev[i] {
 					merge = false
 					prev[i] = value
@@ -206,20 +202,16 @@ func createDataRows(input any, headers []string, mergeFields []int, emptyFieldPl
 		}
 		data = append(data, values)
 	}
-	return data
+	return data, nil
 }
 
 // getColorFlags determines which rows to color.
 func getColorFlags(input any) (colorFlags []bool) {
 	v := reflect.ValueOf(input)
-	if v.Kind() != reflect.Slice {
-		return nil
-	}
 	var prev any
 	colorFlag := true
 	for i := 0; i < v.Len(); i++ {
-		item := v.Index(i).Interface()
-		firstField := reflect.ValueOf(item).Field(0).Interface()
+		firstField := reflect.ValueOf(v.Index(i).Interface()).Field(0).Interface()
 		if prev != nil && prev != firstField {
 			colorFlag = !colorFlag
 		}
@@ -230,26 +222,34 @@ func getColorFlags(input any) (colorFlags []bool) {
 }
 
 // formatValue formats the value of each field.
-func formatValue(v reflect.Value, emptyFieldPlaceholder string, wordDelimitter string) string {
+// Perform multi-value delimiters and whitespace handling.
+// Nested fields are not processed and an error is returned.
+func (t *Table) formatValue(v reflect.Value) (string, error) {
 	if isEmptyStr(v) {
-		return emptyFieldPlaceholder
+		return t.emptyFieldPlaceholder, nil
 	}
-	if v.Kind() == reflect.Slice {
+	switch v.Kind() {
+	case reflect.Slice:
 		if v.IsNil() || v.Len() == 0 {
-			return emptyFieldPlaceholder
+			return t.emptyFieldPlaceholder, nil
 		}
 		var s []string
 		for i := 0; i < v.Len(); i++ {
-			val := v.Index(i)
-			if isEmptyStr(val) {
-				s = append(s, emptyFieldPlaceholder)
+			value := v.Index(i)
+			if value.Kind() == reflect.Slice || value.Kind() == reflect.Struct {
+				return "", fmt.Errorf("elements of slice must not be nested")
+			}
+			if isEmptyStr(value) {
+				s = append(s, t.emptyFieldPlaceholder)
 			} else {
 				s = append(s, trim(v.Index(i)))
 			}
 		}
-		return strings.Join(s, wordDelimitter)
+		return strings.Join(s, t.wordDelimiter), nil
+	case reflect.Struct:
+		return "", fmt.Errorf("field must not be struct")
 	}
-	return trim(v)
+	return trim(v), nil
 }
 
 // contains is a helper function used to determine grouping.
@@ -273,8 +273,8 @@ func isEmptyStr(v reflect.Value) bool {
 }
 
 // backlogify converts to backlog tables format.
-func backlogify(s string, hasHeader bool) string {
-	if hasHeader {
+func (t *Table) backlogify(s string) string {
+	if t.hasHeader {
 		i := strings.Index(s, "\n")
 		if i == -1 {
 			return s
@@ -285,40 +285,41 @@ func backlogify(s string, hasHeader bool) string {
 }
 
 // colorize adds color to the table.
-func colorize(table string, colorFlags []bool, tableFormat TableFormat, tableTheme TableTheme, hasHeader bool) string {
-	if tableTheme == NoneTheme {
+func (t *Table) colorize(table string) string {
+	if t.theme == NoneTheme {
 		return table
 	}
-	offset := getOffset(tableFormat, hasHeader)
-	var coloredLines []string
+	offset := t.getOffset()
+	color := t.getColor()
+	var clines []string
 	lines := strings.Split(table, "\n")
 	for i, line := range lines {
 		if i < offset {
-			coloredLines = append(coloredLines, line)
+			clines = append(clines, line)
 			continue
 		}
-		if i-offset < len(colorFlags) {
-			if colorFlags[i-offset] {
-				coloredLines = append(coloredLines, getColor(tableTheme).Sprint(line))
+		if i-offset < len(t.colorFlags) {
+			if t.colorFlags[i-offset] {
+				clines = append(clines, color.Sprint(line))
 			} else {
-				coloredLines = append(coloredLines, line)
+				clines = append(clines, line)
 			}
 		} else {
-			coloredLines = append(coloredLines, line)
+			clines = append(clines, line)
 		}
 	}
-	return strings.Join(coloredLines, "\n")
+	return strings.Join(clines, "\n")
 }
 
 // getOffset determines the starting position for coloring.
-func getOffset(tableFormat TableFormat, hasHeader bool) int {
-	if !hasHeader {
+func (t *Table) getOffset() int {
+	if !t.hasHeader {
 		return 0
 	}
-	switch tableFormat {
-	case Markdown:
+	switch t.format {
+	case MarkdownFormat:
 		return 2
-	case Backlog:
+	case BacklogFormat:
 		return 1
 	default:
 		return 0
@@ -326,8 +327,8 @@ func getOffset(tableFormat TableFormat, hasHeader bool) int {
 }
 
 // getColor sets the color theme.
-func getColor(tableTheme TableTheme) *color.Color {
-	switch tableTheme {
+func (t *Table) getColor() *color.Color {
+	switch t.theme {
 	case DarkTheme:
 		return color.New(color.BgHiBlack, color.FgHiWhite)
 	case LightTheme:

@@ -2,6 +2,7 @@ package main
 
 import (
 	"fmt"
+	"log"
 
 	"github.com/nekrassov01/mintab"
 )
@@ -27,59 +28,162 @@ func main() {
 	}
 
 	var table *mintab.Table
-	table = mintab.New(samples)
+
+	table = mintab.NewTable()
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithTableFormat(mintab.Backlog))
+	/*
+
+		| InstanceName | SecurityGroupName | CidrBlock                |
+		|--------------|-------------------|--------------------------|
+		| i-1          | sg-1              | 10.0.0.0/16              |
+		| i-1          | sg-1              | 10.1.0.0/16              |
+		| i-1          | sg-2              | 10.2.0.0/16              |
+		| i-1          | sg-2              | 10.3.0.0/16              |
+		| i-2          | sg-1              | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-1              | 10.1.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-2              | 10.3.0.0/16<br>0.0.0.0/0 |
+		| i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-4          | sg-4              | N/A                      |
+
+	*/
+
+	table = mintab.NewTable(mintab.WithFormat(mintab.BacklogFormat))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithTableHeader(false))
+	/*
+
+		| InstanceName | SecurityGroupName | CidrBlock                |h
+		| i-1          | sg-1              | 10.0.0.0/16              |
+		| i-1          | sg-1              | 10.1.0.0/16              |
+		| i-1          | sg-2              | 10.2.0.0/16              |
+		| i-1          | sg-2              | 10.3.0.0/16              |
+		| i-2          | sg-1              | 10.0.0.0/16&br;0.0.0.0/0 |
+		| i-2          | sg-1              | 10.1.0.0/16&br;0.0.0.0/0 |
+		| i-2          | sg-2              | 10.2.0.0/16&br;0.0.0.0/0 |
+		| i-2          | sg-2              | 10.3.0.0/16&br;0.0.0.0/0 |
+		| i-3          | N/A               | 10.0.0.0/16&br;0.0.0.0/0 |
+		| i-4          | sg-4              | N/A                      |
+
+	*/
+
+	table = mintab.NewTable(mintab.WithHeader(false))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithEmptyFieldPlaceholder("NULL"))
+	/*
+
+		| i-1 | sg-1 | 10.0.0.0/16              |
+		| i-1 | sg-1 | 10.1.0.0/16              |
+		| i-1 | sg-2 | 10.2.0.0/16              |
+		| i-1 | sg-2 | 10.3.0.0/16              |
+		| i-2 | sg-1 | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-2 | sg-1 | 10.1.0.0/16<br>0.0.0.0/0 |
+		| i-2 | sg-2 | 10.2.0.0/16<br>0.0.0.0/0 |
+		| i-2 | sg-2 | 10.3.0.0/16<br>0.0.0.0/0 |
+		| i-3 | N/A  | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-4 | sg-4 | N/A                      |
+
+	*/
+
+	table = mintab.NewTable(mintab.WithEmptyFieldPlaceholder("NULL"))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithEmptyFieldPlaceholder(""))
+	/*
+
+		| InstanceName | SecurityGroupName | CidrBlock                |
+		|--------------|-------------------|--------------------------|
+		| i-1          | sg-1              | 10.0.0.0/16              |
+		| i-1          | sg-1              | 10.1.0.0/16              |
+		| i-1          | sg-2              | 10.2.0.0/16              |
+		| i-1          | sg-2              | 10.3.0.0/16              |
+		| i-2          | sg-1              | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-1              | 10.1.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-2              | 10.3.0.0/16<br>0.0.0.0/0 |
+		| i-3          | NULL              | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-4          | sg-4              | NULL                     |
+
+	*/
+
+	table = mintab.NewTable(mintab.WithWordDelimiter(","))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithWordDelimitter(","))
+	/*
+
+		| InstanceName | SecurityGroupName | CidrBlock             |
+		|--------------|-------------------|-----------------------|
+		| i-1          | sg-1              | 10.0.0.0/16           |
+		| i-1          | sg-1              | 10.1.0.0/16           |
+		| i-1          | sg-2              | 10.2.0.0/16           |
+		| i-1          | sg-2              | 10.3.0.0/16           |
+		| i-2          | sg-1              | 10.0.0.0/16,0.0.0.0/0 |
+		| i-2          | sg-1              | 10.1.0.0/16,0.0.0.0/0 |
+		| i-2          | sg-2              | 10.2.0.0/16,0.0.0.0/0 |
+		| i-2          | sg-2              | 10.3.0.0/16,0.0.0.0/0 |
+		| i-3          | N/A               | 10.0.0.0/16,0.0.0.0/0 |
+		| i-4          | sg-4              | N/A                   |
+
+	*/
+
+	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.DarkTheme))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithMergeFields([]int{0, 1}), mintab.WithTableTheme(mintab.DarkTheme))
+	/*
+
+		| InstanceName | SecurityGroupName | CidrBlock                |
+		|--------------|-------------------|--------------------------|
+		| i-1          | sg-1              | 10.0.0.0/16              |
+		|              |                   | 10.1.0.0/16              |
+		|              | sg-2              | 10.2.0.0/16              |
+		|              |                   | 10.3.0.0/16              |
+		| i-2          | sg-1              | 10.0.0.0/16<br>0.0.0.0/0 |
+		|              |                   | 10.1.0.0/16<br>0.0.0.0/0 |
+		|              | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
+		|              |                   | 10.3.0.0/16<br>0.0.0.0/0 |
+		| i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-4          | sg-4              | N/A                      |
+
+	*/
+
+	table = mintab.NewTable(mintab.WithIgnoreFields([]int{2}))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithMergeFields([]int{0, 1}), mintab.WithTableTheme(mintab.DarkTheme), mintab.WithEmptyFieldPlaceholder(""))
-	fmt.Println(table.Out())
+	/*
 
-	table = mintab.New(samples, mintab.WithMergeFields([]int{0, 1}), mintab.WithTableTheme(mintab.LightTheme))
-	fmt.Println(table.Out())
+		| InstanceName | SecurityGroupName |
+		|--------------|-------------------|
+		| i-1          | sg-1              |
+		| i-1          | sg-1              |
+		| i-1          | sg-2              |
+		| i-1          | sg-2              |
+		| i-2          | sg-1              |
+		| i-2          | sg-1              |
+		| i-2          | sg-2              |
+		| i-2          | sg-2              |
+		| i-3          | N/A               |
+		| i-4          | sg-4              |
 
-	table = mintab.New(samples, mintab.WithIgnoreFields([]int{2}))
-	fmt.Println(table.Out())
-
-	/* ignored except for slice of struct */
-
-	table = mintab.New([]string{"aaa", "bbb", "ccc"})
-	fmt.Println(table.Out())
-
-	table = mintab.New([]int{1, 2, 3})
-	fmt.Println(table.Out())
-
-	table = mintab.New([]bool{true, false, true})
-	fmt.Println(table.Out())
-
-	table = mintab.New([]rune{'a', 'b', 'c'})
-	fmt.Println(table.Out())
-
-	table = mintab.New("aaa")
-	fmt.Println(table.Out())
-
-	table = mintab.New(1)
-	fmt.Println(table.Out())
-
-	table = mintab.New(true)
-	fmt.Println(table.Out())
-
-	table = mintab.New('a')
-	fmt.Println(table.Out())
+	*/
 }

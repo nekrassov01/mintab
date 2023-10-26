@@ -15,8 +15,8 @@ Support
 
 - Markdown table format
 - Backlog table format
-- Group columns based on first field value
-- Color rows based on first field value
+- Group rows based on first column value
+- Color rows based on first column value
 - Ignore specified columns
 
 Notes
@@ -50,7 +50,11 @@ func main() {
 	}
 
 	var table *mintab.Table
-	table = mintab.New(samples)
+
+	table = mintab.NewTable()
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
         /*
@@ -68,11 +72,14 @@ func main() {
         | i-4          | sg-4              | N/A                      |
         */
 
-	table = mintab.New(samples, mintab.WithTableFormat(mintab.Backlog))
+	table = mintab.NewTable(mintab.WithFormat(mintab.Backlog))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
         /*
-        | InstanceName | SecurityGroupName |        CidrBlock         |h
+        | InstanceName | SecurityGroupName | CidrBlock                |h
         | i-1          | sg-1              | 10.0.0.0/16              |
         | i-1          | sg-1              | 10.1.0.0/16              |
         | i-1          | sg-2              | 10.2.0.0/16              |
@@ -85,7 +92,10 @@ func main() {
         | i-4          | sg-4              | N/A                      |
         */
 
-	table = mintab.New(samples, mintab.WithDisableHeader())
+	table = mintab.NewTable(mintab.WithHeader(false))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
         /*
@@ -101,7 +111,10 @@ func main() {
         | i-4 | sg-4 | N/A                      |
         */
 
-	table = mintab.New(samples, mintab.WithEmptyFieldPlaceholder("NULL"))
+	table = mintab.NewTable(mintab.WithEmptyFieldPlaceholder("NULL"))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
         /*
@@ -119,7 +132,10 @@ func main() {
         | i-4          | sg-4              | NULL                     |
         */
 
-	table = mintab.New(samples, mintab.WithWordDelimitter(","))
+	table = mintab.NewTable(mintab.WithWordDelimiter(","))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
         /*
@@ -137,7 +153,10 @@ func main() {
         | i-4          | sg-4              | N/A                   |
         */
 
-	table = mintab.New(samples, mintab.WithMergeFields([]int{0, 1}), mintab.WithTableTheme(mintab.DarkTheme))
+	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.DarkTheme))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
         /*
@@ -155,7 +174,10 @@ func main() {
         | i-4          | sg-4              | N/A                      |
         */
 
-	table = mintab.New(samples, mintab.WithIgnoreFields([]int{2}))
+	table = mintab.NewTable(mintab.WithIgnoreFields([]int{2}))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
 	fmt.Println(table.Out())
 
         /*

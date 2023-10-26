@@ -15,7 +15,22 @@ type sample struct {
 	CidrBlock         []string
 }
 
-var samples []sample
+type object struct {
+	ObjectID   int
+	ObjectName string
+}
+
+type nested struct {
+	BucketName string
+	Objects    []object
+}
+
+var (
+	samples                      []sample
+	nests                        []nested
+	defaultEmptyFieldPlaceholder string
+	defaultWordDelimiter         string
+)
 
 func TestMain(m *testing.M) {
 	setup()
@@ -24,6 +39,8 @@ func TestMain(m *testing.M) {
 }
 
 func setup() {
+	defaultEmptyFieldPlaceholder = "N/A"
+	defaultWordDelimiter = "<br>"
 	samples = []sample{
 		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.1.0.0/16"}},
@@ -36,16 +53,52 @@ func setup() {
 		{InstanceName: "i-3", SecurityGroupName: "", CidrBlock: []string{"10.0.0.0/16", "0.0.0.0/0"}},
 		{InstanceName: "i-4", SecurityGroupName: "sg-4", CidrBlock: []string{}},
 	}
+	nests = []nested{
+		{
+			BucketName: "bucket1",
+			Objects: []object{
+				{
+					ObjectID:   11,
+					ObjectName: "bucket1-obj1",
+				},
+				{
+					ObjectID:   12,
+					ObjectName: "bucket1-obj2",
+				},
+			},
+		},
+		{
+			BucketName: "bucket2",
+			Objects: []object{
+				{
+					ObjectID:   21,
+					ObjectName: "bucket2-obj1",
+				},
+				{
+					ObjectID:   22,
+					ObjectName: "bucket2-obj2",
+				},
+				{
+					ObjectID:   23,
+					ObjectName: "bucket2-obj3",
+				},
+			},
+		},
+	}
 }
 
-func TestNew(t *testing.T) {
+func TestNewTable(t *testing.T) {
 	type args struct {
-		input        any
-		mergeFields  []int
-		ignoreFields []int
+		format                TableFormat
+		theme                 TableTheme
+		hasHeader             bool
+		emptyFieldPlaceholder string
+		wordDelimiter         string
+		mergeFields           []int
+		ignoreFields          []int
 	}
 	type want struct {
-		table *Table
+		got *Table
 	}
 	tests := []struct {
 		name string
@@ -53,15 +106,402 @@ func TestNew(t *testing.T) {
 		want want
 	}{
 		{
-			name: "basic",
+			name: "markdown+basic",
 			args: args{
-				input:        samples,
-				mergeFields:  nil,
-				ignoreFields: nil,
+				format:                MarkdownFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
 			},
 			want: want{
-				table: &Table{
-					Data: [][]string{
+				got: &Table{
+					data:                  nil,
+					format:                MarkdownFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "markdown+disableHeader",
+			args: args{
+				format:                MarkdownFormat,
+				theme:                 NoneTheme,
+				hasHeader:             false,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                MarkdownFormat,
+					theme:                 NoneTheme,
+					hasHeader:             false,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "markdown+merge",
+			args: args{
+				format:                MarkdownFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           []int{0, 1},
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                MarkdownFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           []int{0, 1},
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "markdown+ignore",
+			args: args{
+				format:                MarkdownFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				ignoreFields:          []int{2},
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                MarkdownFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          []int{2},
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "markdown+emptyFieldPlaceholder",
+			args: args{
+				format:                MarkdownFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: "NULL",
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                MarkdownFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: "NULL",
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "markdown+wordDelimiter",
+			args: args{
+				format:                MarkdownFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         ",",
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                MarkdownFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         ",",
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "markdown+edgecase",
+			args: args{
+				format:                MarkdownFormat,
+				theme:                 NoneTheme,
+				hasHeader:             false,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           []int{0, 1},
+				ignoreFields:          []int{2},
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                MarkdownFormat,
+					theme:                 NoneTheme,
+					hasHeader:             false,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           []int{0, 1},
+					ignoreFields:          []int{2},
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "backlog+basic",
+			args: args{
+				format:                BacklogFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                BacklogFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "backlog+disableHeader",
+			args: args{
+				format:                BacklogFormat,
+				theme:                 NoneTheme,
+				hasHeader:             false,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                BacklogFormat,
+					theme:                 NoneTheme,
+					hasHeader:             false,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "backlog+merge",
+			args: args{
+				format:                BacklogFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           []int{0, 1},
+				ignoreFields:          nil,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                BacklogFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           []int{0, 1},
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "backlog+ignore",
+			args: args{
+				format:                BacklogFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          []int{2},
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                BacklogFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          []int{2},
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "backlog+emptyFieldPlaceholder",
+			args: args{
+				format:                BacklogFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: "NULL",
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                BacklogFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: "NULL",
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "backlog+wordDelimiter",
+			args: args{
+				format:                BacklogFormat,
+				theme:                 NoneTheme,
+				hasHeader:             true,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         ",",
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                BacklogFormat,
+					theme:                 NoneTheme,
+					hasHeader:             true,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         ",",
+					mergeFields:           nil,
+					ignoreFields:          nil,
+					colorFlags:            nil,
+				},
+			},
+		},
+		{
+			name: "backlog+edgecase",
+			args: args{
+				format:                BacklogFormat,
+				theme:                 NoneTheme,
+				hasHeader:             false,
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           []int{0, 1},
+				ignoreFields:          []int{2},
+			},
+			want: want{
+				got: &Table{
+					data:                  nil,
+					format:                BacklogFormat,
+					theme:                 NoneTheme,
+					hasHeader:             false,
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           []int{0, 1},
+					ignoreFields:          []int{2},
+					colorFlags:            nil,
+				},
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			got := NewTable(
+				WithFormat(tt.args.format),
+				WithTheme(tt.args.theme),
+				WithHeader(tt.args.hasHeader),
+				WithEmptyFieldPlaceholder(tt.args.emptyFieldPlaceholder),
+				WithWordDelimiter(tt.args.wordDelimiter),
+				WithMergeFields(tt.args.mergeFields),
+				WithIgnoreFields(tt.args.ignoreFields),
+			)
+			if !reflect.DeepEqual(got, tt.want.got) {
+				t.Errorf("got: %v, want: %v", got, tt.want.got)
+			}
+		})
+	}
+}
+
+func TestTable_Load(t *testing.T) {
+	type fields struct {
+		emptyFieldPlaceholder string
+		wordDelimiter         string
+		mergeFields           []int
+		ignoreFields          []int
+	}
+	type args struct {
+		input any
+	}
+	type want struct {
+		got *Table
+		err error
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "basic",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
 						{"i-1", "sg-1", "10.0.0.0/16"},
 						{"i-1", "sg-1", "10.1.0.0/16"},
 						{"i-1", "sg-2", "10.2.0.0/16"},
@@ -73,21 +513,94 @@ func TestNew(t *testing.T) {
 						{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
 						{"i-4", "sg-4", "N/A"},
 					},
-					headers:    []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-					colorFlags: []bool{true, true, true, true, false, false, false, false, true, false},
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
+				err: nil,
+			},
+		},
+		{
+			name: "emptyFieldPlaceholder",
+			fields: fields{
+				emptyFieldPlaceholder: "NULL",
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+						{"i-3", "NULL", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-4", "sg-4", "NULL"},
+					},
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: "NULL",
+					wordDelimiter:         defaultWordDelimiter,
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
+				},
+				err: nil,
+			},
+		},
+		{
+			name: "wordDelimiter",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         ",",
+				mergeFields:           nil,
+				ignoreFields:          nil,
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16,0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16,0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16,0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16,0.0.0.0/0"},
+						{"i-3", "N/A", "10.0.0.0/16,0.0.0.0/0"},
+						{"i-4", "sg-4", "N/A"},
+					},
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         ",",
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
+				},
+				err: nil,
 			},
 		},
 		{
 			name: "merge",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           []int{0, 1},
+				ignoreFields:          nil,
+			},
 			args: args{
-				input:        samples,
-				mergeFields:  []int{0, 1},
-				ignoreFields: nil,
+				input: samples,
 			},
 			want: want{
-				table: &Table{
-					Data: [][]string{
+				got: &Table{
+					data: [][]string{
 						{"i-1", "sg-1", "10.0.0.0/16"},
 						{"", "", "10.1.0.0/16"},
 						{"", "sg-2", "10.2.0.0/16"},
@@ -99,21 +612,29 @@ func TestNew(t *testing.T) {
 						{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
 						{"i-4", "sg-4", "N/A"},
 					},
-					headers:    []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-					colorFlags: []bool{true, true, true, true, false, false, false, false, true, false},
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           []int{0, 1},
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
+				err: nil,
 			},
 		},
 		{
 			name: "ignore",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           nil,
+				ignoreFields:          []int{2},
+			},
 			args: args{
-				input:        samples,
-				mergeFields:  nil,
-				ignoreFields: []int{2},
+				input: samples,
 			},
 			want: want{
-				table: &Table{
-					Data: [][]string{
+				got: &Table{
+					data: [][]string{
 						{"i-1", "sg-1"},
 						{"i-1", "sg-1"},
 						{"i-1", "sg-2"},
@@ -125,21 +646,30 @@ func TestNew(t *testing.T) {
 						{"i-3", "N/A"},
 						{"i-4", "sg-4"},
 					},
-					headers:    []string{"InstanceName", "SecurityGroupName"},
+					headers:               []string{"InstanceName", "SecurityGroupName"},
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					ignoreFields:          []int{2},
+
 					colorFlags: []bool{true, true, true, true, false, false, false, false, true, false},
 				},
+				err: nil,
 			},
 		},
 		{
 			name: "merge+ignore",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergeFields:           []int{0, 1},
+				ignoreFields:          []int{2},
+			},
 			args: args{
-				input:        samples,
-				mergeFields:  []int{0, 1},
-				ignoreFields: []int{2},
+				input: samples,
 			},
 			want: want{
-				table: &Table{
-					Data: [][]string{
+				got: &Table{
+					data: [][]string{
 						{"i-1", "sg-1"},
 						{"", ""},
 						{"", "sg-2"},
@@ -151,9 +681,49 @@ func TestNew(t *testing.T) {
 						{"i-3", "N/A"},
 						{"i-4", "sg-4"},
 					},
-					headers:    []string{"InstanceName", "SecurityGroupName"},
-					colorFlags: []bool{true, true, true, true, false, false, false, false, true, false},
+					headers:               []string{"InstanceName", "SecurityGroupName"},
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					mergeFields:           []int{0, 1},
+					ignoreFields:          []int{2},
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
+				err: nil,
+			},
+		},
+		{
+			name: "edgecase",
+			fields: fields{
+				emptyFieldPlaceholder: "",
+				wordDelimiter:         ",",
+				mergeFields:           []int{0, 1},
+				ignoreFields:          []int{2},
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1"},
+						{"", ""},
+						{"", "sg-2"},
+						{"", ""},
+						{"i-2", "sg-1"},
+						{"", ""},
+						{"", "sg-2"},
+						{"", ""},
+						{"i-3", ""},
+						{"i-4", "sg-4"},
+					},
+					headers:               []string{"InstanceName", "SecurityGroupName"},
+					emptyFieldPlaceholder: "",
+					wordDelimiter:         ",",
+					mergeFields:           []int{0, 1},
+					ignoreFields:          []int{2},
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
+				},
+				err: nil,
 			},
 		},
 		{
@@ -162,7 +732,8 @@ func TestNew(t *testing.T) {
 				input: []string{"a", "b", "c"},
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be struct"),
 			},
 		},
 		{
@@ -171,7 +742,8 @@ func TestNew(t *testing.T) {
 				input: []int{1, 2, 3},
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be struct"),
 			},
 		},
 		{
@@ -180,7 +752,8 @@ func TestNew(t *testing.T) {
 				input: []bool{true, false, true},
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be struct"),
 			},
 		},
 		{
@@ -189,7 +762,8 @@ func TestNew(t *testing.T) {
 				input: []rune{'a', 'b', 'c'},
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be struct"),
 			},
 		},
 		{
@@ -198,7 +772,8 @@ func TestNew(t *testing.T) {
 				input: "a",
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be slice"),
 			},
 		},
 		{
@@ -207,7 +782,8 @@ func TestNew(t *testing.T) {
 				input: 1,
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be slice"),
 			},
 		},
 		{
@@ -216,7 +792,8 @@ func TestNew(t *testing.T) {
 				input: true,
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be slice"),
 			},
 		},
 		{
@@ -225,144 +802,98 @@ func TestNew(t *testing.T) {
 				input: 'a',
 			},
 			want: want{
-				table: nil,
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be slice"),
 			},
 		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			table := New(tt.args.input, WithMergeFields(tt.args.mergeFields), WithIgnoreFields(tt.args.ignoreFields))
-			if table == nil && tt.want.table == nil {
-				return
-			}
-			if !reflect.DeepEqual(table.Data, tt.want.table.Data) {
-				t.Errorf("got: %v, want: %v", table.Data, tt.want.table.Data)
-			}
-			if !reflect.DeepEqual(table.headers, tt.want.table.headers) {
-				t.Errorf("got: %v, want: %v", table.headers, tt.want.table.headers)
-			}
-			if !reflect.DeepEqual(table.colorFlags, tt.want.table.colorFlags) {
-				t.Errorf("got: %v, want: %v", table.colorFlags, tt.want.table.colorFlags)
-			}
-		})
-	}
-}
-
-func Test_formatValue(t *testing.T) {
-	type args struct {
-		v                     any
-		emptyFieldPlaceholder string
-		wordDelimitter        string
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
 		{
-			name: "empty string",
+			name: "slice in slice",
 			args: args{
-				v:                     "",
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
+				input: [][]string{
+					{"a", "b", "c"},
+					{"x", "y", "z"},
+				},
 			},
-			want: defaultEmptyFieldPlaceholder,
-		},
-		{
-			name: "nil slice",
-			args: args{
-				v:                     ([]string)(nil),
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
+			want: want{
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must be struct"),
 			},
-			want: defaultEmptyFieldPlaceholder,
 		},
 		{
 			name: "empty slice",
 			args: args{
-				v:                     []string{},
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
+				input: []string{},
 			},
-			want: defaultEmptyFieldPlaceholder,
-		},
-		{
-			name: "slice with empty string",
-			args: args{
-				v:                     []string{"", ""},
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
+			want: want{
+				got: nil,
+				err: fmt.Errorf("cannot parse input: no elements in slice"),
 			},
-			want: "N/A<br>N/A",
-		},
-		{
-			name: "slice with normal strings",
-			args: args{
-				v:                     []string{"a", "b"},
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-			},
-			want: "a<br>b",
-		},
-		{
-			name: "mixed slice",
-			args: args{
-				v:                     []string{"a", "", "b"},
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-			},
-			want: "a<br>N/A<br>b",
-		},
-		{
-			name: "non-slice value",
-			args: args{
-				v:                     123,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-			},
-			want: "123",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			v := reflect.ValueOf(tt.args.v)
-			got := formatValue(v, tt.args.emptyFieldPlaceholder, tt.args.wordDelimitter)
-			if got != tt.want {
-				t.Errorf("got: %v, got: %v", tt.want, got)
+			table := &Table{
+				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
+				wordDelimiter:         tt.fields.wordDelimiter,
+				mergeFields:           tt.fields.mergeFields,
+				ignoreFields:          tt.fields.ignoreFields,
+			}
+			if err := table.Load(tt.args.input); err != nil {
+				if err.Error() != tt.want.err.Error() {
+					t.Fatalf("got: %v, want: %v", err.Error(), tt.want.err.Error())
+				}
+				return
+			}
+			if !reflect.DeepEqual(table, tt.want.got) {
+				t.Errorf("got: %v, want: %v", table, tt.want.got)
 			}
 		})
 	}
 }
 
-func TestOut(t *testing.T) {
-	type args struct {
-		input                 any
+func TestTable_Out(t *testing.T) {
+	type fields struct {
+		data                  [][]string
+		headers               []string
 		format                TableFormat
 		theme                 TableTheme
 		hasHeader             bool
 		emptyFieldPlaceholder string
-		wordDelimitter        string
+		wordDelimiter         string
 		mergeFields           []int
 		ignoreFields          []int
+		colorFlags            []bool
+	}
+	type want struct {
+		got string
 	}
 	tests := []struct {
-		name string
-		args args
-		want string
+		name   string
+		fields fields
+		want   want
 	}{
 		{
 			name: "markdown+basic",
-			args: args{
-				input:                 samples,
-				format:                Markdown,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    MarkdownFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |        CidrBlock         |
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock                |
 |--------------|-------------------|--------------------------|
 | i-1          | sg-1              | 10.0.0.0/16              |
 | i-1          | sg-1              | 10.1.0.0/16              |
@@ -375,20 +906,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
 | i-4          | sg-4              | N/A                      |
 `,
+			},
 		},
 		{
 			name: "markdown+disableHeader",
-			args: args{
-				input:                 samples,
-				format:                Markdown,
-				theme:                 NoneTheme,
-				hasHeader:             false,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    MarkdownFormat,
+				theme:     NoneTheme,
+				hasHeader: false,
 			},
-			want: `| i-1 | sg-1 | 10.0.0.0/16              |
+			want: want{
+				got: `| i-1 | sg-1 | 10.0.0.0/16              |
 | i-1 | sg-1 | 10.1.0.0/16              |
 | i-1 | sg-2 | 10.2.0.0/16              |
 | i-1 | sg-2 | 10.3.0.0/16              |
@@ -399,20 +940,30 @@ func TestOut(t *testing.T) {
 | i-3 | N/A  | 10.0.0.0/16<br>0.0.0.0/0 |
 | i-4 | sg-4 | N/A                      |
 `,
+			},
 		},
 		{
 			name: "markdown+merge",
-			args: args{
-				input:                 samples,
-				format:                Markdown,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"", "", "10.1.0.0/16"},
+					{"", "sg-2", "10.2.0.0/16"},
+					{"", "", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"", "", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"", "", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    MarkdownFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |        CidrBlock         |
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock                |
 |--------------|-------------------|--------------------------|
 | i-1          | sg-1              | 10.0.0.0/16              |
 |              |                   | 10.1.0.0/16              |
@@ -425,20 +976,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
 | i-4          | sg-4              | N/A                      |
 `,
+			},
 		},
 		{
 			name: "markdown+ignore",
-			args: args{
-				input:                 samples,
-				format:                Markdown,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          []int{2},
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1"},
+					{"i-1", "sg-1"},
+					{"i-1", "sg-2"},
+					{"i-1", "sg-2"},
+					{"i-2", "sg-1"},
+					{"i-2", "sg-1"},
+					{"i-2", "sg-2"},
+					{"i-2", "sg-2"},
+					{"i-3", "N/A"},
+					{"i-4", "sg-4"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName"},
+				format:    MarkdownFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |
+			want: want{
+				got: `| InstanceName | SecurityGroupName |
 |--------------|-------------------|
 | i-1          | sg-1              |
 | i-1          | sg-1              |
@@ -451,20 +1012,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               |
 | i-4          | sg-4              |
 `,
+			},
 		},
 		{
 			name: "markdown+emptyFieldPlaceholder",
-			args: args{
-				input:                 samples,
-				format:                Markdown,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: "NULL",
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "NULL", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "NULL"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    MarkdownFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |        CidrBlock         |
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock                |
 |--------------|-------------------|--------------------------|
 | i-1          | sg-1              | 10.0.0.0/16              |
 | i-1          | sg-1              | 10.1.0.0/16              |
@@ -477,20 +1048,30 @@ func TestOut(t *testing.T) {
 | i-3          | NULL              | 10.0.0.0/16<br>0.0.0.0/0 |
 | i-4          | sg-4              | NULL                     |
 `,
+			},
 		},
 		{
-			name: "markdown+wordDelimitter",
-			args: args{
-				input:                 samples,
-				format:                Markdown,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        ",",
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			name: "markdown+wordDelimiter",
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16,0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16,0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16,0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16,0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16,0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    MarkdownFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |       CidrBlock       |
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock             |
 |--------------|-------------------|-----------------------|
 | i-1          | sg-1              | 10.0.0.0/16           |
 | i-1          | sg-1              | 10.1.0.0/16           |
@@ -503,20 +1084,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               | 10.0.0.0/16,0.0.0.0/0 |
 | i-4          | sg-4              | N/A                   |
 `,
+			},
 		},
 		{
 			name: "markdown+edgecase",
-			args: args{
-				input:                 samples,
-				format:                Markdown,
-				theme:                 NoneTheme,
-				hasHeader:             false,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          []int{2},
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1"},
+					{"", ""},
+					{"", "sg-2"},
+					{"", ""},
+					{"i-2", "sg-1"},
+					{"", ""},
+					{"", "sg-2"},
+					{"", ""},
+					{"i-3", "N/A"},
+					{"i-4", "sg-4"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName"},
+				format:    MarkdownFormat,
+				theme:     NoneTheme,
+				hasHeader: false,
 			},
-			want: `| i-1 | sg-1 |
+			want: want{
+				got: `| i-1 | sg-1 |
 |     |      |
 |     | sg-2 |
 |     |      |
@@ -527,20 +1118,30 @@ func TestOut(t *testing.T) {
 | i-3 | N/A  |
 | i-4 | sg-4 |
 `,
+			},
 		},
 		{
 			name: "backlog+basic",
-			args: args{
-				input:                 samples,
-				format:                Backlog,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    BacklogFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |        CidrBlock         |h
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock                |h
 | i-1          | sg-1              | 10.0.0.0/16              |
 | i-1          | sg-1              | 10.1.0.0/16              |
 | i-1          | sg-2              | 10.2.0.0/16              |
@@ -552,20 +1153,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               | 10.0.0.0/16&br;0.0.0.0/0 |
 | i-4          | sg-4              | N/A                      |
 `,
+			},
 		},
 		{
 			name: "backlog+disableHeader",
-			args: args{
-				input:                 samples,
-				format:                Backlog,
-				theme:                 NoneTheme,
-				hasHeader:             false,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    BacklogFormat,
+				theme:     NoneTheme,
+				hasHeader: false,
 			},
-			want: `| i-1 | sg-1 | 10.0.0.0/16              |
+			want: want{
+				got: `| i-1 | sg-1 | 10.0.0.0/16              |
 | i-1 | sg-1 | 10.1.0.0/16              |
 | i-1 | sg-2 | 10.2.0.0/16              |
 | i-1 | sg-2 | 10.3.0.0/16              |
@@ -576,20 +1187,30 @@ func TestOut(t *testing.T) {
 | i-3 | N/A  | 10.0.0.0/16&br;0.0.0.0/0 |
 | i-4 | sg-4 | N/A                      |
 `,
+			},
 		},
 		{
 			name: "backlog+merge",
-			args: args{
-				input:                 samples,
-				format:                Backlog,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"", "", "10.1.0.0/16"},
+					{"", "sg-2", "10.2.0.0/16"},
+					{"", "", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"", "", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"", "", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    BacklogFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |        CidrBlock         |h
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock                |h
 | i-1          | sg-1              | 10.0.0.0/16              |
 |              |                   | 10.1.0.0/16              |
 |              | sg-2              | 10.2.0.0/16              |
@@ -601,20 +1222,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               | 10.0.0.0/16&br;0.0.0.0/0 |
 | i-4          | sg-4              | N/A                      |
 `,
+			},
 		},
 		{
 			name: "backlog+ignore",
-			args: args{
-				input:                 samples,
-				format:                Backlog,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          []int{2},
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1"},
+					{"i-1", "sg-1"},
+					{"i-1", "sg-2"},
+					{"i-1", "sg-2"},
+					{"i-2", "sg-1"},
+					{"i-2", "sg-1"},
+					{"i-2", "sg-2"},
+					{"i-2", "sg-2"},
+					{"i-3", "N/A"},
+					{"i-4", "sg-4"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName"},
+				format:    BacklogFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |h
+			want: want{
+				got: `| InstanceName | SecurityGroupName |h
 | i-1          | sg-1              |
 | i-1          | sg-1              |
 | i-1          | sg-2              |
@@ -626,20 +1257,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               |
 | i-4          | sg-4              |
 `,
+			},
 		},
 		{
 			name: "backlog+emptyFieldPlaceholder",
-			args: args{
-				input:                 samples,
-				format:                Backlog,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: "NULL",
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+					{"i-3", "NULL", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "NULL"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    BacklogFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |        CidrBlock         |h
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock                |h
 | i-1          | sg-1              | 10.0.0.0/16              |
 | i-1          | sg-1              | 10.1.0.0/16              |
 | i-1          | sg-2              | 10.2.0.0/16              |
@@ -651,20 +1292,30 @@ func TestOut(t *testing.T) {
 | i-3          | NULL              | 10.0.0.0/16&br;0.0.0.0/0 |
 | i-4          | sg-4              | NULL                     |
 `,
+			},
 		},
 		{
-			name: "backlog+wordDelimitter",
-			args: args{
-				input:                 samples,
-				format:                Backlog,
-				theme:                 NoneTheme,
-				hasHeader:             true,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        ",",
-				mergeFields:           nil,
-				ignoreFields:          nil,
+			name: "backlog+wordDelimiter",
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1", "10.0.0.0/16"},
+					{"i-1", "sg-1", "10.1.0.0/16"},
+					{"i-1", "sg-2", "10.2.0.0/16"},
+					{"i-1", "sg-2", "10.3.0.0/16"},
+					{"i-2", "sg-1", "10.0.0.0/16,0.0.0.0/0"},
+					{"i-2", "sg-1", "10.1.0.0/16,0.0.0.0/0"},
+					{"i-2", "sg-2", "10.2.0.0/16,0.0.0.0/0"},
+					{"i-2", "sg-2", "10.3.0.0/16,0.0.0.0/0"},
+					{"i-3", "N/A", "10.0.0.0/16,0.0.0.0/0"},
+					{"i-4", "sg-4", "N/A"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+				format:    BacklogFormat,
+				theme:     NoneTheme,
+				hasHeader: true,
 			},
-			want: `| InstanceName | SecurityGroupName |       CidrBlock       |h
+			want: want{
+				got: `| InstanceName | SecurityGroupName | CidrBlock             |h
 | i-1          | sg-1              | 10.0.0.0/16           |
 | i-1          | sg-1              | 10.1.0.0/16           |
 | i-1          | sg-2              | 10.2.0.0/16           |
@@ -676,20 +1327,30 @@ func TestOut(t *testing.T) {
 | i-3          | N/A               | 10.0.0.0/16,0.0.0.0/0 |
 | i-4          | sg-4              | N/A                   |
 `,
+			},
 		},
 		{
 			name: "backlog+edgecase",
-			args: args{
-				input:                 samples,
-				format:                Backlog,
-				theme:                 NoneTheme,
-				hasHeader:             false,
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimitter:        defaultWordDelimitter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          []int{2},
+			fields: fields{
+				data: [][]string{
+					{"i-1", "sg-1"},
+					{"", ""},
+					{"", "sg-2"},
+					{"", ""},
+					{"i-2", "sg-1"},
+					{"", ""},
+					{"", "sg-2"},
+					{"", ""},
+					{"i-3", "N/A"},
+					{"i-4", "sg-4"},
+				},
+				headers:   []string{"InstanceName", "SecurityGroupName"},
+				format:    BacklogFormat,
+				theme:     NoneTheme,
+				hasHeader: false,
 			},
-			want: `| i-1 | sg-1 |
+			want: want{
+				got: `| i-1 | sg-1 |
 |     |      |
 |     | sg-2 |
 |     |      |
@@ -700,132 +1361,333 @@ func TestOut(t *testing.T) {
 | i-3 | N/A  |
 | i-4 | sg-4 |
 `,
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			table := New(
-				tt.args.input,
-				WithTableFormat(tt.args.format),
-				WithTableTheme(tt.args.theme),
-				WithTableHeader(tt.args.hasHeader),
-				WithEmptyFieldPlaceholder(tt.args.emptyFieldPlaceholder),
-				WithWordDelimitter(tt.args.wordDelimitter),
-				WithMergeFields(tt.args.mergeFields),
-				WithIgnoreFields(tt.args.ignoreFields),
-			)
-			got := table.Out()
-			fmt.Println(got)
-			if got != tt.want {
-				t.Errorf("got: %v, want: %v", got, tt.want)
+			table := &Table{
+				data:                  tt.fields.data,
+				headers:               tt.fields.headers,
+				format:                tt.fields.format,
+				theme:                 tt.fields.theme,
+				hasHeader:             tt.fields.hasHeader,
+				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
+				wordDelimiter:         tt.fields.wordDelimiter,
+				mergeFields:           tt.fields.mergeFields,
+				ignoreFields:          tt.fields.ignoreFields,
+				colorFlags:            tt.fields.colorFlags,
+			}
+			if got := table.Out(); !reflect.DeepEqual(got, tt.want.got) {
+				t.Errorf("got: %v, want: %v", got, tt.want.got)
 			}
 		})
 	}
 }
 
-func Test_getOffset(t *testing.T) {
+func TestTable_formatValue(t *testing.T) {
+	type fields struct {
+		emptyFieldPlaceholder string
+		wordDelimiter         string
+	}
 	type args struct {
+		v any
+	}
+	type want struct {
+		got string
+		err error
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "empty string",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: "",
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "nil slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: ([]string)(nil),
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "empty slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []string{},
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "slice with empty string",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []string{"", ""},
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder + defaultWordDelimiter + defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "slice with normal strings",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []string{"a", "b"},
+			},
+			want: want{
+				got: "a" + defaultWordDelimiter + "b",
+				err: nil,
+			},
+		},
+		{
+			name: "mixed slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []string{"a", "", "b"},
+			},
+			want: want{
+				got: "a" + defaultWordDelimiter + defaultEmptyFieldPlaceholder + defaultWordDelimiter + "b",
+				err: nil,
+			},
+		},
+		{
+			name: "non-slice value",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: 123,
+			},
+			want: want{
+				got: "123",
+				err: nil,
+			},
+		},
+		{
+			name: "slice in slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: [][]string{
+					{"a", "b", "c"},
+					{"x", "y", "z"},
+				},
+			},
+			want: want{
+				got: "",
+				err: fmt.Errorf("elements of slice must not be nested"),
+			},
+		},
+		{
+			name: "struct in slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: nests,
+			},
+			want: want{
+				got: "",
+				err: fmt.Errorf("elements of slice must not be nested"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := reflect.ValueOf(tt.args.v)
+			table := &Table{
+				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
+				wordDelimiter:         tt.fields.wordDelimiter,
+			}
+			got, err := table.formatValue(v)
+			if err != nil {
+				if err.Error() != tt.want.err.Error() {
+					t.Fatalf("got: %v, want: %v", err.Error(), tt.want.err.Error())
+				}
+				return
+			}
+			if !reflect.DeepEqual(got, tt.want.got) {
+				t.Errorf("got: %v, want: %v", got, tt.want.got)
+			}
+		})
+	}
+}
+
+func TestTable_getOffset(t *testing.T) {
+	type fields struct {
 		format    TableFormat
 		hasHeader bool
 	}
+	type want struct {
+		got int
+	}
 	tests := []struct {
-		name string
-		args args
-		want int
+		name   string
+		fields fields
+		want   want
 	}{
 		{
 			name: "markdown",
-			args: args{
-				format:    Markdown,
+			fields: fields{
+				format:    MarkdownFormat,
 				hasHeader: true,
 			},
-			want: 2,
+			want: want{
+				got: 2,
+			},
 		},
 		{
 			name: "backlog",
-			args: args{
-				format:    Backlog,
+			fields: fields{
+				format:    BacklogFormat,
 				hasHeader: true,
 			},
-			want: 1,
+			want: want{
+				got: 1,
+			},
 		},
 		{
 			name: "markdown+disableHeader",
-			args: args{
-				format:    Markdown,
+			fields: fields{
+				format:    MarkdownFormat,
 				hasHeader: false,
 			},
-			want: 0,
+			want: want{
+				got: 0,
+			},
 		},
 		{
 			name: "backlog+disableHeader",
-			args: args{
-				format:    Backlog,
+			fields: fields{
+				format:    BacklogFormat,
 				hasHeader: false,
 			},
-			want: 0,
+			want: want{
+				got: 0,
+			},
 		},
 		{
 			name: "default",
-			args: args{
+			fields: fields{
 				format: "",
 			},
-			want: 0,
+			want: want{
+				got: 0,
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getOffset(tt.args.format, tt.args.hasHeader)
-			if got != tt.want {
-				t.Errorf("got: %v, want: %v", got, tt.want)
+			table := NewTable(
+				WithFormat(tt.fields.format),
+				WithHeader(tt.fields.hasHeader),
+			)
+			got := table.getOffset()
+			if !reflect.DeepEqual(got, tt.want.got) {
+				t.Errorf("got: %v, want: %v", got, tt.want.got)
 			}
 		})
 	}
 }
 
-func Test_getColor(t *testing.T) {
-	type args struct {
-		tableTheme TableTheme
+func TestTable_getColor(t *testing.T) {
+	type fields struct {
+		theme TableTheme
+	}
+	type want struct {
+		got *color.Color
 	}
 	tests := []struct {
-		name string
-		args args
-		want *color.Color
+		name   string
+		fields fields
+		want   want
 	}{
 		{
 			name: "dark",
-			args: args{
-				tableTheme: DarkTheme,
+			fields: fields{
+				theme: DarkTheme,
 			},
-			want: color.New(color.BgHiBlack, color.FgHiWhite),
+			want: want{
+				got: color.New(color.BgHiBlack, color.FgHiWhite),
+			},
 		},
 		{
 			name: "light",
-			args: args{
-				tableTheme: LightTheme,
+			fields: fields{
+				theme: LightTheme,
 			},
-			want: color.New(color.BgHiWhite, color.FgHiBlack),
+			want: want{
+				got: color.New(color.BgHiWhite, color.FgHiBlack),
+			},
 		},
 		{
 			name: "none",
-			args: args{
-				tableTheme: NoneTheme,
+			fields: fields{
+				theme: NoneTheme,
 			},
-			want: color.New(color.Reset),
+			want: want{
+				got: color.New(color.Reset),
+			},
 		},
 		{
 			name: "default",
-			args: args{
-				tableTheme: "",
+			fields: fields{
+				theme: "",
 			},
-			want: color.New(color.Reset),
+			want: want{
+				got: color.New(color.Reset),
+			},
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			got := getColor(tt.args.tableTheme)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("got: %v, want: %v", got, tt.want)
+			table := NewTable(
+				WithTheme(tt.fields.theme),
+			)
+			got := table.getColor()
+			if !reflect.DeepEqual(got, tt.want.got) {
+				t.Errorf("got: %v, want: %v", got, tt.want.got)
 			}
 		})
 	}
