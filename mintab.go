@@ -9,6 +9,9 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
+// Version of mintab.
+const Version = "0.0.0"
+
 // defaultEmptyFieldPlaceholder is a placeholder if the field has no value.
 const defaultEmptyFieldPlaceholder = "N/A"
 
