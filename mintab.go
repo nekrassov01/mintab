@@ -45,7 +45,7 @@ type Table struct {
 	headers               []string    // headers holds the name of each field in the table header.
 	format                TableFormat // format specifies the format of the table.
 	theme                 TableTheme  // theme specifies the theme of the table.
-	disableHeader         bool        // disableHeader indicates whether to disable header or not.
+	hasHeader             bool        // hasHeader indicates whether to enable header or not.
 	emptyFieldPlaceholder string      // emptyFieldPlaceholder specifies the placeholder if the field is empty.
 	wordDelimitter        string      // wordDelimitter specifies the word delimiter of the field.
 	mergeFields           []int       // mergeFields holds indices of the field to be grouped.
@@ -71,7 +71,7 @@ func New(input any, opts ...Option) *Table {
 		headers:               nil,
 		format:                Markdown,
 		theme:                 NoneTheme,
-		disableHeader:         false,
+		hasHeader:             true,
 		emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 		wordDelimitter:        defaultWordDelimitter,
 		mergeFields:           nil,
@@ -103,10 +103,10 @@ func WithTableTheme(theme TableTheme) Option {
 	}
 }
 
-// WithDisableHeader disables the header.
-func WithDisableHeader() Option {
+// WithTableHeader enables/disables the header.
+func WithTableHeader(has bool) Option {
 	return func(t *Table) {
-		t.disableHeader = true
+		t.hasHeader = has
 	}
 }
 
@@ -148,7 +148,7 @@ func (t *Table) Out() string {
 	}
 	tableString := &strings.Builder{}
 	table := tablewriter.NewWriter(tableString)
-	if !t.disableHeader {
+	if t.hasHeader {
 		table.SetHeader(t.headers)
 		table.SetAutoFormatHeaders(false)
 	}
@@ -160,9 +160,9 @@ func (t *Table) Out() string {
 	table.SetAutoWrapText(false)
 	table.AppendBulk(t.Data)
 	table.Render()
-	s := colorize(tableString.String(), t.colorFlags, t.format, t.theme, t.disableHeader)
+	s := colorize(tableString.String(), t.colorFlags, t.format, t.theme, t.hasHeader)
 	if t.format == Backlog {
-		s = backlogify(s, t.disableHeader)
+		s = backlogify(s, t.hasHeader)
 	}
 	return s
 }
@@ -273,8 +273,8 @@ func isEmptyStr(v reflect.Value) bool {
 }
 
 // backlogify converts to backlog tables format.
-func backlogify(s string, disableHeader bool) string {
-	if !disableHeader {
+func backlogify(s string, hasHeader bool) string {
+	if hasHeader {
 		i := strings.Index(s, "\n")
 		if i == -1 {
 			return s
@@ -285,11 +285,11 @@ func backlogify(s string, disableHeader bool) string {
 }
 
 // colorize adds color to the table.
-func colorize(table string, colorFlags []bool, tableFormat TableFormat, tableTheme TableTheme, disableHeader bool) string {
+func colorize(table string, colorFlags []bool, tableFormat TableFormat, tableTheme TableTheme, hasHeader bool) string {
 	if tableTheme == NoneTheme {
 		return table
 	}
-	offset := getOffset(tableFormat, disableHeader)
+	offset := getOffset(tableFormat, hasHeader)
 	var coloredLines []string
 	lines := strings.Split(table, "\n")
 	for i, line := range lines {
@@ -311,8 +311,8 @@ func colorize(table string, colorFlags []bool, tableFormat TableFormat, tableThe
 }
 
 // getOffset determines the starting position for coloring.
-func getOffset(tableFormat TableFormat, disableHeader bool) int {
-	if disableHeader {
+func getOffset(tableFormat TableFormat, hasHeader bool) int {
+	if !hasHeader {
 		return 0
 	}
 	switch tableFormat {

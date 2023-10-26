@@ -33,7 +33,7 @@ func main() {
 	table = mintab.New(samples, mintab.WithTableFormat(mintab.Backlog))
 	fmt.Println(table.Out())
 
-	table = mintab.New(samples, mintab.WithDisableHeader())
+	table = mintab.New(samples, mintab.WithTableHeader(false))
 	fmt.Println(table.Out())
 
 	table = mintab.New(samples, mintab.WithEmptyFieldPlaceholder("NULL"))
