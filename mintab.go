@@ -10,7 +10,7 @@ import (
 )
 
 // Version of mintab.
-const Version = "0.0.3"
+const Version = "0.0.4"
 
 const (
 	MarkdownFormat = iota
