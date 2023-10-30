@@ -76,7 +76,7 @@ publish: deps-gobump check-git
 	$(GOBIN)/gobump up -w .
 	git commit -am "bump up version to $(VERSION)"
 	git tag "v$(VERSION)"
-	git push origin main -f
+	git push origin main
 	git push origin "refs/tags/v$(VERSION)"
 
 .PHONY: clean
