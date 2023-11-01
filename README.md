@@ -11,7 +11,7 @@ mintab is a minimum ASCII table utilities using [tablewriter](https://github.com
 ![terminal](_assets/terminal.png)
 
 Support
----------
+-------
 
 - Markdown table format
 - Backlog table format
@@ -22,7 +22,7 @@ Support
 Notes
 -----
 
-- Only slice of struct is accepted
+- Only non-nested struct slices are accepted
 - Using reflect
 
 Usage
@@ -72,7 +72,7 @@ func main() {
         | i-4          | sg-4              | N/A                      |
         */
 
-	table = mintab.NewTable(mintab.WithFormat(mintab.Backlog))
+	table = mintab.NewTable(mintab.WithFormat(mintab.BacklogFormat))
 	if err := table.Load(samples); err != nil {
 		log.Fatal(err)
 	}
