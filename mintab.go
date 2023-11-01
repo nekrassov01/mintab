@@ -32,8 +32,8 @@ type Table struct {
 	hasHeader             bool       // hasHeader indicates whether to enable header or not.
 	emptyFieldPlaceholder string     // emptyFieldPlaceholder specifies the placeholder if the field is empty.
 	wordDelimiter         string     // wordDelimiter specifies the word delimiter of the field.
-	mergeFields           []int      // mergeFields holds indices of the field to be grouped.
-	ignoreFields          []int      // ignoreFields holds indices of the fields to be ignored.
+	mergedFields          []int      // mergedFields holds indices of the field to be grouped.
+	ignoredFields         []int      // ignoredFields holds indices of the fields to be ignored.
 	colorFlags            []bool     // colorFlags holds flags indicating whether to color each row or not.
 }
 
@@ -93,20 +93,23 @@ func WithWordDelimiter(wordDelimiter string) Option {
 // determined by whether the value in the first column is the same as in the previous row.
 func WithMergeFields(mergeFields []int) Option {
 	return func(t *Table) {
-		t.mergeFields = mergeFields
+		t.mergedFields = mergeFields
 	}
 }
 
 // WithIgnoreFields specifies the column numbers to be ignored.
 func WithIgnoreFields(ignoreFields []int) Option {
 	return func(t *Table) {
-		t.ignoreFields = ignoreFields
+		t.ignoredFields = ignoreFields
 	}
 }
 
 // Load validates input and converts them to table data.
 // Returns error if not struct slice.
 func (t *Table) Load(input any) (err error) {
+	if _, ok := input.([]interface{}); ok {
+		return fmt.Errorf("cannot parse input: must not be slice of empty interface")
+	}
 	v := reflect.ValueOf(input)
 	if v.Kind() != reflect.Slice {
 		return fmt.Errorf("cannot parse input: must be slice")
@@ -114,13 +117,12 @@ func (t *Table) Load(input any) (err error) {
 	if v.Len() == 0 {
 		return fmt.Errorf("cannot parse input: no elements in slice")
 	}
-	elem := v.Index(0).Interface()
-	e := reflect.TypeOf(elem)
+	e := v.Index(0)
 	if e.Kind() != reflect.Struct {
 		return fmt.Errorf("cannot parse input: must be struct")
 	}
 	t.colorFlags = getColorFlags(input)
-	t.headers = t.setHeader(e)
+	t.headers = t.setHeader(e.Type())
 	t.data, err = t.setData(input)
 	if err != nil {
 		return err
@@ -157,7 +159,7 @@ func (t *Table) Out() string {
 func (t *Table) setHeader(typ reflect.Type) (headers []string) {
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if contains(t.ignoreFields, i) || field.PkgPath != "" {
+		if contains(t.ignoredFields, i) || field.PkgPath != "" {
 			continue
 		}
 		headers = append(headers, field.Name)
@@ -179,7 +181,7 @@ func (t *Table) setData(input any) (data [][]string, err error) {
 			if err != nil {
 				return nil, fmt.Errorf("cannot parse field: %w", err)
 			}
-			if contains(t.mergeFields, i) {
+			if contains(t.mergedFields, i) {
 				if value != prev[i] {
 					merge = false
 					prev[i] = value

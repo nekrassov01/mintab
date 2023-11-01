@@ -28,6 +28,7 @@ type nested struct {
 var (
 	samples                      []sample
 	nests                        []nested
+	iregulars                    []interface{}
 	defaultEmptyFieldPlaceholder string
 	defaultWordDelimiter         string
 )
@@ -85,6 +86,7 @@ func setup() {
 			},
 		},
 	}
+	iregulars = []interface{}{sample{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16"}}, 1, "string", 2.5, struct{}{}}
 }
 
 func TestNewTable(t *testing.T) {
@@ -94,8 +96,8 @@ func TestNewTable(t *testing.T) {
 		hasHeader             bool
 		emptyFieldPlaceholder string
 		wordDelimiter         string
-		mergeFields           []int
-		ignoreFields          []int
+		mergedFields          []int
+		ignoredFields         []int
 	}
 	type want struct {
 		got *Table
@@ -122,8 +124,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -145,8 +147,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             false,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -159,7 +161,7 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           []int{0, 1},
+				mergedFields:          []int{0, 1},
 			},
 			want: want{
 				got: &Table{
@@ -169,8 +171,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           []int{0, 1},
-					ignoreFields:          nil,
+					mergedFields:          []int{0, 1},
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -183,7 +185,7 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				ignoreFields:          []int{2},
+				ignoredFields:         []int{2},
 			},
 			want: want{
 				got: &Table{
@@ -193,8 +195,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          []int{2},
+					mergedFields:          nil,
+					ignoredFields:         []int{2},
 					colorFlags:            nil,
 				},
 			},
@@ -207,8 +209,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: "NULL",
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			want: want{
 				got: &Table{
@@ -218,8 +220,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: "NULL",
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -232,8 +234,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         ",",
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			want: want{
 				got: &Table{
@@ -243,8 +245,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         ",",
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -257,8 +259,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             false,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          []int{2},
+				mergedFields:          []int{0, 1},
+				ignoredFields:         []int{2},
 			},
 			want: want{
 				got: &Table{
@@ -268,8 +270,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             false,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           []int{0, 1},
-					ignoreFields:          []int{2},
+					mergedFields:          []int{0, 1},
+					ignoredFields:         []int{2},
 					colorFlags:            nil,
 				},
 			},
@@ -282,8 +284,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			want: want{
 				got: &Table{
@@ -293,8 +295,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -307,8 +309,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             false,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			want: want{
 				got: &Table{
@@ -318,8 +320,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             false,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -332,8 +334,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          nil,
+				mergedFields:          []int{0, 1},
+				ignoredFields:         nil,
 			},
 			want: want{
 				got: &Table{
@@ -343,8 +345,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           []int{0, 1},
-					ignoreFields:          nil,
+					mergedFields:          []int{0, 1},
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -357,8 +359,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          []int{2},
+				mergedFields:          nil,
+				ignoredFields:         []int{2},
 			},
 			want: want{
 				got: &Table{
@@ -368,8 +370,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          []int{2},
+					mergedFields:          nil,
+					ignoredFields:         []int{2},
 					colorFlags:            nil,
 				},
 			},
@@ -382,8 +384,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: "NULL",
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			want: want{
 				got: &Table{
@@ -393,8 +395,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: "NULL",
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -407,8 +409,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             true,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         ",",
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			want: want{
 				got: &Table{
@@ -418,8 +420,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             true,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         ",",
-					mergeFields:           nil,
-					ignoreFields:          nil,
+					mergedFields:          nil,
+					ignoredFields:         nil,
 					colorFlags:            nil,
 				},
 			},
@@ -432,8 +434,8 @@ func TestNewTable(t *testing.T) {
 				hasHeader:             false,
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          []int{2},
+				mergedFields:          []int{0, 1},
+				ignoredFields:         []int{2},
 			},
 			want: want{
 				got: &Table{
@@ -443,8 +445,8 @@ func TestNewTable(t *testing.T) {
 					hasHeader:             false,
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           []int{0, 1},
-					ignoreFields:          []int{2},
+					mergedFields:          []int{0, 1},
+					ignoredFields:         []int{2},
 					colorFlags:            nil,
 				},
 			},
@@ -458,8 +460,8 @@ func TestNewTable(t *testing.T) {
 				WithHeader(tt.args.hasHeader),
 				WithEmptyFieldPlaceholder(tt.args.emptyFieldPlaceholder),
 				WithWordDelimiter(tt.args.wordDelimiter),
-				WithMergeFields(tt.args.mergeFields),
-				WithIgnoreFields(tt.args.ignoreFields),
+				WithMergeFields(tt.args.mergedFields),
+				WithIgnoreFields(tt.args.ignoredFields),
 			)
 			if !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
@@ -472,8 +474,8 @@ func TestTable_Load(t *testing.T) {
 	type fields struct {
 		emptyFieldPlaceholder string
 		wordDelimiter         string
-		mergeFields           []int
-		ignoreFields          []int
+		mergedFields          []int
+		ignoredFields         []int
 	}
 	type args struct {
 		input any
@@ -493,8 +495,8 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			args: args{
 				input: samples,
@@ -526,8 +528,8 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: "NULL",
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			args: args{
 				input: samples,
@@ -559,8 +561,8 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         ",",
-				mergeFields:           nil,
-				ignoreFields:          nil,
+				mergedFields:          nil,
+				ignoredFields:         nil,
 			},
 			args: args{
 				input: samples,
@@ -592,8 +594,8 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          nil,
+				mergedFields:          []int{0, 1},
+				ignoredFields:         nil,
 			},
 			args: args{
 				input: samples,
@@ -615,7 +617,7 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           []int{0, 1},
+					mergedFields:          []int{0, 1},
 					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
@@ -626,8 +628,8 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           nil,
-				ignoreFields:          []int{2},
+				mergedFields:          nil,
+				ignoredFields:         []int{2},
 			},
 			args: args{
 				input: samples,
@@ -649,7 +651,7 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					ignoreFields:          []int{2},
+					ignoredFields:         []int{2},
 
 					colorFlags: []bool{true, true, true, true, false, false, false, false, true, false},
 				},
@@ -661,8 +663,8 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				mergeFields:           []int{0, 1},
-				ignoreFields:          []int{2},
+				mergedFields:          []int{0, 1},
+				ignoredFields:         []int{2},
 			},
 			args: args{
 				input: samples,
@@ -684,8 +686,8 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					mergeFields:           []int{0, 1},
-					ignoreFields:          []int{2},
+					mergedFields:          []int{0, 1},
+					ignoredFields:         []int{2},
 					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
@@ -696,8 +698,8 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: "",
 				wordDelimiter:         ",",
-				mergeFields:           []int{0, 1},
-				ignoreFields:          []int{2},
+				mergedFields:          []int{0, 1},
+				ignoredFields:         []int{2},
 			},
 			args: args{
 				input: samples,
@@ -719,8 +721,8 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName"},
 					emptyFieldPlaceholder: "",
 					wordDelimiter:         ",",
-					mergeFields:           []int{0, 1},
-					ignoreFields:          []int{2},
+					mergedFields:          []int{0, 1},
+					ignoredFields:         []int{2},
 					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
@@ -829,14 +831,24 @@ func TestTable_Load(t *testing.T) {
 				err: fmt.Errorf("cannot parse input: no elements in slice"),
 			},
 		},
+		{
+			name: "iregular slice",
+			args: args{
+				input: iregulars,
+			},
+			want: want{
+				got: nil,
+				err: fmt.Errorf("cannot parse input: must not be slice of empty interface"),
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			table := &Table{
 				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
 				wordDelimiter:         tt.fields.wordDelimiter,
-				mergeFields:           tt.fields.mergeFields,
-				ignoreFields:          tt.fields.ignoreFields,
+				mergedFields:          tt.fields.mergedFields,
+				ignoredFields:         tt.fields.ignoredFields,
 			}
 			if err := table.Load(tt.args.input); err != nil {
 				if err.Error() != tt.want.err.Error() {
@@ -1374,8 +1386,8 @@ func TestTable_Out(t *testing.T) {
 				hasHeader:             tt.fields.hasHeader,
 				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
 				wordDelimiter:         tt.fields.wordDelimiter,
-				mergeFields:           tt.fields.mergeFields,
-				ignoreFields:          tt.fields.ignoreFields,
+				mergedFields:          tt.fields.mergeFields,
+				ignoredFields:         tt.fields.ignoreFields,
 				colorFlags:            tt.fields.colorFlags,
 			}
 			if got := table.Out(); !reflect.DeepEqual(got, tt.want.got) {
