@@ -735,7 +735,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
 			},
 		},
 		{
@@ -745,7 +745,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
 			},
 		},
 		{
@@ -755,7 +755,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
 			},
 		},
 		{
@@ -765,7 +765,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
 			},
 		},
 		{
@@ -818,7 +818,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
 			},
 		},
 		{
@@ -838,7 +838,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must not be slice of empty interface"),
+				err: fmt.Errorf("cannot parse input: elements of slice must not be empty interface"),
 			},
 		},
 	}

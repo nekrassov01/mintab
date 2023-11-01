@@ -108,7 +108,7 @@ func WithIgnoreFields(ignoreFields []int) Option {
 // Returns error if not struct slice.
 func (t *Table) Load(input any) (err error) {
 	if _, ok := input.([]interface{}); ok {
-		return fmt.Errorf("cannot parse input: must not be slice of empty interface")
+		return fmt.Errorf("cannot parse input: elements of slice must not be empty interface")
 	}
 	v := reflect.ValueOf(input)
 	if v.Kind() != reflect.Slice {
@@ -119,7 +119,7 @@ func (t *Table) Load(input any) (err error) {
 	}
 	e := v.Index(0)
 	if e.Kind() != reflect.Struct {
-		return fmt.Errorf("cannot parse input: must be struct")
+		return fmt.Errorf("cannot parse input: elements of slice must be struct")
 	}
 	t.colorFlags = getColorFlags(input)
 	t.headers = t.setHeader(e.Type())
