@@ -18,9 +18,9 @@ const (
 )
 
 const (
-	DarkTheme = iota
+	NoneTheme = iota
+	DarkTheme
 	LightTheme
-	NoneTheme
 )
 
 // Table represents a table in a matrix of strings.
