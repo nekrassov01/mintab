@@ -9,14 +9,16 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-// Version of mintab.
+// Version
 const Version = "0.0.7"
 
+// Table format
 const (
 	MarkdownFormat = iota
 	BacklogFormat
 )
 
+// Table theme
 const (
 	NoneTheme = iota
 	DarkTheme
@@ -37,7 +39,7 @@ type Table struct {
 	colorFlags            []bool     // colorFlags holds flags indicating whether to color each row or not.
 }
 
-// New instantiates a table struct.
+// NewTable instantiates a table struct.
 func NewTable(opts ...Option) (t *Table) {
 	t = &Table{}
 	t.format = MarkdownFormat
@@ -111,20 +113,25 @@ func (t *Table) Load(input any) (err error) {
 		return fmt.Errorf("cannot parse input: elements of slice must not be empty interface")
 	}
 	v := reflect.ValueOf(input)
+	if v.Kind() == reflect.Ptr {
+		v = v.Elem()
+	}
 	if v.Kind() != reflect.Slice {
-		return fmt.Errorf("cannot parse input: must be slice")
+		return fmt.Errorf("cannot parse input: must be a slice or a pointer to a slice")
 	}
 	if v.Len() == 0 {
 		return fmt.Errorf("cannot parse input: no elements in slice")
 	}
 	e := v.Index(0)
-	if e.Kind() != reflect.Struct {
-		return fmt.Errorf("cannot parse input: elements of slice must be struct")
+	if e.Kind() == reflect.Ptr {
+		e = e.Elem()
 	}
-	t.colorFlags = getColorFlags(input)
-	t.headers = t.setHeader(e.Type())
-	t.data, err = t.setData(input)
-	if err != nil {
+	if e.Kind() != reflect.Struct {
+		return fmt.Errorf("cannot parse input: elements of slice must be struct or pointer to struct")
+	}
+	t.setColorFlags(v)
+	t.setHeader(e.Type())
+	if err = t.setData(v); err != nil {
 		return err
 	}
 	return nil
@@ -156,95 +163,129 @@ func (t *Table) Out() string {
 }
 
 // setHeader uses reflect to extract field names and create headers.
-func (t *Table) setHeader(typ reflect.Type) (headers []string) {
+func (t *Table) setHeader(typ reflect.Type) {
+	if len(t.headers) > 0 {
+		return
+	}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
 		if contains(t.ignoredFields, i) || field.PkgPath != "" {
 			continue
 		}
-		headers = append(headers, field.Name)
+		t.headers = append(t.headers, field.Name)
 	}
-	return headers
 }
 
-// setData checks whether what is passed using reflect is a slice of struct,
-// formats the field values, and converts them to a string table.
-func (t *Table) setData(input any) (data [][]string, err error) {
-	v := reflect.ValueOf(input)
+// setData converts input to a matrix of strings.
+func (t *Table) setData(v reflect.Value) error {
 	prev := make([]string, len(t.headers))
+	t.data = make([][]string, v.Len())
 	for i := 0; i < v.Len(); i++ {
-		var values []string
-		item := v.Index(i).Interface()
+		values := make([]string, len(t.headers))
+		itemValue := v.Index(i)
+		if itemValue.Kind() == reflect.Ptr {
+			itemValue = itemValue.Elem()
+		}
 		merge := true
-		for i, header := range t.headers {
-			value, err := t.formatValue(reflect.ValueOf(item).FieldByName(header))
-			if err != nil {
-				return nil, fmt.Errorf("cannot parse field: %w", err)
+		for j, header := range t.headers {
+			field := itemValue.FieldByName(header)
+			if !field.IsValid() {
+				return fmt.Errorf("field \"%s\" does not exist", header)
 			}
-			if contains(t.mergedFields, i) {
-				if value != prev[i] {
+			value, err := t.formatValue(field)
+			if err != nil {
+				return fmt.Errorf("cannot format field \"%s\": %w", header, err)
+			}
+			if contains(t.mergedFields, j) {
+				if value != prev[j] {
 					merge = false
-					prev[i] = value
+					prev[j] = value
 				}
 				if merge {
 					value = ""
 				}
 			}
-			values = append(values, value)
+			values[j] = value
 		}
-		data = append(data, values)
+		t.data[i] = values
 	}
-	return data, nil
+	return nil
 }
 
-// getColorFlags determines which rows to color.
-func getColorFlags(input any) (colorFlags []bool) {
-	v := reflect.ValueOf(input)
-	var prev any
+// setColorFlags determines which rows to color.
+func (t *Table) setColorFlags(v reflect.Value) {
+	if v.Kind() == reflect.Ptr && v.Elem().Kind() == reflect.Slice {
+		v = v.Elem()
+	}
+	t.colorFlags = make([]bool, v.Len())
 	colorFlag := true
+	var prev any
 	for i := 0; i < v.Len(); i++ {
-		firstField := reflect.ValueOf(v.Index(i).Interface()).Field(0).Interface()
-		if prev != nil && prev != firstField {
+		item := v.Index(i)
+		if item.Kind() == reflect.Ptr {
+			item = item.Elem()
+		}
+		firstField := item.Field(0).Interface()
+		if i != 0 && !reflect.DeepEqual(prev, firstField) {
 			colorFlag = !colorFlag
 		}
-		colorFlags = append(colorFlags, colorFlag)
+		t.colorFlags[i] = colorFlag
 		prev = firstField
 	}
-	return colorFlags
 }
 
 // formatValue formats the value of each field.
 // Perform multi-value delimiters and whitespace handling.
 // Nested fields are not processed and an error is returned.
 func (t *Table) formatValue(v reflect.Value) (string, error) {
-	if isEmptyStr(v) {
-		return t.emptyFieldPlaceholder, nil
+	if v.Kind() == reflect.Ptr {
+		if v.IsNil() {
+			return t.emptyFieldPlaceholder, nil
+		}
+		v = v.Elem()
 	}
 	switch v.Kind() {
+	case reflect.String:
+		if v.String() == "" {
+			return t.emptyFieldPlaceholder, nil
+		}
+		return strings.TrimSpace(v.String()), nil
+	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+		return fmt.Sprint(v.Int()), nil
+	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+		return fmt.Sprint(v.Uint()), nil
+	case reflect.Float32, reflect.Float64:
+		return fmt.Sprint(v.Float()), nil
 	case reflect.Slice:
-		if v.IsNil() || v.Len() == 0 {
+		if v.Len() == 0 {
 			return t.emptyFieldPlaceholder, nil
 		}
 		var s []string
 		for i := 0; i < v.Len(); i++ {
-			value := v.Index(i)
-			if value.Kind() == reflect.Slice || value.Kind() == reflect.Struct {
+			e := v.Index(i)
+			if e.Kind() == reflect.Ptr {
+				if e.IsNil() {
+					s = append(s, t.emptyFieldPlaceholder)
+					continue
+				}
+				e = e.Elem()
+			}
+			if e.Kind() == reflect.Slice || e.Kind() == reflect.Struct {
 				return "", fmt.Errorf("elements of slice must not be nested")
 			}
-			if isEmptyStr(value) {
-				s = append(s, t.emptyFieldPlaceholder)
-			} else {
-				s = append(s, trim(v.Index(i)))
+			fv, err := t.formatValue(e)
+			if err != nil {
+				return "", err
 			}
+			s = append(s, fv)
 		}
 		return strings.Join(s, t.wordDelimiter), nil
-	case reflect.Struct:
-		return "", fmt.Errorf("field must not be struct")
+	default:
+		return fmt.Sprint(v.Interface()), nil
 	}
-	return trim(v), nil
 }
 
-// backlogify converts to backlog tables format.
+// backlogify converts to backlog table format.
 func (t *Table) backlogify(s string) string {
 	if t.hasHeader {
 		i := strings.Index(s, "\n")
@@ -263,22 +304,19 @@ func (t *Table) colorize(table string) string {
 	}
 	offset := t.getOffset()
 	color := t.getColor()
-	var clines []string
 	lines := strings.Split(table, "\n")
+	m := make(map[int]struct{})
+	for i, colorFlag := range t.colorFlags {
+		if colorFlag {
+			m[offset+i] = struct{}{}
+		}
+	}
+	var clines []string
 	for i, line := range lines {
-		if i < offset {
-			clines = append(clines, line)
-			continue
+		if _, ok := m[i]; ok {
+			line = color.Sprint(line)
 		}
-		if i-offset < len(t.colorFlags) {
-			if t.colorFlags[i-offset] {
-				clines = append(clines, color.Sprint(line))
-			} else {
-				clines = append(clines, line)
-			}
-		} else {
-			clines = append(clines, line)
-		}
+		clines = append(clines, line)
 	}
 	return strings.Join(clines, "\n")
 }
@@ -301,12 +339,14 @@ func (t *Table) getOffset() int {
 // getColor sets the color theme.
 func (t *Table) getColor() *color.Color {
 	switch t.theme {
+	case NoneTheme:
+		return &color.Color{}
 	case DarkTheme:
 		return color.New(color.BgHiBlack, color.FgHiWhite)
 	case LightTheme:
 		return color.New(color.BgHiWhite, color.FgHiBlack)
 	default:
-		return color.New(color.Reset)
+		return &color.Color{}
 	}
 }
 
@@ -318,14 +358,4 @@ func contains(values []int, target int) bool {
 		}
 	}
 	return false
-}
-
-// trim is a helper function used in formatting field values.
-func trim(v reflect.Value) string {
-	return strings.TrimSpace(fmt.Sprint(v))
-}
-
-// isEmptyStr is a helper function that checks if a field value is empty.
-func isEmptyStr(v reflect.Value) bool {
-	return v.Kind() == reflect.String && v.String() == ""
 }

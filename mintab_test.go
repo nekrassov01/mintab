@@ -27,8 +27,10 @@ type nested struct {
 
 var (
 	samples                      []sample
+	samplesPtr                   []*sample
+	slicePtr                     *[]sample
 	nests                        []nested
-	iregulars                    []interface{}
+	irregulars                   []interface{}
 	defaultEmptyFieldPlaceholder string
 	defaultWordDelimiter         string
 )
@@ -54,6 +56,11 @@ func setup() {
 		{InstanceName: "i-3", SecurityGroupName: "", CidrBlock: []string{"10.0.0.0/16", "0.0.0.0/0"}},
 		{InstanceName: "i-4", SecurityGroupName: "sg-4", CidrBlock: []string{}},
 	}
+	samplesPtr = make([]*sample, 0, len(samples))
+	for i := range samples {
+		samplesPtr = append(samplesPtr, &samples[i])
+	}
+	slicePtr = &samples
 	nests = []nested{
 		{
 			BucketName: "bucket1",
@@ -86,11 +93,11 @@ func setup() {
 			},
 		},
 	}
-	iregulars = []interface{}{sample{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16"}}, 1, "string", 2.5, struct{}{}}
+	irregulars = []interface{}{sample{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16"}}, 1, "string", 2.5, struct{}{}}
 }
 
 func TestNewTable(t *testing.T) {
-	type args struct {
+	type fields struct {
 		format                int
 		theme                 int
 		hasHeader             bool
@@ -103,13 +110,13 @@ func TestNewTable(t *testing.T) {
 		got *Table
 	}
 	tests := []struct {
-		name string
-		args args
-		want want
+		name   string
+		fields fields
+		want   want
 	}{
 		{
 			name: "markdown+basic",
-			args: args{
+			fields: fields{
 				format:                MarkdownFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -132,7 +139,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "markdown+disableHeader",
-			args: args{
+			fields: fields{
 				format:                MarkdownFormat,
 				theme:                 NoneTheme,
 				hasHeader:             false,
@@ -155,7 +162,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "markdown+merge",
-			args: args{
+			fields: fields{
 				format:                MarkdownFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -179,7 +186,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "markdown+ignore",
-			args: args{
+			fields: fields{
 				format:                MarkdownFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -203,7 +210,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "markdown+emptyFieldPlaceholder",
-			args: args{
+			fields: fields{
 				format:                MarkdownFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -228,7 +235,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "markdown+wordDelimiter",
-			args: args{
+			fields: fields{
 				format:                MarkdownFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -253,7 +260,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "markdown+edgecase",
-			args: args{
+			fields: fields{
 				format:                MarkdownFormat,
 				theme:                 NoneTheme,
 				hasHeader:             false,
@@ -278,7 +285,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "backlog+basic",
-			args: args{
+			fields: fields{
 				format:                BacklogFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -303,7 +310,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "backlog+disableHeader",
-			args: args{
+			fields: fields{
 				format:                BacklogFormat,
 				theme:                 NoneTheme,
 				hasHeader:             false,
@@ -328,7 +335,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "backlog+merge",
-			args: args{
+			fields: fields{
 				format:                BacklogFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -353,7 +360,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "backlog+ignore",
-			args: args{
+			fields: fields{
 				format:                BacklogFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -378,7 +385,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "backlog+emptyFieldPlaceholder",
-			args: args{
+			fields: fields{
 				format:                BacklogFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -403,7 +410,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "backlog+wordDelimiter",
-			args: args{
+			fields: fields{
 				format:                BacklogFormat,
 				theme:                 NoneTheme,
 				hasHeader:             true,
@@ -428,7 +435,7 @@ func TestNewTable(t *testing.T) {
 		},
 		{
 			name: "backlog+edgecase",
-			args: args{
+			fields: fields{
 				format:                BacklogFormat,
 				theme:                 NoneTheme,
 				hasHeader:             false,
@@ -455,13 +462,13 @@ func TestNewTable(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			got := NewTable(
-				WithFormat(tt.args.format),
-				WithTheme(tt.args.theme),
-				WithHeader(tt.args.hasHeader),
-				WithEmptyFieldPlaceholder(tt.args.emptyFieldPlaceholder),
-				WithWordDelimiter(tt.args.wordDelimiter),
-				WithMergeFields(tt.args.mergedFields),
-				WithIgnoreFields(tt.args.ignoredFields),
+				WithFormat(tt.fields.format),
+				WithTheme(tt.fields.theme),
+				WithHeader(tt.fields.hasHeader),
+				WithEmptyFieldPlaceholder(tt.fields.emptyFieldPlaceholder),
+				WithWordDelimiter(tt.fields.wordDelimiter),
+				WithMergeFields(tt.fields.mergedFields),
+				WithIgnoreFields(tt.fields.ignoredFields),
 			)
 			if !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
@@ -500,6 +507,72 @@ func TestTable_Load(t *testing.T) {
 			},
 			args: args{
 				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+						{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-4", "sg-4", "N/A"},
+					},
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
+				},
+				err: nil,
+			},
+		},
+		{
+			name: "slice elements ptr",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergedFields:          nil,
+				ignoredFields:         nil,
+			},
+			args: args{
+				input: samplesPtr,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+						{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-4", "sg-4", "N/A"},
+					},
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+					wordDelimiter:         defaultWordDelimiter,
+					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
+				},
+				err: nil,
+			},
+		},
+		{
+			name: "slice ptr",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+				mergedFields:          nil,
+				ignoredFields:         nil,
+			},
+			args: args{
+				input: slicePtr,
 			},
 			want: want{
 				got: &Table{
@@ -735,7 +808,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct or pointer to struct"),
 			},
 		},
 		{
@@ -745,7 +818,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct or pointer to struct"),
 			},
 		},
 		{
@@ -755,7 +828,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct or pointer to struct"),
 			},
 		},
 		{
@@ -765,7 +838,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct or pointer to struct"),
 			},
 		},
 		{
@@ -775,7 +848,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be slice"),
+				err: fmt.Errorf("cannot parse input: must be a slice or a pointer to a slice"),
 			},
 		},
 		{
@@ -785,7 +858,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be slice"),
+				err: fmt.Errorf("cannot parse input: must be a slice or a pointer to a slice"),
 			},
 		},
 		{
@@ -795,7 +868,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be slice"),
+				err: fmt.Errorf("cannot parse input: must be a slice or a pointer to a slice"),
 			},
 		},
 		{
@@ -805,7 +878,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: must be slice"),
+				err: fmt.Errorf("cannot parse input: must be a slice or a pointer to a slice"),
 			},
 		},
 		{
@@ -818,7 +891,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: elements of slice must be struct"),
+				err: fmt.Errorf("cannot parse input: elements of slice must be struct or pointer to struct"),
 			},
 		},
 		{
@@ -834,7 +907,7 @@ func TestTable_Load(t *testing.T) {
 		{
 			name: "iregular slice",
 			args: args{
-				input: iregulars,
+				input: irregulars,
 			},
 			want: want{
 				got: nil,
@@ -1398,6 +1471,9 @@ func TestTable_Out(t *testing.T) {
 }
 
 func TestTable_formatValue(t *testing.T) {
+	sp := func(s string) *string {
+		return &s
+	}
 	type fields struct {
 		emptyFieldPlaceholder string
 		wordDelimiter         string
@@ -1416,6 +1492,20 @@ func TestTable_formatValue(t *testing.T) {
 		want   want
 	}{
 		{
+			name: "string",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: "aaa",
+			},
+			want: want{
+				got: "aaa",
+				err: nil,
+			},
+		},
+		{
 			name: "empty string",
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
@@ -1426,6 +1516,76 @@ func TestTable_formatValue(t *testing.T) {
 			},
 			want: want{
 				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "int",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: 123,
+			},
+			want: want{
+				got: "123",
+				err: nil,
+			},
+		},
+		{
+			name: "uint",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: uint(123),
+			},
+			want: want{
+				got: "123",
+				err: nil,
+			},
+		},
+		{
+			name: "float",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: 123.456,
+			},
+			want: want{
+				got: "123.456",
+				err: nil,
+			},
+		},
+		{
+			name: "non-nil pointer string",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: new(string),
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "non-nil pointer int",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: new(int),
+			},
+			want: want{
+				got: "0",
 				err: nil,
 			},
 		},
@@ -1458,7 +1618,7 @@ func TestTable_formatValue(t *testing.T) {
 			},
 		},
 		{
-			name: "slice with empty string",
+			name: "slice in empty strings",
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
@@ -1500,20 +1660,6 @@ func TestTable_formatValue(t *testing.T) {
 			},
 		},
 		{
-			name: "non-slice value",
-			fields: fields{
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimiter:         defaultWordDelimiter,
-			},
-			args: args{
-				v: 123,
-			},
-			want: want{
-				got: "123",
-				err: nil,
-			},
-		},
-		{
 			name: "slice in slice",
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
@@ -1544,6 +1690,90 @@ func TestTable_formatValue(t *testing.T) {
 				err: fmt.Errorf("elements of slice must not be nested"),
 			},
 		},
+		{
+			name: "pointer to slice with normal strings",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: &[]string{"a", "b"},
+			},
+			want: want{
+				got: "a" + defaultWordDelimiter + "b",
+				err: nil,
+			},
+		},
+		{
+			name: "slice with pointer to strings",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []*string{sp(""), sp("a"), sp("b")},
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder + defaultWordDelimiter + "a" + defaultWordDelimiter + "b",
+				err: nil,
+			},
+		},
+		{
+			name: "slice with pointer to empty string",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []*string{},
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "slice with nil pointer",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []*int{nil},
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "uint slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []uint{0, 1, 2},
+			},
+			want: want{
+				got: "0" + defaultWordDelimiter + "1" + defaultWordDelimiter + "2",
+				err: nil,
+			},
+		},
+		{
+			name: "nil ptr",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: (*int)(nil),
+			},
+			want: want{
+				got: defaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -1561,6 +1791,105 @@ func TestTable_formatValue(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
+			}
+		})
+	}
+}
+
+func TestTable_setData(t *testing.T) {
+	type fields struct {
+		headers []string
+	}
+	type args struct {
+		v any
+	}
+	type want struct {
+		got []bool
+		err error
+	}
+	tests := []struct {
+		name   string
+		fields fields
+		args   args
+		want   want
+	}{
+		{
+			name: "invalid field name",
+			fields: fields{
+				headers: []string{"aaa"},
+			},
+			args: args{
+				v: samples,
+			},
+			want: want{
+				got: nil,
+				err: fmt.Errorf("field \"aaa\" does not exist"),
+			},
+		},
+		{
+			name: "invalid field",
+			fields: fields{
+				headers: []string{"BucketName", "Objects"},
+			},
+			args: args{
+				v: nests,
+			},
+			want: want{
+				got: nil,
+				err: fmt.Errorf("cannot format field \"Objects\": elements of slice must not be nested"),
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := reflect.ValueOf(tt.args.v)
+			table := &Table{
+				headers: tt.fields.headers,
+			}
+			if err := table.setData(v); err != nil {
+				if err.Error() != tt.want.err.Error() {
+					t.Fatalf("got: %v, want: %v", err.Error(), tt.want.err.Error())
+				}
+				return
+			}
+			if !reflect.DeepEqual(table.data, tt.want.got) {
+				t.Errorf("got: %v, want: %v", table.data, tt.want.got)
+			}
+		})
+	}
+}
+
+func TestTable_setColorFlags(t *testing.T) {
+	type args struct {
+		v any
+	}
+	type want struct {
+		got []bool
+		err error
+	}
+	tests := []struct {
+		name string
+		args args
+		want want
+	}{
+		{
+			name: "ptr",
+			args: args{
+				v: slicePtr,
+			},
+			want: want{
+				got: []bool{true, true, true, true, false, false, false, false, true, false},
+				err: nil,
+			},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			v := reflect.ValueOf(tt.args.v)
+			table := &Table{}
+			table.setColorFlags(v)
+			if !reflect.DeepEqual(table.colorFlags, tt.want.got) {
+				t.Errorf("got: %v, want: %v", table.colorFlags, tt.want.got)
 			}
 		})
 	}
@@ -1656,6 +1985,15 @@ func TestTable_getColor(t *testing.T) {
 		want   want
 	}{
 		{
+			name: "none",
+			fields: fields{
+				theme: NoneTheme,
+			},
+			want: want{
+				got: &color.Color{},
+			},
+		},
+		{
 			name: "dark",
 			fields: fields{
 				theme: DarkTheme,
@@ -1674,21 +2012,12 @@ func TestTable_getColor(t *testing.T) {
 			},
 		},
 		{
-			name: "none",
-			fields: fields{
-				theme: NoneTheme,
-			},
-			want: want{
-				got: color.New(color.Reset),
-			},
-		},
-		{
 			name: "default",
 			fields: fields{
 				theme: 9,
 			},
 			want: want{
-				got: color.New(color.Reset),
+				got: &color.Color{},
 			},
 		},
 	}
