@@ -108,7 +108,7 @@ func WithIgnoreFields(ignoreFields []int) Option {
 
 // Load validates input and converts them to table data.
 // Returns error if not struct slice.
-func (t *Table) Load(input any) (err error) {
+func (t *Table) Load(input any) error {
 	if _, ok := input.([]interface{}); ok {
 		return fmt.Errorf("cannot parse input: elements of slice must not be empty interface")
 	}
@@ -131,10 +131,7 @@ func (t *Table) Load(input any) (err error) {
 	}
 	t.setColorFlags(v)
 	t.setHeader(e.Type())
-	if err = t.setData(v); err != nil {
-		return err
-	}
-	return nil
+	return t.setData(v)
 }
 
 // Out outputs the table as a string.
