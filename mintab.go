@@ -40,13 +40,14 @@ type Table struct {
 }
 
 // NewTable instantiates a table struct.
-func NewTable(opts ...Option) (t *Table) {
-	t = &Table{}
-	t.format = MarkdownFormat
-	t.theme = NoneTheme
-	t.hasHeader = true
-	t.emptyFieldPlaceholder = "N/A"
-	t.wordDelimiter = "<br>"
+func NewTable(opts ...Option) *Table {
+	t := &Table{
+		format:                MarkdownFormat,
+		theme:                 NoneTheme,
+		hasHeader:             true,
+		emptyFieldPlaceholder: "N/A",
+		wordDelimiter:         "<br>",
+	}
 	for _, opt := range opts {
 		opt(t)
 	}
