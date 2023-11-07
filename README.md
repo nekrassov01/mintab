@@ -194,7 +194,26 @@ func main() {
         | i-3          | N/A               |
         | i-4          | sg-4              |
         */
-}
+
+	type escaped struct {
+		Domain string
+	}
+	escapes := []escaped{
+        {Domain: "*.example.com"}
+    }
+
+	table = mintab.NewTable(mintab.WithEscapeTargets([]string{"*"}))
+	if err := table.Load(escs); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(table.Out())
+
+        /*
+        | Domain         |
+        | -------------- |
+        | \*.example.com |
+        }
+        /*
 ```
 
 Author

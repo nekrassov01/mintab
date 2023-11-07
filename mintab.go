@@ -37,6 +37,7 @@ type Table struct {
 	mergedFields          []int      // mergedFields holds indices of the field to be grouped.
 	ignoredFields         []int      // ignoredFields holds indices of the fields to be ignored.
 	colorFlags            []bool     // colorFlags holds flags indicating whether to color each row or not.
+	escapeTargets         []string
 }
 
 // NewTable instantiates a table struct.
@@ -104,6 +105,12 @@ func WithMergeFields(mergeFields []int) Option {
 func WithIgnoreFields(ignoreFields []int) Option {
 	return func(t *Table) {
 		t.ignoredFields = ignoreFields
+	}
+}
+
+func WithEscapeTargets(escapeTargets []string) Option {
+	return func(t *Table) {
+		t.escapeTargets = escapeTargets
 	}
 }
 
@@ -244,10 +251,14 @@ func (t *Table) formatValue(v reflect.Value) (string, error) {
 	}
 	switch v.Kind() {
 	case reflect.String:
-		if v.String() == "" {
+		s := v.String()
+		if s == "" {
 			return t.emptyFieldPlaceholder, nil
 		}
-		return strings.TrimSpace(v.String()), nil
+		for _, escapeTarget := range t.escapeTargets {
+			s = strings.ReplaceAll(s, escapeTarget, `\`+escapeTarget)
+		}
+		return strings.TrimSpace(s), nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
 		return fmt.Sprint(v.Int()), nil
 	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:

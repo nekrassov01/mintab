@@ -41,6 +41,13 @@ func main() {
 		{Number: -1, NumberSlice: []int{-1, 0, 1}},
 	}
 
+	type escaped struct {
+		Domain string
+	}
+	escapes := []escaped{
+		{Domain: "*.example.com"},
+	}
+
 	var table *mintab.Table
 	table = mintab.NewTable()
 	if err := table.Load(samples); err != nil {
@@ -267,6 +274,20 @@ func main() {
 		|      0 | 0&br;1&br;2  |
 		|      1 | N/A          |
 		|     -1 | -1&br;0&br;1 |
+
+	*/
+
+	table = mintab.NewTable(mintab.WithEscapeTargets([]string{"*"}))
+	if err := table.Load(escapes); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(table.Out())
+
+	/*
+
+		| Domain         |
+		|----------------|
+		| \*.example.com |
 
 	*/
 }
