@@ -1618,7 +1618,7 @@ func TestTable_formatValue(t *testing.T) {
 			},
 		},
 		{
-			name: "slice in empty strings",
+			name: "slice with empty strings",
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
@@ -1656,6 +1656,34 @@ func TestTable_formatValue(t *testing.T) {
 			},
 			want: want{
 				got: "a" + defaultWordDelimiter + defaultEmptyFieldPlaceholder + defaultWordDelimiter + "b",
+				err: nil,
+			},
+		},
+		{
+			name: "int slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []int{0, 1, 2},
+			},
+			want: want{
+				got: "0" + defaultWordDelimiter + "1" + defaultWordDelimiter + "2",
+				err: nil,
+			},
+		},
+		{
+			name: "uint slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []uint{0, 1, 2},
+			},
+			want: want{
+				got: "0" + defaultWordDelimiter + "1" + defaultWordDelimiter + "2",
 				err: nil,
 			},
 		},
@@ -1747,20 +1775,6 @@ func TestTable_formatValue(t *testing.T) {
 			},
 		},
 		{
-			name: "uint slice",
-			fields: fields{
-				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
-				wordDelimiter:         defaultWordDelimiter,
-			},
-			args: args{
-				v: []uint{0, 1, 2},
-			},
-			want: want{
-				got: "0" + defaultWordDelimiter + "1" + defaultWordDelimiter + "2",
-				err: nil,
-			},
-		},
-		{
 			name: "nil ptr",
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
@@ -1791,6 +1805,75 @@ func TestTable_formatValue(t *testing.T) {
 			}
 			if !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
+			}
+		})
+	}
+}
+
+func TestTable_setHeader(t *testing.T) {
+	type testHeader struct {
+		ExportedString   string
+		ExportedInt      int
+		unexportedString string //nolint
+		unexportedInt    int    //nolint
+	}
+	type fields struct {
+		headers       []string
+		ignoredFields []int
+	}
+	type args struct {
+		typ reflect.Type
+	}
+	tests := []struct {
+		name    string
+		fields  fields
+		args    args
+		want    []string
+		wantErr bool
+	}{
+		{
+			name: "no initial headers",
+			fields: fields{
+				headers:       []string{},
+				ignoredFields: []int{},
+			},
+			args: args{
+				typ: reflect.TypeOf(testHeader{}),
+			},
+			want: []string{"ExportedString", "ExportedInt"},
+		},
+		{
+			name: "ignoring fields",
+			fields: fields{
+				headers:       []string{},
+				ignoredFields: []int{0},
+			},
+			args: args{
+				typ: reflect.TypeOf(testHeader{}),
+			},
+			want: []string{"ExportedInt"},
+		},
+		{
+			name: "with pre-existing headers",
+			fields: fields{
+				headers:       []string{"ExportedString", "ExportedInt"},
+				ignoredFields: []int{},
+			},
+			args: args{
+				typ: reflect.TypeOf(testHeader{}),
+			},
+			want: []string{"ExportedString", "ExportedInt"},
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			table := &Table{
+				headers:       tt.fields.headers,
+				ignoredFields: tt.fields.ignoredFields,
+			}
+			table.setHeader(tt.args.typ)
+			if !reflect.DeepEqual(table.headers, tt.want) {
+				t.Errorf("got: %v, want: %v", table.headers, tt.want)
 			}
 		})
 	}
