@@ -9,9 +9,6 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-// Version
-const Version = "0.0.13"
-
 // Table format
 const (
 	MarkdownFormat = iota
