@@ -111,7 +111,7 @@ func TestNewTable(t *testing.T) {
 		wordDelimiter         string
 		mergedFields          []int
 		ignoredFields         []int
-		escapeTargets         []string
+		escapedTargets        []string
 	}
 	type want struct {
 		got *Table
@@ -141,7 +141,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -165,7 +165,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -190,7 +190,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          []int{0, 1},
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -215,7 +215,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         []int{2},
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -241,7 +241,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -267,7 +267,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -281,7 +281,7 @@ func TestNewTable(t *testing.T) {
 				wordDelimiter:         ",",
 				mergedFields:          nil,
 				ignoredFields:         nil,
-				escapeTargets:         []string{"*", "-"},
+				escapedTargets:        []string{"*", "-"},
 			},
 			want: want{
 				got: &Table{
@@ -294,7 +294,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         []string{"*", "-"},
+					escapedTargets:        []string{"*", "-"},
 				},
 			},
 		},
@@ -320,7 +320,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -346,7 +346,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -372,7 +372,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -398,7 +398,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          []int{0, 1},
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -424,7 +424,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         []int{2},
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -450,7 +450,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -476,7 +476,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -490,7 +490,7 @@ func TestNewTable(t *testing.T) {
 				wordDelimiter:         ",",
 				mergedFields:          nil,
 				ignoredFields:         nil,
-				escapeTargets:         []string{"*", "-"},
+				escapedTargets:        []string{"*", "-"},
 			},
 			want: want{
 				got: &Table{
@@ -503,7 +503,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          nil,
 					ignoredFields:         nil,
 					colorFlags:            nil,
-					escapeTargets:         []string{"*", "-"},
+					escapedTargets:        []string{"*", "-"},
 				},
 			},
 		},
@@ -529,7 +529,7 @@ func TestNewTable(t *testing.T) {
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
 					colorFlags:            nil,
-					escapeTargets:         nil,
+					escapedTargets:        nil,
 				},
 			},
 		},
@@ -544,7 +544,7 @@ func TestNewTable(t *testing.T) {
 				WithWordDelimiter(tt.fields.wordDelimiter),
 				WithMergeFields(tt.fields.mergedFields),
 				WithIgnoreFields(tt.fields.ignoredFields),
-				WithEscapeTargets(tt.fields.escapeTargets),
+				WithEscapeTargets(tt.fields.escapedTargets),
 			)
 			if !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
@@ -559,7 +559,7 @@ func TestTable_Load(t *testing.T) {
 		wordDelimiter         string
 		mergedFields          []int
 		ignoredFields         []int
-		escapeTargets         []string
+		escapedTargets        []string
 	}
 	type args struct {
 		input any
@@ -848,7 +848,7 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				escapeTargets:         []string{"*"},
+				escapedTargets:        []string{"*"},
 			},
 			args: args{
 				input: escapes,
@@ -862,7 +862,7 @@ func TestTable_Load(t *testing.T) {
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
 					colorFlags:            []bool{true},
-					escapeTargets:         []string{"*"},
+					escapedTargets:        []string{"*"},
 				},
 				err: nil,
 			},
@@ -1023,7 +1023,7 @@ func TestTable_Load(t *testing.T) {
 				wordDelimiter:         tt.fields.wordDelimiter,
 				mergedFields:          tt.fields.mergedFields,
 				ignoredFields:         tt.fields.ignoredFields,
-				escapeTargets:         tt.fields.escapeTargets,
+				escapedTargets:        tt.fields.escapedTargets,
 			}
 			if err := table.Load(tt.args.input); err != nil {
 				if err.Error() != tt.want.err.Error() {
@@ -1050,7 +1050,7 @@ func TestTable_Out(t *testing.T) {
 		mergeFields           []int
 		ignoreFields          []int
 		colorFlags            []bool
-		escapeTargets         []string
+		escapedTargets        []string
 	}
 	type want struct {
 		got string
@@ -1565,7 +1565,7 @@ func TestTable_Out(t *testing.T) {
 				mergedFields:          tt.fields.mergeFields,
 				ignoredFields:         tt.fields.ignoreFields,
 				colorFlags:            tt.fields.colorFlags,
-				escapeTargets:         tt.fields.escapeTargets,
+				escapedTargets:        tt.fields.escapedTargets,
 			}
 			if got := table.Out(); !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
@@ -1581,7 +1581,7 @@ func TestTable_formatValue(t *testing.T) {
 	type fields struct {
 		emptyFieldPlaceholder string
 		wordDelimiter         string
-		escapeTargets         []string
+		escapedTargets        []string
 	}
 	type args struct {
 		v any
@@ -1615,7 +1615,7 @@ func TestTable_formatValue(t *testing.T) {
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
-				escapeTargets:         []string{"*"},
+				escapedTargets:        []string{"*"},
 			},
 			args: args{
 				v: "*.example.com",
@@ -1895,6 +1895,20 @@ func TestTable_formatValue(t *testing.T) {
 			},
 		},
 		{
+			name: "slice with byte slice",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: []byte("string"),
+			},
+			want: want{
+				got: "string",
+				err: nil,
+			},
+		},
+		{
 			name: "nil ptr",
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
@@ -1915,7 +1929,7 @@ func TestTable_formatValue(t *testing.T) {
 			table := &Table{
 				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
 				wordDelimiter:         tt.fields.wordDelimiter,
-				escapeTargets:         tt.fields.escapeTargets,
+				escapedTargets:        tt.fields.escapedTargets,
 			}
 			got, err := table.formatValue(v)
 			if err != nil {
