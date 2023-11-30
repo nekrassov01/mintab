@@ -10,7 +10,7 @@ import (
 )
 
 // Version
-const Version = "0.0.12"
+const Version = "0.0.13"
 
 // Table format
 const (
