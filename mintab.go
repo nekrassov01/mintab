@@ -34,7 +34,7 @@ type Table struct {
 	mergedFields          []int      // mergedFields holds indices of the field to be grouped.
 	ignoredFields         []int      // ignoredFields holds indices of the fields to be ignored.
 	colorFlags            []bool     // colorFlags holds flags indicating whether to color each row or not.
-	escapedTargets        []string   //  mergedFields holds the characters to be escaped
+	escapedTargets        []string   // escapedTargets holds the characters to be escaped; string, not rune
 }
 
 // NewTable instantiates a table struct.
