@@ -15,7 +15,7 @@ func main() {
 	}
 
 	samples := []sample{
-		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.０.0.0/16"}},
+		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.1.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-2", CidrBlock: []string{"10.2.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-2", CidrBlock: []string{"10.3.0.0/16"}},
