@@ -15,7 +15,7 @@ func main() {
 	}
 
 	samples := []sample{
-		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16"}},
+		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.０.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.1.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-2", CidrBlock: []string{"10.2.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-2", CidrBlock: []string{"10.3.0.0/16"}},
@@ -129,6 +129,27 @@ func main() {
 		| i-2          | sg-2              | 10.3.0.0/16,0.0.0.0/0 |
 		| i-3          | N/A               | 10.0.0.0/16,0.0.0.0/0 |
 		| i-4          | sg-4              | N/A                   |
+	*/
+
+	table = mintab.NewTable(mintab.WithTheme(mintab.DarkTheme))
+	if err := table.Load(samples); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(table.Out())
+
+	/*
+		| InstanceName | SecurityGroupName | CidrBlock                |
+		| ------------ | ----------------- | ------------------------ |
+		| i-1          | sg-1              | 10.0.0.0/16              |
+		| i-1          | sg-1              | 10.1.0.0/16              |
+		| i-1          | sg-2              | 10.2.0.0/16              |
+		| i-1          | sg-2              | 10.3.0.0/16              |
+		| i-2          | sg-1              | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-1              | 10.1.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
+		| i-2          | sg-2              | 10.3.0.0/16<br>0.0.0.0/0 |
+		| i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
+		| i-4          | sg-4              | N/A                      |
 	*/
 
 	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.DarkTheme))

@@ -140,7 +140,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -164,7 +163,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -189,7 +187,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -214,7 +211,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         []int{2},
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -240,7 +236,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -266,7 +261,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -293,7 +287,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        []string{"*", "-"},
 				},
 			},
@@ -319,7 +312,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -345,7 +337,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -371,7 +362,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -397,7 +387,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -423,7 +412,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         []int{2},
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -449,7 +437,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -475,7 +462,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -502,7 +488,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					colorFlags:            nil,
 					escapedTargets:        []string{"*", "-"},
 				},
 			},
@@ -528,7 +513,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
-					colorFlags:            nil,
 					escapedTargets:        nil,
 				},
 			},
@@ -602,7 +586,6 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -635,7 +618,6 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -668,7 +650,6 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -701,7 +682,6 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: "NULL",
 					wordDelimiter:         defaultWordDelimiter,
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -734,7 +714,6 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         ",",
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -768,7 +747,6 @@ func TestTable_Load(t *testing.T) {
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          []int{0, 1},
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -802,8 +780,6 @@ func TestTable_Load(t *testing.T) {
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
 					ignoredFields:         []int{2},
-
-					colorFlags: []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -838,7 +814,6 @@ func TestTable_Load(t *testing.T) {
 					wordDelimiter:         defaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -861,7 +836,6 @@ func TestTable_Load(t *testing.T) {
 					headers:               []string{"Domain"},
 					emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 					wordDelimiter:         defaultWordDelimiter,
-					colorFlags:            []bool{true},
 					escapedTargets:        []string{"*"},
 				},
 				err: nil,
@@ -897,7 +871,6 @@ func TestTable_Load(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
-					colorFlags:            []bool{true, true, true, true, false, false, false, false, true, false},
 				},
 				err: nil,
 			},
@@ -1049,7 +1022,6 @@ func TestTable_Out(t *testing.T) {
 		wordDelimiter         string
 		mergeFields           []int
 		ignoreFields          []int
-		colorFlags            []bool
 		escapedTargets        []string
 	}
 	type want struct {
@@ -1564,7 +1536,6 @@ func TestTable_Out(t *testing.T) {
 				wordDelimiter:         tt.fields.wordDelimiter,
 				mergedFields:          tt.fields.mergeFields,
 				ignoredFields:         tt.fields.ignoreFields,
-				colorFlags:            tt.fields.colorFlags,
 				escapedTargets:        tt.fields.escapedTargets,
 			}
 			if got := table.Out(); !reflect.DeepEqual(got, tt.want.got) {
@@ -2072,42 +2043,6 @@ func TestTable_setData(t *testing.T) {
 			}
 			if !reflect.DeepEqual(table.data, tt.want.got) {
 				t.Errorf("got: %v, want: %v", table.data, tt.want.got)
-			}
-		})
-	}
-}
-
-func TestTable_setColorFlags(t *testing.T) {
-	type args struct {
-		v any
-	}
-	type want struct {
-		got []bool
-		err error
-	}
-	tests := []struct {
-		name string
-		args args
-		want want
-	}{
-		{
-			name: "ptr",
-			args: args{
-				v: slicePtr,
-			},
-			want: want{
-				got: []bool{true, true, true, true, false, false, false, false, true, false},
-				err: nil,
-			},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			v := reflect.ValueOf(tt.args.v)
-			table := &Table{}
-			table.setColorFlags(v)
-			if !reflect.DeepEqual(table.colorFlags, tt.want.got) {
-				t.Errorf("got: %v, want: %v", table.colorFlags, tt.want.got)
 			}
 		})
 	}
