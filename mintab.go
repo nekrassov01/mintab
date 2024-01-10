@@ -11,7 +11,8 @@ import (
 
 // Table format
 const (
-	MarkdownFormat = iota
+	TextTableFormat = iota
+	MarkdownFormat
 	BacklogFormat
 )
 
@@ -20,6 +21,12 @@ const (
 	NoneTheme = iota
 	DarkTheme
 	LightTheme
+)
+
+// Dafault values
+const (
+	DefaultEmptyFieldPlaceholder = "N/A"
+	DefaultWordDelimiter         = "\n"
 )
 
 // Table represents a table in a matrix of strings.
@@ -33,18 +40,17 @@ type Table struct {
 	wordDelimiter         string     // wordDelimiter specifies the word delimiter of the field.
 	mergedFields          []int      // mergedFields holds indices of the field to be grouped.
 	ignoredFields         []int      // ignoredFields holds indices of the fields to be ignored.
-	colorFlags            []bool     // colorFlags holds flags indicating whether to color each row or not.
 	escapedTargets        []string   // escapedTargets holds the characters to be escaped; string, not rune
 }
 
 // NewTable instantiates a table struct.
 func NewTable(opts ...Option) *Table {
 	t := &Table{
-		format:                MarkdownFormat,
+		format:                TextTableFormat,
 		theme:                 NoneTheme,
 		hasHeader:             true,
-		emptyFieldPlaceholder: "N/A",
-		wordDelimiter:         "<br>",
+		emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
+		wordDelimiter:         DefaultWordDelimiter,
 	}
 	for _, opt := range opts {
 		opt(t)
@@ -134,7 +140,6 @@ func (t *Table) Load(input any) error {
 	if e.Kind() != reflect.Struct {
 		return fmt.Errorf("cannot parse input: elements of slice must be struct or pointer to struct")
 	}
-	t.setColorFlags(v)
 	t.setHeader(e.Type())
 	return t.setData(v)
 }
@@ -214,28 +219,6 @@ func (t *Table) setData(v reflect.Value) error {
 	return nil
 }
 
-// setColorFlags determines which rows to color.
-func (t *Table) setColorFlags(v reflect.Value) {
-	if v.Kind() == reflect.Ptr && v.Elem().Kind() == reflect.Slice {
-		v = v.Elem()
-	}
-	t.colorFlags = make([]bool, v.Len())
-	colorFlag := true
-	var prev any
-	for i := 0; i < v.Len(); i++ {
-		item := v.Index(i)
-		if item.Kind() == reflect.Ptr {
-			item = item.Elem()
-		}
-		firstField := item.Field(0).Interface()
-		if i != 0 && !reflect.DeepEqual(prev, firstField) {
-			colorFlag = !colorFlag
-		}
-		t.colorFlags[i] = colorFlag
-		prev = firstField
-	}
-}
-
 // formatValue formats the value of each field.
 // Perform multi-value delimiters and whitespace handling.
 // Nested fields are not processed and an error is returned.
@@ -252,8 +235,21 @@ func (t *Table) formatValue(v reflect.Value) (string, error) {
 		if s == "" {
 			return t.emptyFieldPlaceholder, nil
 		}
-		s = strings.ReplaceAll(s, "\n", "<br>")
-		s = strings.ReplaceAll(s, " ", "&nbsp;")
+		if t.format != TextTableFormat {
+			s = strings.ReplaceAll(s, " ", "&nbsp;")
+		}
+		if t.format == MarkdownFormat {
+			s = strings.ReplaceAll(s, "\n", "<br>")
+			if t.wordDelimiter == "\n" {
+				t.wordDelimiter = "<br>"
+			}
+		}
+		if t.format == BacklogFormat {
+			s = strings.ReplaceAll(s, "\n", "&br;")
+			if t.wordDelimiter == "\n" {
+				t.wordDelimiter = "&br;"
+			}
+		}
 		for _, escapeTarget := range t.escapedTargets {
 			s = strings.ReplaceAll(s, escapeTarget, `\`+escapeTarget)
 		}
@@ -305,31 +301,42 @@ func (t *Table) backlogify(s string) string {
 		}
 		s = s[:i] + "h" + s[i:]
 	}
-	return strings.ReplaceAll(s, "<br>", "&br;")
+	return s
 }
 
-// colorize adds color to the table.
+// colorize adds color to the table, row by row based on the first field value.
 func (t *Table) colorize(table string) string {
 	if t.theme == NoneTheme {
 		return table
 	}
-	offset := t.getOffset()
-	color := t.getColor()
 	lines := strings.Split(table, "\n")
-	m := make(map[int]struct{})
-	for i, colorFlag := range t.colorFlags {
-		if colorFlag {
-			m[offset+i] = struct{}{}
-		}
-	}
-	var clines []string
+	var coloredLines []string
+	var lastNonEmptyFirstFieldValue string
+	var currentColorFlag bool
 	for i, line := range lines {
-		if _, ok := m[i]; ok {
-			line = color.Sprint(line)
+		if i < t.getOffset() {
+			coloredLines = append(coloredLines, line)
+			continue
 		}
-		clines = append(clines, line)
+		fields := strings.Split(line, "|")
+		if len(fields) <= 1 {
+			coloredLines = append(coloredLines, line)
+			continue
+		}
+		firstFieldValue := strings.TrimSpace(fields[1])
+		if firstFieldValue == "" {
+			firstFieldValue = lastNonEmptyFirstFieldValue
+		}
+		if firstFieldValue != lastNonEmptyFirstFieldValue {
+			currentColorFlag = !currentColorFlag
+			lastNonEmptyFirstFieldValue = firstFieldValue
+		}
+		if currentColorFlag {
+			line = t.getColor().Sprint(line)
+		}
+		coloredLines = append(coloredLines, line)
 	}
-	return strings.Join(clines, "\n")
+	return strings.Join(coloredLines, "\n")
 }
 
 // getOffset determines the starting position for coloring.
@@ -338,7 +345,7 @@ func (t *Table) getOffset() int {
 		return 0
 	}
 	switch t.format {
-	case MarkdownFormat:
+	case TextTableFormat, MarkdownFormat:
 		return 2
 	case BacklogFormat:
 		return 1
