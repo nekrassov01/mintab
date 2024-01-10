@@ -252,6 +252,7 @@ func (t *Table) formatValue(v reflect.Value) (string, error) {
 		if s == "" {
 			return t.emptyFieldPlaceholder, nil
 		}
+		s = strings.ReplaceAll(s, "\n", "<br>")
 		for _, escapeTarget := range t.escapedTargets {
 			s = strings.ReplaceAll(s, escapeTarget, `\`+escapeTarget)
 		}
@@ -288,7 +289,7 @@ func (t *Table) formatValue(v reflect.Value) (string, error) {
 			}
 			s = append(s, fv)
 		}
-		return strings.ReplaceAll(strings.Join(s, t.wordDelimiter), "\n", "<br>"), nil
+		return strings.Join(s, t.wordDelimiter), nil
 	default:
 		return fmt.Sprint(v.Interface()), nil
 	}

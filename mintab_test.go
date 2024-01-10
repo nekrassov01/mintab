@@ -1922,6 +1922,23 @@ func TestTable_formatValue(t *testing.T) {
 				err: nil,
 			},
 		},
+		{
+			name: "newline",
+			fields: fields{
+				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
+				wordDelimiter:         defaultWordDelimiter,
+			},
+			args: args{
+				v: `aaa
+  bbb
+    ccc
+`,
+			},
+			want: want{
+				got: "aaa<br>  bbb<br>    ccc<br>",
+				err: nil,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
