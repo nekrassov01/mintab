@@ -1923,7 +1923,7 @@ func TestTable_formatValue(t *testing.T) {
 			},
 		},
 		{
-			name: "newline",
+			name: "escape",
 			fields: fields{
 				emptyFieldPlaceholder: defaultEmptyFieldPlaceholder,
 				wordDelimiter:         defaultWordDelimiter,
@@ -1935,7 +1935,7 @@ func TestTable_formatValue(t *testing.T) {
 `,
 			},
 			want: want{
-				got: "aaa<br>  bbb<br>    ccc<br>",
+				got: "aaa<br>&nbsp;&nbsp;bbb<br>&nbsp;&nbsp;&nbsp;&nbsp;ccc<br>",
 				err: nil,
 			},
 		},
