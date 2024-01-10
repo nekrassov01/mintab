@@ -1,3 +1,3 @@
 package mintab
 
-const Version = "0.0.16"
+const Version = "0.0.17"
