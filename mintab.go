@@ -11,7 +11,7 @@ import (
 
 // Table format
 const (
-	TextTableFormat = iota
+	TextFormat = iota
 	MarkdownFormat
 	BacklogFormat
 )
@@ -46,7 +46,7 @@ type Table struct {
 // NewTable instantiates a table struct.
 func NewTable(opts ...Option) *Table {
 	t := &Table{
-		format:                TextTableFormat,
+		format:                TextFormat,
 		theme:                 NoneTheme,
 		hasHeader:             true,
 		emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
@@ -235,7 +235,7 @@ func (t *Table) formatValue(v reflect.Value) (string, error) {
 		if s == "" {
 			return t.emptyFieldPlaceholder, nil
 		}
-		if t.format != TextTableFormat {
+		if t.format != TextFormat {
 			s = strings.ReplaceAll(s, " ", "&nbsp;")
 		}
 		if t.format == MarkdownFormat {
@@ -345,7 +345,7 @@ func (t *Table) getOffset() int {
 		return 0
 	}
 	switch t.format {
-	case TextTableFormat, MarkdownFormat:
+	case TextFormat, MarkdownFormat:
 		return 2
 	case BacklogFormat:
 		return 1

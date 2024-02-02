@@ -1567,7 +1567,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1582,7 +1582,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "escape1",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 				escapedTargets:        []string{"*"},
@@ -1598,7 +1598,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "escape2",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1651,7 +1651,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "empty string",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1666,7 +1666,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "int",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1681,7 +1681,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "uint",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1696,7 +1696,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "float",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1711,7 +1711,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "non-nil pointer string",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1726,7 +1726,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "non-nil pointer int",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1741,7 +1741,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "nil slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1756,7 +1756,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "empty slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1771,7 +1771,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with empty strings",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1786,7 +1786,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with normal strings",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1801,7 +1801,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "mixed slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1816,7 +1816,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "int slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1831,7 +1831,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "uint slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1846,7 +1846,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice in slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1864,7 +1864,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "struct in slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1879,7 +1879,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "pointer to slice with normal strings",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1894,7 +1894,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with pointer to strings",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1909,7 +1909,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with pointer to empty string",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1924,7 +1924,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with nil pointer",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1939,7 +1939,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with byte slice",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1954,7 +1954,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "nil ptr",
 			fields: fields{
-				format:                TextTableFormat,
+				format:                TextFormat,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
