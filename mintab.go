@@ -25,7 +25,7 @@ const (
 
 // Dafault values
 const (
-	DefaultEmptyFieldPlaceholder = "N/A"
+	DefaultEmptyFieldPlaceholder = "-"
 	DefaultWordDelimiter         = "\n"
 )
 
@@ -223,6 +223,9 @@ func (t *Table) setData(v reflect.Value) error {
 // Perform multi-value delimiters and whitespace handling.
 // Nested fields are not processed and an error is returned.
 func (t *Table) formatValue(v reflect.Value) (string, error) {
+	if t.format != TextFormat && t.emptyFieldPlaceholder == "-" {
+		t.emptyFieldPlaceholder = "\\-"
+	}
 	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
 			return t.emptyFieldPlaceholder, nil

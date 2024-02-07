@@ -576,8 +576,8 @@ func TestTable_Load(t *testing.T) {
 						{"i-2", "sg-1", "10.1.0.0/16\n0.0.0.0/0"},
 						{"i-2", "sg-2", "10.2.0.0/16\n0.0.0.0/0"},
 						{"i-2", "sg-2", "10.3.0.0/16\n0.0.0.0/0"},
-						{"i-3", "N/A", "10.0.0.0/16\n0.0.0.0/0"},
-						{"i-4", "sg-4", "N/A"},
+						{"i-3", "-", "10.0.0.0/16\n0.0.0.0/0"},
+						{"i-4", "sg-4", "-"},
 					},
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
@@ -608,8 +608,8 @@ func TestTable_Load(t *testing.T) {
 						{"i-2", "sg-1", "10.1.0.0/16\n0.0.0.0/0"},
 						{"i-2", "sg-2", "10.2.0.0/16\n0.0.0.0/0"},
 						{"i-2", "sg-2", "10.3.0.0/16\n0.0.0.0/0"},
-						{"i-3", "N/A", "10.0.0.0/16\n0.0.0.0/0"},
-						{"i-4", "sg-4", "N/A"},
+						{"i-3", "-", "10.0.0.0/16\n0.0.0.0/0"},
+						{"i-4", "sg-4", "-"},
 					},
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
@@ -640,8 +640,8 @@ func TestTable_Load(t *testing.T) {
 						{"i-2", "sg-1", "10.1.0.0/16\n0.0.0.0/0"},
 						{"i-2", "sg-2", "10.2.0.0/16\n0.0.0.0/0"},
 						{"i-2", "sg-2", "10.3.0.0/16\n0.0.0.0/0"},
-						{"i-3", "N/A", "10.0.0.0/16\n0.0.0.0/0"},
-						{"i-4", "sg-4", "N/A"},
+						{"i-3", "-", "10.0.0.0/16\n0.0.0.0/0"},
+						{"i-4", "sg-4", "-"},
 					},
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
@@ -704,8 +704,8 @@ func TestTable_Load(t *testing.T) {
 						{"i-2", "sg-1", "10.1.0.0/16,0.0.0.0/0"},
 						{"i-2", "sg-2", "10.2.0.0/16,0.0.0.0/0"},
 						{"i-2", "sg-2", "10.3.0.0/16,0.0.0.0/0"},
-						{"i-3", "N/A", "10.0.0.0/16,0.0.0.0/0"},
-						{"i-4", "sg-4", "N/A"},
+						{"i-3", "-", "10.0.0.0/16,0.0.0.0/0"},
+						{"i-4", "sg-4", "-"},
 					},
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
@@ -736,8 +736,8 @@ func TestTable_Load(t *testing.T) {
 						{"", "", "10.1.0.0/16\n0.0.0.0/0"},
 						{"", "sg-2", "10.2.0.0/16\n0.0.0.0/0"},
 						{"", "", "10.3.0.0/16\n0.0.0.0/0"},
-						{"i-3", "N/A", "10.0.0.0/16\n0.0.0.0/0"},
-						{"i-4", "sg-4", "N/A"},
+						{"i-3", "-", "10.0.0.0/16\n0.0.0.0/0"},
+						{"i-4", "sg-4", "-"},
 					},
 					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
@@ -769,7 +769,7 @@ func TestTable_Load(t *testing.T) {
 						{"i-2", "sg-1"},
 						{"i-2", "sg-2"},
 						{"i-2", "sg-2"},
-						{"i-3", "N/A"},
+						{"i-3", "-"},
 						{"i-4", "sg-4"},
 					},
 					headers:               []string{"InstanceName", "SecurityGroupName"},
@@ -802,7 +802,7 @@ func TestTable_Load(t *testing.T) {
 						{"", ""},
 						{"", "sg-2"},
 						{"", ""},
-						{"i-3", "N/A"},
+						{"i-3", "-"},
 						{"i-4", "sg-4"},
 					},
 					headers:               []string{"InstanceName", "SecurityGroupName"},
@@ -1040,8 +1040,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
 					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
 					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    MarkdownFormat,
@@ -1059,8 +1059,8 @@ func TestTable_Out(t *testing.T) {
 | i-2          | sg-1              | 10.1.0.0/16<br>0.0.0.0/0 |
 | i-2          | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
 | i-2          | sg-2              | 10.3.0.0/16<br>0.0.0.0/0 |
-| i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
-| i-4          | sg-4              | N/A                      |
+| i-3          | -                 | 10.0.0.0/16<br>0.0.0.0/0 |
+| i-4          | sg-4              | -                        |
 `,
 			},
 		},
@@ -1076,8 +1076,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
 					{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
 					{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    MarkdownFormat,
@@ -1093,8 +1093,8 @@ func TestTable_Out(t *testing.T) {
 | i-2 | sg-1 | 10.1.0.0/16<br>0.0.0.0/0 |
 | i-2 | sg-2 | 10.2.0.0/16<br>0.0.0.0/0 |
 | i-2 | sg-2 | 10.3.0.0/16<br>0.0.0.0/0 |
-| i-3 | N/A  | 10.0.0.0/16<br>0.0.0.0/0 |
-| i-4 | sg-4 | N/A                      |
+| i-3 | -    | 10.0.0.0/16<br>0.0.0.0/0 |
+| i-4 | sg-4 | -                        |
 `,
 			},
 		},
@@ -1110,8 +1110,8 @@ func TestTable_Out(t *testing.T) {
 					{"", "", "10.1.0.0/16<br>0.0.0.0/0"},
 					{"", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
 					{"", "", "10.3.0.0/16<br>0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16<br>0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16<br>0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    MarkdownFormat,
@@ -1129,8 +1129,8 @@ func TestTable_Out(t *testing.T) {
 |              |                   | 10.1.0.0/16<br>0.0.0.0/0 |
 |              | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
 |              |                   | 10.3.0.0/16<br>0.0.0.0/0 |
-| i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
-| i-4          | sg-4              | N/A                      |
+| i-3          | -                 | 10.0.0.0/16<br>0.0.0.0/0 |
+| i-4          | sg-4              | -                        |
 `,
 			},
 		},
@@ -1146,7 +1146,7 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1"},
 					{"i-2", "sg-2"},
 					{"i-2", "sg-2"},
-					{"i-3", "N/A"},
+					{"i-3", "-"},
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
@@ -1165,7 +1165,7 @@ func TestTable_Out(t *testing.T) {
 | i-2          | sg-1              |
 | i-2          | sg-2              |
 | i-2          | sg-2              |
-| i-3          | N/A               |
+| i-3          | -                 |
 | i-4          | sg-4              |
 `,
 			},
@@ -1218,8 +1218,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1", "10.1.0.0/16,0.0.0.0/0"},
 					{"i-2", "sg-2", "10.2.0.0/16,0.0.0.0/0"},
 					{"i-2", "sg-2", "10.3.0.0/16,0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16,0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16,0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    MarkdownFormat,
@@ -1237,8 +1237,8 @@ func TestTable_Out(t *testing.T) {
 | i-2          | sg-1              | 10.1.0.0/16,0.0.0.0/0 |
 | i-2          | sg-2              | 10.2.0.0/16,0.0.0.0/0 |
 | i-2          | sg-2              | 10.3.0.0/16,0.0.0.0/0 |
-| i-3          | N/A               | 10.0.0.0/16,0.0.0.0/0 |
-| i-4          | sg-4              | N/A                   |
+| i-3          | -                 | 10.0.0.0/16,0.0.0.0/0 |
+| i-4          | sg-4              | -                     |
 `,
 			},
 		},
@@ -1254,7 +1254,7 @@ func TestTable_Out(t *testing.T) {
 					{"", ""},
 					{"", "sg-2"},
 					{"", ""},
-					{"i-3", "N/A"},
+					{"i-3", "-"},
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
@@ -1271,7 +1271,7 @@ func TestTable_Out(t *testing.T) {
 |     |      |
 |     | sg-2 |
 |     |      |
-| i-3 | N/A  |
+| i-3 | -    |
 | i-4 | sg-4 |
 `,
 			},
@@ -1288,8 +1288,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1", "10.1.0.0/16&br;0.0.0.0/0"},
 					{"i-2", "sg-2", "10.2.0.0/16&br;0.0.0.0/0"},
 					{"i-2", "sg-2", "10.3.0.0/16&br;0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16&br;0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16&br;0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    BacklogFormat,
@@ -1306,8 +1306,8 @@ func TestTable_Out(t *testing.T) {
 | i-2          | sg-1              | 10.1.0.0/16&br;0.0.0.0/0 |
 | i-2          | sg-2              | 10.2.0.0/16&br;0.0.0.0/0 |
 | i-2          | sg-2              | 10.3.0.0/16&br;0.0.0.0/0 |
-| i-3          | N/A               | 10.0.0.0/16&br;0.0.0.0/0 |
-| i-4          | sg-4              | N/A                      |
+| i-3          | -                 | 10.0.0.0/16&br;0.0.0.0/0 |
+| i-4          | sg-4              | -                        |
 `,
 			},
 		},
@@ -1323,8 +1323,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1", "10.1.0.0/16&br;0.0.0.0/0"},
 					{"i-2", "sg-2", "10.2.0.0/16&br;0.0.0.0/0"},
 					{"i-2", "sg-2", "10.3.0.0/16&br;0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16&br;0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16&br;0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    BacklogFormat,
@@ -1340,8 +1340,8 @@ func TestTable_Out(t *testing.T) {
 | i-2 | sg-1 | 10.1.0.0/16&br;0.0.0.0/0 |
 | i-2 | sg-2 | 10.2.0.0/16&br;0.0.0.0/0 |
 | i-2 | sg-2 | 10.3.0.0/16&br;0.0.0.0/0 |
-| i-3 | N/A  | 10.0.0.0/16&br;0.0.0.0/0 |
-| i-4 | sg-4 | N/A                      |
+| i-3 | -    | 10.0.0.0/16&br;0.0.0.0/0 |
+| i-4 | sg-4 | -                        |
 `,
 			},
 		},
@@ -1357,8 +1357,8 @@ func TestTable_Out(t *testing.T) {
 					{"", "", "10.1.0.0/16&br;0.0.0.0/0"},
 					{"", "sg-2", "10.2.0.0/16&br;0.0.0.0/0"},
 					{"", "", "10.3.0.0/16&br;0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16&br;0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16&br;0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    BacklogFormat,
@@ -1375,8 +1375,8 @@ func TestTable_Out(t *testing.T) {
 |              |                   | 10.1.0.0/16&br;0.0.0.0/0 |
 |              | sg-2              | 10.2.0.0/16&br;0.0.0.0/0 |
 |              |                   | 10.3.0.0/16&br;0.0.0.0/0 |
-| i-3          | N/A               | 10.0.0.0/16&br;0.0.0.0/0 |
-| i-4          | sg-4              | N/A                      |
+| i-3          | -                 | 10.0.0.0/16&br;0.0.0.0/0 |
+| i-4          | sg-4              | -                        |
 `,
 			},
 		},
@@ -1392,7 +1392,7 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1"},
 					{"i-2", "sg-2"},
 					{"i-2", "sg-2"},
-					{"i-3", "N/A"},
+					{"i-3", "-"},
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
@@ -1410,7 +1410,7 @@ func TestTable_Out(t *testing.T) {
 | i-2          | sg-1              |
 | i-2          | sg-2              |
 | i-2          | sg-2              |
-| i-3          | N/A               |
+| i-3          | -                 |
 | i-4          | sg-4              |
 `,
 			},
@@ -1462,8 +1462,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-2", "sg-1", "10.1.0.0/16,0.0.0.0/0"},
 					{"i-2", "sg-2", "10.2.0.0/16,0.0.0.0/0"},
 					{"i-2", "sg-2", "10.3.0.0/16,0.0.0.0/0"},
-					{"i-3", "N/A", "10.0.0.0/16,0.0.0.0/0"},
-					{"i-4", "sg-4", "N/A"},
+					{"i-3", "-", "10.0.0.0/16,0.0.0.0/0"},
+					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
 				format:    BacklogFormat,
@@ -1480,8 +1480,8 @@ func TestTable_Out(t *testing.T) {
 | i-2          | sg-1              | 10.1.0.0/16,0.0.0.0/0 |
 | i-2          | sg-2              | 10.2.0.0/16,0.0.0.0/0 |
 | i-2          | sg-2              | 10.3.0.0/16,0.0.0.0/0 |
-| i-3          | N/A               | 10.0.0.0/16,0.0.0.0/0 |
-| i-4          | sg-4              | N/A                   |
+| i-3          | -                 | 10.0.0.0/16,0.0.0.0/0 |
+| i-4          | sg-4              | -                     |
 `,
 			},
 		},
@@ -1497,7 +1497,7 @@ func TestTable_Out(t *testing.T) {
 					{"", ""},
 					{"", "sg-2"},
 					{"", ""},
-					{"i-3", "N/A"},
+					{"i-3", "-"},
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
@@ -1514,7 +1514,7 @@ func TestTable_Out(t *testing.T) {
 |     |      |
 |     | sg-2 |
 |     |      |
-| i-3 | N/A  |
+| i-3 | -    |
 | i-4 | sg-4 |
 `,
 			},
@@ -1660,6 +1660,36 @@ func TestTable_formatValue(t *testing.T) {
 			},
 			want: want{
 				got: DefaultEmptyFieldPlaceholder,
+				err: nil,
+			},
+		},
+		{
+			name: "empty string markdown",
+			fields: fields{
+				format:                MarkdownFormat,
+				emptyFieldPlaceholder: "-",
+				wordDelimiter:         DefaultWordDelimiter,
+			},
+			args: args{
+				v: "",
+			},
+			want: want{
+				got: "\\-",
+				err: nil,
+			},
+		},
+		{
+			name: "empty string backlog",
+			fields: fields{
+				format:                BacklogFormat,
+				emptyFieldPlaceholder: "-",
+				wordDelimiter:         DefaultWordDelimiter,
+			},
+			args: args{
+				v: "",
+			},
+			want: want{
+				got: "\\-",
 				err: nil,
 			},
 		},
