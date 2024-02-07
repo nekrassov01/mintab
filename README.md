@@ -42,9 +42,9 @@ func main() {
 		{InstanceName: "i-1", SecurityGroupName: "sg-2", CidrBlock: []string{"10.2.0.0/16"}},
 		{InstanceName: "i-1", SecurityGroupName: "sg-2", CidrBlock: []string{"10.3.0.0/16"}},
 		{InstanceName: "i-2", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16", "0.0.0.0/0"}},
-		{InstanceName: "i-2", SecurityGroupName: "sg-1", CidrBlock: []string{"10.1.0.0/16", "0.0.0.0/0"}},
+		{InstanceName: "i-2", SecurityGroupName: "sg-1", CidrBlock: []string{"10.1.0.0/16", "::1"}},
 		{InstanceName: "i-2", SecurityGroupName: "sg-2", CidrBlock: []string{"10.2.0.0/16", "0.0.0.0/0"}},
-		{InstanceName: "i-2", SecurityGroupName: "sg-2", CidrBlock: []string{"10.3.0.0/16", "0.0.0.0/0"}},
+		{InstanceName: "i-2", SecurityGroupName: "sg-2", CidrBlock: []string{"10.3.0.0/16", "::1"}},
 		{InstanceName: "i-3", SecurityGroupName: "", CidrBlock: []string{"10.0.0.0/16", "0.0.0.0/0"}},
 		{InstanceName: "i-4", SecurityGroupName: "sg-4", CidrBlock: []string{}},
 	}
@@ -67,14 +67,14 @@ func main() {
         | i-2          | sg-1              | 10.0.0.0/16 |
         |              |                   | 0.0.0.0/0   |
         | i-2          | sg-1              | 10.1.0.0/16 |
-        |              |                   | 0.0.0.0/0   |
+        |              |                   | sg-5        |
         | i-2          | sg-2              | 10.2.0.0/16 |
         |              |                   | 0.0.0.0/0   |
         | i-2          | sg-2              | 10.3.0.0/16 |
+        |              |                   | sg-5        |
+        | i-3          | -                 | 10.0.0.0/16 |
         |              |                   | 0.0.0.0/0   |
-        | i-3          | N/A               | 10.0.0.0/16 |
-        |              |                   | 0.0.0.0/0   |
-        | i-4          | sg-4              | N/A         |
+        | i-4          | sg-4              | -           |
 	*/
 
 	table = mintab.NewTable(mintab.WithFormat(mintab.MarkdownFormat))
@@ -91,11 +91,11 @@ func main() {
         | i-1          | sg-2              | 10.2.0.0/16              |
         | i-1          | sg-2              | 10.3.0.0/16              |
         | i-2          | sg-1              | 10.0.0.0/16<br>0.0.0.0/0 |
-        | i-2          | sg-1              | 10.1.0.0/16<br>0.0.0.0/0 |
+        | i-2          | sg-1              | 10.1.0.0/16<br>sg-5      |
         | i-2          | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
-        | i-2          | sg-2              | 10.3.0.0/16<br>0.0.0.0/0 |
-        | i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
-        | i-4          | sg-4              | N/A                      |
+        | i-2          | sg-2              | 10.3.0.0/16<br>sg-5      |
+        | i-3          | \-                | 10.0.0.0/16<br>0.0.0.0/0 |
+        | i-4          | sg-4              | \-                       |
 	*/
 
 	table = mintab.NewTable(mintab.WithFormat(mintab.BacklogFormat))
@@ -111,11 +111,11 @@ func main() {
         | i-1          | sg-2              | 10.2.0.0/16              |
         | i-1          | sg-2              | 10.3.0.0/16              |
         | i-2          | sg-1              | 10.0.0.0/16&br;0.0.0.0/0 |
-        | i-2          | sg-1              | 10.1.0.0/16&br;0.0.0.0/0 |
+        | i-2          | sg-1              | 10.1.0.0/16&br;sg-5      |
         | i-2          | sg-2              | 10.2.0.0/16&br;0.0.0.0/0 |
-        | i-2          | sg-2              | 10.3.0.0/16&br;0.0.0.0/0 |
-        | i-3          | N/A               | 10.0.0.0/16&br;0.0.0.0/0 |
-        | i-4          | sg-4              | N/A                      |
+        | i-2          | sg-2              | 10.3.0.0/16&br;sg-5      |
+        | i-3          | \-                | 10.0.0.0/16&br;0.0.0.0/0 |
+        | i-4          | sg-4              | \-                       |
 	*/
 
 	table = mintab.NewTable(mintab.WithHeader(false))
@@ -132,14 +132,14 @@ func main() {
         | i-2 | sg-1 | 10.0.0.0/16 |
         |     |      | 0.0.0.0/0   |
         | i-2 | sg-1 | 10.1.0.0/16 |
-        |     |      | 0.0.0.0/0   |
+        |     |      | sg-5        |
         | i-2 | sg-2 | 10.2.0.0/16 |
         |     |      | 0.0.0.0/0   |
         | i-2 | sg-2 | 10.3.0.0/16 |
+        |     |      | sg-5        |
+        | i-3 | -    | 10.0.0.0/16 |
         |     |      | 0.0.0.0/0   |
-        | i-3 | N/A  | 10.0.0.0/16 |
-        |     |      | 0.0.0.0/0   |
-        | i-4 | sg-4 | N/A         |
+        | i-4 | sg-4 | -           |
 	*/
 
 	table = mintab.NewTable(mintab.WithEmptyFieldPlaceholder("NULL"))
@@ -158,11 +158,11 @@ func main() {
         | i-2          | sg-1              | 10.0.0.0/16 |
         |              |                   | 0.0.0.0/0   |
         | i-2          | sg-1              | 10.1.0.0/16 |
-        |              |                   | 0.0.0.0/0   |
+        |              |                   | sg-5        |
         | i-2          | sg-2              | 10.2.0.0/16 |
         |              |                   | 0.0.0.0/0   |
         | i-2          | sg-2              | 10.3.0.0/16 |
-        |              |                   | 0.0.0.0/0   |
+        |              |                   | sg-5        |
         | i-3          | NULL              | 10.0.0.0/16 |
         |              |                   | 0.0.0.0/0   |
         | i-4          | sg-4              | NULL        |
@@ -184,14 +184,14 @@ func main() {
         | i-2          | sg-1              | 10.0.0.0/16 |
         |              |                   | 0.0.0.0/0   |
         |              |                   | 10.1.0.0/16 |
-        |              |                   | 0.0.0.0/0   |
+        |              |                   | sg-5        |
         |              | sg-2              | 10.2.0.0/16 |
         |              |                   | 0.0.0.0/0   |
         |              |                   | 10.3.0.0/16 |
+        |              |                   | sg-5        |
+        | i-3          | -                 | 10.0.0.0/16 |
         |              |                   | 0.0.0.0/0   |
-        | i-3          | N/A               | 10.0.0.0/16 |
-        |              |                   | 0.0.0.0/0   |
-        | i-4          | sg-4              | N/A         |
+        | i-4          | sg-4              | -           |
 	*/
 
 	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.DarkTheme))
@@ -208,11 +208,11 @@ func main() {
         |              | sg-2              | 10.2.0.0/16              |
         |              |                   | 10.3.0.0/16              |
         | i-2          | sg-1              | 10.0.0.0/16<br>0.0.0.0/0 |
-        |              |                   | 10.1.0.0/16<br>0.0.0.0/0 |
+        |              |                   | 10.1.0.0/16<br>sg-5      |
         |              | sg-2              | 10.2.0.0/16<br>0.0.0.0/0 |
-        |              |                   | 10.3.0.0/16<br>0.0.0.0/0 |
-        | i-3          | N/A               | 10.0.0.0/16<br>0.0.0.0/0 |
-        | i-4          | sg-4              | N/A                      |
+        |              |                   | 10.3.0.0/16<br>sg-5      |
+        | i-3          | -                 | 10.0.0.0/16<br>0.0.0.0/0 |
+        | i-4          | sg-4              | -                        |
 	*/
 
 	table = mintab.NewTable(mintab.WithIgnoreFields([]int{2}))
@@ -232,7 +232,7 @@ func main() {
         | i-2          | sg-1              |
         | i-2          | sg-2              |
         | i-2          | sg-2              |
-        | i-3          | N/A               |
+        | i-3          | -                 |
         | i-4          | sg-4              |
 	*/
 
