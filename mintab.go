@@ -3,6 +3,7 @@ package mintab
 import (
 	"fmt"
 	"reflect"
+	"slices"
 	"strings"
 
 	"github.com/fatih/color"
@@ -176,7 +177,7 @@ func (t *Table) setHeader(typ reflect.Type) {
 	}
 	for i := 0; i < typ.NumField(); i++ {
 		field := typ.Field(i)
-		if contains(t.ignoredFields, i) || field.PkgPath != "" {
+		if slices.Contains(t.ignoredFields, i) || field.PkgPath != "" {
 			continue
 		}
 		t.headers = append(t.headers, field.Name)
@@ -203,7 +204,7 @@ func (t *Table) setData(v reflect.Value) error {
 			if err != nil {
 				return fmt.Errorf("cannot format field \"%s\": %w", header, err)
 			}
-			if contains(t.mergedFields, j) {
+			if slices.Contains(t.mergedFields, j) {
 				if value != prev[j] {
 					merge = false
 					prev[j] = value
@@ -369,14 +370,4 @@ func (t *Table) getColor() *color.Color {
 	default:
 		return &color.Color{}
 	}
-}
-
-// contains is a helper function used to determine grouping.
-func contains(values []int, target int) bool {
-	for _, value := range values {
-		if value == target {
-			return true
-		}
-	}
-	return false
 }
