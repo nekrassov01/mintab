@@ -971,7 +971,7 @@ func TestTable_Load(t *testing.T) {
 			},
 			want: want{
 				got: nil,
-				err: fmt.Errorf("cannot parse input: no elements in slice"),
+				err: fmt.Errorf("cannot parse input: no data found"),
 			},
 		},
 		{

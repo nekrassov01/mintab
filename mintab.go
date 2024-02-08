@@ -131,7 +131,7 @@ func (t *Table) Load(input any) error {
 		return fmt.Errorf("cannot parse input: must be a slice or a pointer to a slice")
 	}
 	if v.Len() == 0 {
-		return fmt.Errorf("cannot parse input: no elements in slice")
+		return fmt.Errorf("cannot parse input: no data found")
 	}
 	e := v.Index(0)
 	if e.Kind() == reflect.Ptr {
