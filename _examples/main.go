@@ -158,23 +158,24 @@ func main() {
 		|            |              |             | tg-6       |
 	*/
 
-	table = mintab.NewTable(mintab.WithIgnoreFields([]int{2}))
+	table = mintab.NewTable(mintab.WithIgnoreFields([]int{1}))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(table.Out())
 
 	/*
-		| InstanceID | InstanceName | AttachedTG |
-		|------------|--------------|------------|
-		| i-1        | server-1     | tg-1       |
-		| i-2        | server-2     | tg-2       |
-		| i-3        | server-3     | tg-3       |
-		|            |              | tg-4       |
-		| i-4        | server-4     | -          |
-		| i-5        | server-5     | -          |
-		| i-5        | server-5     | tg-5       |
-		|            |              | tg-6       |
+		| InstanceID | AttachedLB  | AttachedTG |
+		|------------|-------------|------------|
+		| i-1        | lb-domain-1 | tg-1       |
+		| i-2        | lb-doamin-2 | tg-2       |
+		|            | lb-doamin-3 |            |
+		| i-3        | lb-doamin-4 | tg-3       |
+		|            |             | tg-4       |
+		| i-4        | -           | -          |
+		| i-5        | lb-domain-5 | -          |
+		| i-5        | -           | tg-5       |
+		|            |             | tg-6       |
 	*/
 
 	/*
