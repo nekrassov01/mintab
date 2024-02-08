@@ -8,6 +8,10 @@ import (
 )
 
 func main() {
+	/*
+		Basic
+	*/
+
 	type sample1 struct {
 		InstanceID   string
 		InstanceName string
@@ -173,6 +177,10 @@ func main() {
 		|            |              | tg-6       |
 	*/
 
+	/*
+		Escaping
+	*/
+
 	type sample2 struct {
 		Domain string
 	}
@@ -181,7 +189,7 @@ func main() {
 		{Domain: "*.example.com"},
 	}
 
-	table = mintab.NewTable(mintab.WithEscapeTargets([]string{"*"}))
+	table = mintab.NewTable(mintab.WithEscapeTargets([]string{"*"}), mintab.WithFormat(mintab.MarkdownFormat))
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}
@@ -191,5 +199,70 @@ func main() {
 		| Domain         |
 		|----------------|
 		| \*.example.com |
+	*/
+
+	/*
+		Grouping
+	*/
+
+	type sample3 struct {
+		InstanceID      string
+		InstanceName    string
+		SecurityGroupID string
+		FlowDirection   string
+		IPProtocol      string
+		FromPort        int
+		ToPort          int
+		AddressType     string
+		CidrBlock       string
+	}
+
+	s3 := []sample3{
+		{InstanceID: "i-1", InstanceName: "server-1", SecurityGroupID: "sg-1", FlowDirection: "Ingress", IPProtocol: "tcp", FromPort: 22, ToPort: 22, AddressType: "SecurityGroup", CidrBlock: "sg-10"},
+		{InstanceID: "i-1", InstanceName: "server-1", SecurityGroupID: "sg-1", FlowDirection: "Egress", IPProtocol: "-1", FromPort: 0, ToPort: 0, AddressType: "Ipv4", CidrBlock: "0.0.0.0/0"},
+		{InstanceID: "i-1", InstanceName: "server-1", SecurityGroupID: "sg-2", FlowDirection: "Ingress", IPProtocol: "tcp", FromPort: 443, ToPort: 443, AddressType: "Ipv4", CidrBlock: "0.0.0.0/0"},
+		{InstanceID: "i-1", InstanceName: "server-1", SecurityGroupID: "sg-2", FlowDirection: "Egress", IPProtocol: "-1", FromPort: 0, ToPort: 0, AddressType: "Ipv4", CidrBlock: "0.0.0.0/0"},
+		{InstanceID: "i-2", InstanceName: "server-2", SecurityGroupID: "sg-3", FlowDirection: "Ingress", IPProtocol: "icmp", FromPort: -1, ToPort: -1, AddressType: "SecurityGroup", CidrBlock: "sg-11"},
+		{InstanceID: "i-2", InstanceName: "server-2", SecurityGroupID: "sg-3", FlowDirection: "Ingress", IPProtocol: "tcp", FromPort: 3389, ToPort: 3389, AddressType: "Ipv4", CidrBlock: "10.1.0.0/16"},
+		{InstanceID: "i-2", InstanceName: "server-2", SecurityGroupID: "sg-3", FlowDirection: "Ingress", IPProtocol: "tcp", FromPort: 0, ToPort: 65535, AddressType: "PrefixList", CidrBlock: "pl-id/pl-name"},
+		{InstanceID: "i-2", InstanceName: "server-2", SecurityGroupID: "sg-3", FlowDirection: "Egress", IPProtocol: "-1", FromPort: 0, ToPort: 0, AddressType: "Ipv4", CidrBlock: "0.0.0.0/0"},
+	}
+
+	table = mintab.NewTable()
+	if err := table.Load(s3); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(table.Out())
+
+	/*
+		| InstanceID | InstanceName | SecurityGroupID | FlowDirection | IPProtocol | FromPort | ToPort | AddressType   | CidrBlock     |
+		|------------|--------------|-----------------|---------------|------------|----------|--------|---------------|---------------|
+		| i-1        | server-1     | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
+		| i-1        | server-1     | sg-1            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		| i-1        | server-1     | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
+		| i-1        | server-1     | sg-2            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		| i-2        | server-2     | sg-3            | Ingress       | icmp       |       -1 |     -1 | SecurityGroup | sg-11         |
+		| i-2        | server-2     | sg-3            | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
+		| i-2        | server-2     | sg-3            | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
+		| i-2        | server-2     | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+	*/
+
+	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.DarkTheme))
+	if err := table.Load(s3); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(table.Out())
+
+	/*
+		| InstanceID | InstanceName | SecurityGroupID | FlowDirection | IPProtocol | FromPort | ToPort | AddressType   | CidrBlock     |
+		|------------|--------------|-----------------|---------------|------------|----------|--------|---------------|---------------|
+		| i-1        | server-1     | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
+		|            |              | sg-1            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		|            |              | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
+		|            |              | sg-2            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		| i-2        | server-2     | sg-3            | Ingress       | icmp       |       -1 |     -1 | SecurityGroup | sg-11         |
+		|            |              | sg-3            | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
+		|            |              | sg-3            | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
+		|            |              | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 	*/
 }
