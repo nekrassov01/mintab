@@ -50,7 +50,7 @@ func main() {
 		|            |              |             | tg-6       |
 	*/
 
-	table = mintab.NewTable(mintab.WithFormat(mintab.MarkdownFormat))
+	table = mintab.NewTable(mintab.WithFormat(mintab.FormatMarkdown))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -67,7 +67,7 @@ func main() {
 		| i-5        | server-5     | \-                         | tg-5<br>tg-6 |
 	*/
 
-	table = mintab.NewTable(mintab.WithFormat(mintab.BacklogFormat))
+	table = mintab.NewTable(mintab.WithFormat(mintab.FormatBacklog))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -138,7 +138,7 @@ func main() {
 		| i-5        | server-5     | -                       | tg-5,tg-6  |
 	*/
 
-	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.DarkTheme))
+	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.ThemeDark))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -190,7 +190,7 @@ func main() {
 		{Domain: "*.example.com"},
 	}
 
-	table = mintab.NewTable(mintab.WithEscapeTargets([]string{"*"}), mintab.WithFormat(mintab.MarkdownFormat))
+	table = mintab.NewTable(mintab.WithEscapeTargets([]string{"*"}), mintab.WithFormat(mintab.FormatMarkdown))
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}
@@ -248,7 +248,7 @@ func main() {
 		| i-2        | server-2     | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 	*/
 
-	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.DarkTheme))
+	table = mintab.NewTable(mintab.WithMergeFields([]int{0, 1}), mintab.WithTheme(mintab.ThemeDark))
 	if err := table.Load(s3); err != nil {
 		log.Fatal(err)
 	}
