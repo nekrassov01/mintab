@@ -10,19 +10,57 @@ import (
 	"github.com/olekukonko/tablewriter"
 )
 
-// Table format
+// Format defines the output format of the content.
+type Format int
+
+// Enumeration of possible output formats.
 const (
-	TextFormat = iota
-	MarkdownFormat
-	BacklogFormat
+	FormatText     Format = iota // FormatText represents plain text format.
+	FormatMarkdown               // FormatMarkdown represents markdown format.
+	FormatBacklog                // FormatBacklog represents Backlog-specific format.
 )
 
-// Table theme
+// Formats holds the string representation of each Format constant.
+var Formats = []string{
+	"text",
+	"markdown",
+	"backlog",
+}
+
+// String returns the string representation of the Format.
+// If the format is not within the range of predefined formats, an empty string is returned.
+func (o Format) String() string {
+	if o >= 0 && int(o) < len(Formats) {
+		return Formats[o]
+	}
+	return ""
+}
+
+// Theme defines the visual theme preference.
+type Theme int
+
+// Enumeration of possible visual themes.
 const (
-	NoneTheme = iota
-	DarkTheme
-	LightTheme
+	ThemeNone  Theme = iota // ThemeNone indicates no preference for a theme.
+	ThemeDark               // ThemeDark indicates preference for a dark theme.
+	ThemeLight              // ThemeLight indicates preference for a light theme.
 )
+
+// Themes holds the string representation of each Theme constant.
+var Themes = []string{
+	"none",
+	"dark",
+	"light",
+}
+
+// String returns the string representation of the Theme.
+// If the theme is not within the range of predefined themes, an empty string is returned.
+func (t Theme) String() string {
+	if t >= 0 && int(t) < len(Themes) {
+		return Themes[t]
+	}
+	return ""
+}
 
 // Dafault values
 const (
@@ -34,8 +72,8 @@ const (
 type Table struct {
 	data                  [][]string // Data holds the table data in a matrix of strings.
 	headers               []string   // headers holds the name of each field in the table header.
-	format                int        // format specifies the format of the table.
-	theme                 int        // theme specifies the theme of the table.
+	format                Format     // format specifies the format of the table.
+	theme                 Theme      // theme specifies the theme of the table.
 	hasHeader             bool       // hasHeader indicates whether to enable header or not.
 	emptyFieldPlaceholder string     // emptyFieldPlaceholder specifies the placeholder if the field is empty.
 	wordDelimiter         string     // wordDelimiter specifies the word delimiter of the field.
@@ -47,8 +85,8 @@ type Table struct {
 // NewTable instantiates a table struct.
 func NewTable(opts ...Option) *Table {
 	t := &Table{
-		format:                TextFormat,
-		theme:                 NoneTheme,
+		format:                FormatText,
+		theme:                 ThemeNone,
 		hasHeader:             true,
 		emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 		wordDelimiter:         DefaultWordDelimiter,
@@ -63,14 +101,14 @@ func NewTable(opts ...Option) *Table {
 type Option func(*Table)
 
 // WithFormat specifies the table format.
-func WithFormat(format int) Option {
+func WithFormat(format Format) Option {
 	return func(t *Table) {
 		t.format = format
 	}
 }
 
 // WithTheme specifies the table theme.
-func WithTheme(theme int) Option {
+func WithTheme(theme Theme) Option {
 	return func(t *Table) {
 		t.theme = theme
 	}
@@ -155,7 +193,7 @@ func (t *Table) Out() string {
 		table.SetHeaderAlignment(tablewriter.ALIGN_LEFT)
 		table.SetAutoFormatHeaders(false)
 	}
-	if t.format == BacklogFormat {
+	if t.format == FormatBacklog {
 		table.SetHeaderLine(false)
 	}
 	table.SetBorders(tablewriter.Border{Left: true, Top: false, Right: true, Bottom: false})
@@ -164,7 +202,7 @@ func (t *Table) Out() string {
 	table.AppendBulk(t.data)
 	table.Render()
 	s := t.colorize(tableString.String())
-	if t.format == BacklogFormat {
+	if t.format == FormatBacklog {
 		s = t.backlogify(s)
 	}
 	return s
@@ -224,7 +262,7 @@ func (t *Table) setData(v reflect.Value) error {
 // Perform multi-value delimiters and whitespace handling.
 // Nested fields are not processed and an error is returned.
 func (t *Table) formatValue(v reflect.Value) (string, error) {
-	if t.format != TextFormat && t.emptyFieldPlaceholder == "-" {
+	if t.format != FormatText && t.emptyFieldPlaceholder == "-" {
 		t.emptyFieldPlaceholder = "\\-"
 	}
 	if v.Kind() == reflect.Ptr {
@@ -239,16 +277,16 @@ func (t *Table) formatValue(v reflect.Value) (string, error) {
 		if s == "" {
 			return t.emptyFieldPlaceholder, nil
 		}
-		if t.format != TextFormat {
+		if t.format != FormatText {
 			s = strings.ReplaceAll(s, " ", "&nbsp;")
 		}
-		if t.format == MarkdownFormat {
+		if t.format == FormatMarkdown {
 			s = strings.ReplaceAll(s, "\n", "<br>")
 			if t.wordDelimiter == "\n" {
 				t.wordDelimiter = "<br>"
 			}
 		}
-		if t.format == BacklogFormat {
+		if t.format == FormatBacklog {
 			s = strings.ReplaceAll(s, "\n", "&br;")
 			if t.wordDelimiter == "\n" {
 				t.wordDelimiter = "&br;"
@@ -310,7 +348,7 @@ func (t *Table) backlogify(s string) string {
 
 // colorize adds color to the table, row by row based on the first field value.
 func (t *Table) colorize(table string) string {
-	if t.theme == NoneTheme {
+	if t.theme == ThemeNone {
 		return table
 	}
 	lines := strings.Split(table, "\n")
@@ -349,9 +387,9 @@ func (t *Table) getOffset() int {
 		return 0
 	}
 	switch t.format {
-	case TextFormat, MarkdownFormat:
+	case FormatText, FormatMarkdown:
 		return 2
-	case BacklogFormat:
+	case FormatBacklog:
 		return 1
 	default:
 		return 0
@@ -361,11 +399,11 @@ func (t *Table) getOffset() int {
 // getColor sets the color theme.
 func (t *Table) getColor() *color.Color {
 	switch t.theme {
-	case NoneTheme:
+	case ThemeNone:
 		return &color.Color{}
-	case DarkTheme:
+	case ThemeDark:
 		return color.New(color.BgHiBlack, color.FgHiWhite)
-	case LightTheme:
+	case ThemeLight:
 		return color.New(color.BgHiWhite, color.FgHiBlack)
 	default:
 		return &color.Color{}

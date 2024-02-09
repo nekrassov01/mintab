@@ -100,8 +100,8 @@ func setup() {
 
 func TestNewTable(t *testing.T) {
 	type fields struct {
-		format                int
-		theme                 int
+		format                Format
+		theme                 Theme
 		hasHeader             bool
 		emptyFieldPlaceholder string
 		wordDelimiter         string
@@ -120,8 +120,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+basic",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -129,8 +129,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -143,8 +143,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+disableHeader",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             false,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -152,8 +152,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             false,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -166,8 +166,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+merge",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -176,8 +176,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -190,8 +190,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+ignore",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -200,8 +200,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -214,8 +214,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+emptyFieldPlaceholder",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: "NULL",
 				wordDelimiter:         DefaultWordDelimiter,
@@ -225,8 +225,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: "NULL",
 					wordDelimiter:         DefaultWordDelimiter,
@@ -239,8 +239,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+wordDelimiter",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         ",",
@@ -250,8 +250,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         ",",
@@ -264,8 +264,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+escape",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         ",",
@@ -276,8 +276,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         ",",
@@ -290,8 +290,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "markdown+edgecase",
 			fields: fields{
-				format:                MarkdownFormat,
-				theme:                 NoneTheme,
+				format:                FormatMarkdown,
+				theme:                 ThemeNone,
 				hasHeader:             false,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -301,8 +301,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                MarkdownFormat,
-					theme:                 NoneTheme,
+					format:                FormatMarkdown,
+					theme:                 ThemeNone,
 					hasHeader:             false,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -315,8 +315,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+basic",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -326,8 +326,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -340,8 +340,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+disableHeader",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             false,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -351,8 +351,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             false,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -365,8 +365,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+merge",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -376,8 +376,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -390,8 +390,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+ignore",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -401,8 +401,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -415,8 +415,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+emptyFieldPlaceholder",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: "NULL",
 				wordDelimiter:         DefaultWordDelimiter,
@@ -426,8 +426,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: "NULL",
 					wordDelimiter:         DefaultWordDelimiter,
@@ -440,8 +440,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+wordDelimiter",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         ",",
@@ -451,8 +451,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         ",",
@@ -465,8 +465,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+escape",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             true,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         ",",
@@ -477,8 +477,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             true,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         ",",
@@ -491,8 +491,8 @@ func TestNewTable(t *testing.T) {
 		{
 			name: "backlog+edgecase",
 			fields: fields{
-				format:                BacklogFormat,
-				theme:                 NoneTheme,
+				format:                FormatBacklog,
+				theme:                 ThemeNone,
 				hasHeader:             false,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
@@ -502,8 +502,8 @@ func TestNewTable(t *testing.T) {
 			want: want{
 				got: &Table{
 					data:                  nil,
-					format:                BacklogFormat,
-					theme:                 NoneTheme,
+					format:                FormatBacklog,
+					theme:                 ThemeNone,
 					hasHeader:             false,
 					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 					wordDelimiter:         DefaultWordDelimiter,
@@ -1011,8 +1011,8 @@ func TestTable_Out(t *testing.T) {
 	type fields struct {
 		data                  [][]string
 		headers               []string
-		format                int
-		theme                 int
+		format                Format
+		theme                 Theme
 		hasHeader             bool
 		emptyFieldPlaceholder string
 		wordDelimiter         string
@@ -1044,8 +1044,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    MarkdownFormat,
-				theme:     NoneTheme,
+				format:    FormatMarkdown,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1080,8 +1080,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    MarkdownFormat,
-				theme:     NoneTheme,
+				format:    FormatMarkdown,
+				theme:     ThemeNone,
 				hasHeader: false,
 			},
 			want: want{
@@ -1114,8 +1114,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    MarkdownFormat,
-				theme:     NoneTheme,
+				format:    FormatMarkdown,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1150,8 +1150,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
-				format:    MarkdownFormat,
-				theme:     NoneTheme,
+				format:    FormatMarkdown,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1186,8 +1186,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "NULL"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    MarkdownFormat,
-				theme:     NoneTheme,
+				format:    FormatMarkdown,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1222,8 +1222,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    MarkdownFormat,
-				theme:     NoneTheme,
+				format:    FormatMarkdown,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1258,8 +1258,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
-				format:    MarkdownFormat,
-				theme:     NoneTheme,
+				format:    FormatMarkdown,
+				theme:     ThemeNone,
 				hasHeader: false,
 			},
 			want: want{
@@ -1292,8 +1292,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    BacklogFormat,
-				theme:     NoneTheme,
+				format:    FormatBacklog,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1327,8 +1327,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    BacklogFormat,
-				theme:     NoneTheme,
+				format:    FormatBacklog,
+				theme:     ThemeNone,
 				hasHeader: false,
 			},
 			want: want{
@@ -1361,8 +1361,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    BacklogFormat,
-				theme:     NoneTheme,
+				format:    FormatBacklog,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1396,8 +1396,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
-				format:    BacklogFormat,
-				theme:     NoneTheme,
+				format:    FormatBacklog,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1431,8 +1431,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "NULL"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    BacklogFormat,
-				theme:     NoneTheme,
+				format:    FormatBacklog,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1466,8 +1466,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4", "-"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
-				format:    BacklogFormat,
-				theme:     NoneTheme,
+				format:    FormatBacklog,
+				theme:     ThemeNone,
 				hasHeader: true,
 			},
 			want: want{
@@ -1501,8 +1501,8 @@ func TestTable_Out(t *testing.T) {
 					{"i-4", "sg-4"},
 				},
 				headers:   []string{"InstanceName", "SecurityGroupName"},
-				format:    BacklogFormat,
-				theme:     NoneTheme,
+				format:    FormatBacklog,
+				theme:     ThemeNone,
 				hasHeader: false,
 			},
 			want: want{
@@ -1546,7 +1546,7 @@ func TestTable_formatValue(t *testing.T) {
 		return &s
 	}
 	type fields struct {
-		format                int
+		format                Format
 		emptyFieldPlaceholder string
 		wordDelimiter         string
 		escapedTargets        []string
@@ -1567,7 +1567,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1582,7 +1582,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "escape1",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 				escapedTargets:        []string{"*"},
@@ -1598,7 +1598,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "escape2",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1617,7 +1617,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "escape3",
 			fields: fields{
-				format:                MarkdownFormat,
+				format:                FormatMarkdown,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1634,7 +1634,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "escape4",
 			fields: fields{
-				format:                BacklogFormat,
+				format:                FormatBacklog,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1651,7 +1651,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "empty string",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1666,7 +1666,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "empty string markdown",
 			fields: fields{
-				format:                MarkdownFormat,
+				format:                FormatMarkdown,
 				emptyFieldPlaceholder: "-",
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1681,7 +1681,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "empty string backlog",
 			fields: fields{
-				format:                BacklogFormat,
+				format:                FormatBacklog,
 				emptyFieldPlaceholder: "-",
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1696,7 +1696,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "int",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1711,7 +1711,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "uint",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1726,7 +1726,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "float",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1741,7 +1741,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "non-nil pointer string",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1756,7 +1756,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "non-nil pointer int",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1771,7 +1771,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "nil slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1786,7 +1786,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "empty slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1801,7 +1801,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with empty strings",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1816,7 +1816,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with normal strings",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1831,7 +1831,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "mixed slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1846,7 +1846,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "int slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1861,7 +1861,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "uint slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1876,7 +1876,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice in slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1894,7 +1894,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "struct in slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1909,7 +1909,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "pointer to slice with normal strings",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1924,7 +1924,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with pointer to strings",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1939,7 +1939,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with pointer to empty string",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1954,7 +1954,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with nil pointer",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1969,7 +1969,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "slice with byte slice",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -1984,7 +1984,7 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "nil ptr",
 			fields: fields{
-				format:                TextFormat,
+				format:                FormatText,
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 			},
@@ -2154,7 +2154,7 @@ func TestTable_setData(t *testing.T) {
 
 func TestTable_getOffset(t *testing.T) {
 	type fields struct {
-		format    int
+		format    Format
 		hasHeader bool
 	}
 	type want struct {
@@ -2168,7 +2168,7 @@ func TestTable_getOffset(t *testing.T) {
 		{
 			name: "markdown",
 			fields: fields{
-				format:    MarkdownFormat,
+				format:    FormatMarkdown,
 				hasHeader: true,
 			},
 			want: want{
@@ -2178,7 +2178,7 @@ func TestTable_getOffset(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				format:    BacklogFormat,
+				format:    FormatBacklog,
 				hasHeader: true,
 			},
 			want: want{
@@ -2188,7 +2188,7 @@ func TestTable_getOffset(t *testing.T) {
 		{
 			name: "markdown+disableHeader",
 			fields: fields{
-				format:    MarkdownFormat,
+				format:    FormatMarkdown,
 				hasHeader: false,
 			},
 			want: want{
@@ -2198,7 +2198,7 @@ func TestTable_getOffset(t *testing.T) {
 		{
 			name: "backlog+disableHeader",
 			fields: fields{
-				format:    BacklogFormat,
+				format:    FormatBacklog,
 				hasHeader: false,
 			},
 			want: want{
@@ -2231,7 +2231,7 @@ func TestTable_getOffset(t *testing.T) {
 
 func TestTable_getColor(t *testing.T) {
 	type fields struct {
-		theme int
+		theme Theme
 	}
 	type want struct {
 		got *color.Color
@@ -2244,7 +2244,7 @@ func TestTable_getColor(t *testing.T) {
 		{
 			name: "none",
 			fields: fields{
-				theme: NoneTheme,
+				theme: ThemeNone,
 			},
 			want: want{
 				got: &color.Color{},
@@ -2253,7 +2253,7 @@ func TestTable_getColor(t *testing.T) {
 		{
 			name: "dark",
 			fields: fields{
-				theme: DarkTheme,
+				theme: ThemeDark,
 			},
 			want: want{
 				got: color.New(color.BgHiBlack, color.FgHiWhite),
@@ -2262,7 +2262,7 @@ func TestTable_getColor(t *testing.T) {
 		{
 			name: "light",
 			fields: fields{
-				theme: LightTheme,
+				theme: ThemeLight,
 			},
 			want: want{
 				got: color.New(color.BgHiWhite, color.FgHiBlack),
