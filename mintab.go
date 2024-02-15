@@ -2,6 +2,7 @@ package mintab
 
 import (
 	"fmt"
+	"html"
 	"reflect"
 	"slices"
 	"strings"
@@ -64,8 +65,12 @@ func (t Theme) String() string {
 
 // Dafault values
 const (
-	DefaultEmptyFieldPlaceholder = "-"
-	DefaultWordDelimiter         = "\n"
+	DefaultEmptyFieldPlaceholder         = "-"
+	DefaultWordDelimiter                 = "\n"
+	MarkdownDefaultEmptyFieldPlaceholder = "&#45;"
+	MarkdownDefaultWordDelimiter         = "<br>"
+	BacklogDefaultEmptyFieldPlaceholder  = "-"
+	BacklogDefaultWordDelimiter          = "&br;"
 )
 
 // Table represents a table in a matrix of strings.
@@ -79,7 +84,6 @@ type Table struct {
 	wordDelimiter         string     // wordDelimiter specifies the word delimiter of the field.
 	mergedFields          []int      // mergedFields holds indices of the field to be grouped.
 	ignoredFields         []int      // ignoredFields holds indices of the fields to be ignored.
-	escapedTargets        []string   // escapedTargets holds the characters to be escaped; string, not rune
 }
 
 // NewTable instantiates a table struct.
@@ -150,15 +154,27 @@ func WithIgnoreFields(ignoreFields []int) Option {
 	}
 }
 
-func WithEscapeTargets(escapeTargets []string) Option {
-	return func(t *Table) {
-		t.escapedTargets = escapeTargets
-	}
-}
-
 // Load validates input and converts them to table data.
 // Returns error if not struct slice.
 func (t *Table) Load(input any) error {
+	var p, d string
+	switch t.format {
+	case FormatMarkdown:
+		p = MarkdownDefaultEmptyFieldPlaceholder
+		d = MarkdownDefaultWordDelimiter
+	case FormatBacklog:
+		p = BacklogDefaultEmptyFieldPlaceholder
+		d = BacklogDefaultWordDelimiter
+	default:
+		p = DefaultEmptyFieldPlaceholder
+		d = DefaultWordDelimiter
+	}
+	if t.emptyFieldPlaceholder == DefaultEmptyFieldPlaceholder {
+		t.emptyFieldPlaceholder = p
+	}
+	if t.wordDelimiter == DefaultWordDelimiter {
+		t.wordDelimiter = d
+	}
 	if _, ok := input.([]interface{}); ok {
 		return fmt.Errorf("cannot parse input: elements of slice must not be empty interface")
 	}
@@ -262,9 +278,6 @@ func (t *Table) setData(v reflect.Value) error {
 // Perform multi-value delimiters and whitespace handling.
 // Nested fields are not processed and an error is returned.
 func (t *Table) formatValue(v reflect.Value) (string, error) {
-	if t.format != FormatText && t.emptyFieldPlaceholder == "-" {
-		t.emptyFieldPlaceholder = "\\-"
-	}
 	if v.Kind() == reflect.Ptr {
 		if v.IsNil() {
 			return t.emptyFieldPlaceholder, nil
@@ -277,23 +290,10 @@ func (t *Table) formatValue(v reflect.Value) (string, error) {
 		if s == "" {
 			return t.emptyFieldPlaceholder, nil
 		}
-		if t.format != FormatText {
-			s = strings.ReplaceAll(s, " ", "&nbsp;")
-		}
 		if t.format == FormatMarkdown {
-			s = strings.ReplaceAll(s, "\n", "<br>")
-			if t.wordDelimiter == "\n" {
-				t.wordDelimiter = "<br>"
-			}
-		}
-		if t.format == FormatBacklog {
-			s = strings.ReplaceAll(s, "\n", "&br;")
-			if t.wordDelimiter == "\n" {
-				t.wordDelimiter = "&br;"
-			}
-		}
-		for _, escapeTarget := range t.escapedTargets {
-			s = strings.ReplaceAll(s, escapeTarget, `\`+escapeTarget)
+			s = html.EscapeString(s)
+			r := strings.NewReplacer(" ", "&nbsp;", "|", "&#124;", "*", "&#42;", "\\", "&#92;", "_", "&#095;")
+			s = r.Replace(s)
 		}
 		return strings.TrimSpace(s), nil
 	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:

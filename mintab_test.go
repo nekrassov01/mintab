@@ -25,16 +25,11 @@ type nested struct {
 	Objects    []object
 }
 
-type escaped struct {
-	Domain string
-}
-
 var (
 	samples    []sample
 	samplesPtr []*sample
 	slicePtr   *[]sample
 	nests      []nested
-	escapes    []escaped
 	irregulars []interface{}
 )
 
@@ -94,7 +89,6 @@ func setup() {
 			},
 		},
 	}
-	escapes = []escaped{{Domain: "*.example.com"}}
 	irregulars = []interface{}{sample{InstanceName: "i-1", SecurityGroupName: "sg-1", CidrBlock: []string{"10.0.0.0/16"}}, 1, "string", 2.5, struct{}{}}
 }
 
@@ -107,7 +101,6 @@ func TestNewTable(t *testing.T) {
 		wordDelimiter         string
 		mergedFields          []int
 		ignoredFields         []int
-		escapedTargets        []string
 	}
 	type want struct {
 		got *Table
@@ -136,7 +129,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -159,7 +151,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -183,7 +174,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -207,7 +197,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         []int{2},
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -232,7 +221,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -257,7 +245,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -271,7 +258,6 @@ func TestNewTable(t *testing.T) {
 				wordDelimiter:         ",",
 				mergedFields:          nil,
 				ignoredFields:         nil,
-				escapedTargets:        []string{"*", "-"},
 			},
 			want: want{
 				got: &Table{
@@ -283,7 +269,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        []string{"*", "-"},
 				},
 			},
 		},
@@ -308,7 +293,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -333,7 +317,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -358,7 +341,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -383,7 +365,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -408,7 +389,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         []int{2},
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -433,7 +413,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -458,7 +437,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -472,7 +450,6 @@ func TestNewTable(t *testing.T) {
 				wordDelimiter:         ",",
 				mergedFields:          nil,
 				ignoredFields:         nil,
-				escapedTargets:        []string{"*", "-"},
 			},
 			want: want{
 				got: &Table{
@@ -484,7 +461,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         ",",
 					mergedFields:          nil,
 					ignoredFields:         nil,
-					escapedTargets:        []string{"*", "-"},
 				},
 			},
 		},
@@ -509,7 +485,6 @@ func TestNewTable(t *testing.T) {
 					wordDelimiter:         DefaultWordDelimiter,
 					mergedFields:          []int{0, 1},
 					ignoredFields:         []int{2},
-					escapedTargets:        nil,
 				},
 			},
 		},
@@ -524,7 +499,6 @@ func TestNewTable(t *testing.T) {
 				WithWordDelimiter(tt.fields.wordDelimiter),
 				WithMergeFields(tt.fields.mergedFields),
 				WithIgnoreFields(tt.fields.ignoredFields),
-				WithEscapeTargets(tt.fields.escapedTargets),
 			)
 			if !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
@@ -535,11 +509,11 @@ func TestNewTable(t *testing.T) {
 
 func TestTable_Load(t *testing.T) {
 	type fields struct {
+		format                Format
 		emptyFieldPlaceholder string
 		wordDelimiter         string
 		mergedFields          []int
 		ignoredFields         []int
-		escapedTargets        []string
 	}
 	type args struct {
 		input any
@@ -815,29 +789,6 @@ func TestTable_Load(t *testing.T) {
 			},
 		},
 		{
-			name: "escape",
-			fields: fields{
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
-				escapedTargets:        []string{"*"},
-			},
-			args: args{
-				input: escapes,
-			},
-			want: want{
-				got: &Table{
-					data: [][]string{
-						{`\*.example.com`},
-					},
-					headers:               []string{"Domain"},
-					emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-					wordDelimiter:         DefaultWordDelimiter,
-					escapedTargets:        []string{"*"},
-				},
-				err: nil,
-			},
-		},
-		{
 			name: "edgecase",
 			fields: fields{
 				emptyFieldPlaceholder: "",
@@ -984,15 +935,143 @@ func TestTable_Load(t *testing.T) {
 				err: fmt.Errorf("cannot parse input: elements of slice must not be empty interface"),
 			},
 		},
+		{
+			name: "markdown-optimize",
+			fields: fields{
+				format:                FormatMarkdown,
+				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
+				wordDelimiter:         DefaultWordDelimiter,
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16<br>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16<br>0.0.0.0/0"},
+						{"i-3", "&#45;", "10.0.0.0/16<br>0.0.0.0/0"},
+						{"i-4", "sg-4", "&#45;"},
+					},
+					format:                FormatMarkdown,
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
+					wordDelimiter:         MarkdownDefaultWordDelimiter,
+				},
+				err: nil,
+			},
+		},
+		{
+			name: "backlog-optimize",
+			fields: fields{
+				format:                FormatBacklog,
+				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
+				wordDelimiter:         DefaultWordDelimiter,
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16&br;0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16&br;0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16&br;0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16&br;0.0.0.0/0"},
+						{"i-3", "-", "10.0.0.0/16&br;0.0.0.0/0"},
+						{"i-4", "sg-4", "-"},
+					},
+					format:                FormatBacklog,
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: BacklogDefaultEmptyFieldPlaceholder,
+					wordDelimiter:         BacklogDefaultWordDelimiter,
+				},
+				err: nil,
+			},
+		},
+		{
+			name: "markdown-optimize-ignore",
+			fields: fields{
+				format:                FormatMarkdown,
+				emptyFieldPlaceholder: "<p>",
+				wordDelimiter:         "<d>",
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16<d>0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16<d>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16<d>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16<d>0.0.0.0/0"},
+						{"i-3", "<p>", "10.0.0.0/16<d>0.0.0.0/0"},
+						{"i-4", "sg-4", "<p>"},
+					},
+					format:                FormatMarkdown,
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: "<p>",
+					wordDelimiter:         "<d>",
+				},
+				err: nil,
+			},
+		},
+		{
+			name: "backlog-optimize-ignore",
+			fields: fields{
+				format:                FormatBacklog,
+				emptyFieldPlaceholder: "<p>",
+				wordDelimiter:         "<d>",
+			},
+			args: args{
+				input: samples,
+			},
+			want: want{
+				got: &Table{
+					data: [][]string{
+						{"i-1", "sg-1", "10.0.0.0/16"},
+						{"i-1", "sg-1", "10.1.0.0/16"},
+						{"i-1", "sg-2", "10.2.0.0/16"},
+						{"i-1", "sg-2", "10.3.0.0/16"},
+						{"i-2", "sg-1", "10.0.0.0/16<d>0.0.0.0/0"},
+						{"i-2", "sg-1", "10.1.0.0/16<d>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.2.0.0/16<d>0.0.0.0/0"},
+						{"i-2", "sg-2", "10.3.0.0/16<d>0.0.0.0/0"},
+						{"i-3", "<p>", "10.0.0.0/16<d>0.0.0.0/0"},
+						{"i-4", "sg-4", "<p>"},
+					},
+					format:                FormatBacklog,
+					headers:               []string{"InstanceName", "SecurityGroupName", "CidrBlock"},
+					emptyFieldPlaceholder: "<p>",
+					wordDelimiter:         "<d>",
+				},
+				err: nil,
+			},
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			table := &Table{
+				format:                tt.fields.format,
 				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
 				wordDelimiter:         tt.fields.wordDelimiter,
 				mergedFields:          tt.fields.mergedFields,
 				ignoredFields:         tt.fields.ignoredFields,
-				escapedTargets:        tt.fields.escapedTargets,
 			}
 			if err := table.Load(tt.args.input); err != nil {
 				if err.Error() != tt.want.err.Error() {
@@ -1018,7 +1097,6 @@ func TestTable_Out(t *testing.T) {
 		wordDelimiter         string
 		mergeFields           []int
 		ignoreFields          []int
-		escapedTargets        []string
 	}
 	type want struct {
 		got string
@@ -1532,7 +1610,6 @@ func TestTable_Out(t *testing.T) {
 				wordDelimiter:         tt.fields.wordDelimiter,
 				mergedFields:          tt.fields.mergeFields,
 				ignoredFields:         tt.fields.ignoreFields,
-				escapedTargets:        tt.fields.escapedTargets,
 			}
 			if got := table.Out(); !reflect.DeepEqual(got, tt.want.got) {
 				t.Errorf("got: %v, want: %v", got, tt.want.got)
@@ -1549,7 +1626,6 @@ func TestTable_formatValue(t *testing.T) {
 		format                Format
 		emptyFieldPlaceholder string
 		wordDelimiter         string
-		escapedTargets        []string
 	}
 	type args struct {
 		v any
@@ -1582,35 +1658,30 @@ func TestTable_formatValue(t *testing.T) {
 		{
 			name: "escape1",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
-				escapedTargets:        []string{"*"},
+				format:                FormatMarkdown,
+				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         MarkdownDefaultWordDelimiter,
 			},
 			args: args{
-				v: "*.example.com",
+				v: `aaa  bbb    ccc`,
 			},
 			want: want{
-				got: `\*.example.com`,
+				got: "aaa&nbsp;&nbsp;bbb&nbsp;&nbsp;&nbsp;&nbsp;ccc",
 				err: nil,
 			},
 		},
 		{
 			name: "escape2",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                FormatMarkdown,
+				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         MarkdownDefaultWordDelimiter,
 			},
 			args: args{
-				v: `aaa
-  bbb
-    ccc`,
+				v: `|`,
 			},
 			want: want{
-				got: `aaa
-  bbb
-    ccc`,
+				got: "&#124;",
 				err: nil,
 			},
 		},
@@ -1618,33 +1689,44 @@ func TestTable_formatValue(t *testing.T) {
 			name: "escape3",
 			fields: fields{
 				format:                FormatMarkdown,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         MarkdownDefaultWordDelimiter,
 			},
 			args: args{
-				v: `aaa
-  bbb
-    ccc`,
+				v: "*",
 			},
 			want: want{
-				got: "aaa<br>&nbsp;&nbsp;bbb<br>&nbsp;&nbsp;&nbsp;&nbsp;ccc",
+				got: "&#42;",
 				err: nil,
 			},
 		},
 		{
 			name: "escape4",
 			fields: fields{
-				format:                FormatBacklog,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                FormatMarkdown,
+				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         MarkdownDefaultWordDelimiter,
 			},
 			args: args{
-				v: `aaa
-  bbb
-    ccc`,
+				v: "\\",
 			},
 			want: want{
-				got: "aaa&br;&nbsp;&nbsp;bbb&br;&nbsp;&nbsp;&nbsp;&nbsp;ccc",
+				got: "&#92;",
+				err: nil,
+			},
+		},
+		{
+			name: "escape5",
+			fields: fields{
+				format:                FormatMarkdown,
+				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         MarkdownDefaultWordDelimiter,
+			},
+			args: args{
+				v: "_",
+			},
+			want: want{
+				got: "&#095;",
 				err: nil,
 			},
 		},
@@ -1660,36 +1742,6 @@ func TestTable_formatValue(t *testing.T) {
 			},
 			want: want{
 				got: DefaultEmptyFieldPlaceholder,
-				err: nil,
-			},
-		},
-		{
-			name: "empty string markdown",
-			fields: fields{
-				format:                FormatMarkdown,
-				emptyFieldPlaceholder: "-",
-				wordDelimiter:         DefaultWordDelimiter,
-			},
-			args: args{
-				v: "",
-			},
-			want: want{
-				got: "\\-",
-				err: nil,
-			},
-		},
-		{
-			name: "empty string backlog",
-			fields: fields{
-				format:                FormatBacklog,
-				emptyFieldPlaceholder: "-",
-				wordDelimiter:         DefaultWordDelimiter,
-			},
-			args: args{
-				v: "",
-			},
-			want: want{
-				got: "\\-",
 				err: nil,
 			},
 		},
@@ -2004,7 +2056,6 @@ func TestTable_formatValue(t *testing.T) {
 				format:                tt.fields.format,
 				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
 				wordDelimiter:         tt.fields.wordDelimiter,
-				escapedTargets:        tt.fields.escapedTargets,
 			}
 			got, err := table.formatValue(v)
 			if err != nil {

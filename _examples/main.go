@@ -62,9 +62,9 @@ func main() {
 		| i-1        | server-1     | lb-domain-1                | tg-1         |
 		| i-2        | server-2     | lb-doamin-2<br>lb-doamin-3 | tg-2         |
 		| i-3        | server-3     | lb-doamin-4                | tg-3<br>tg-4 |
-		| i-4        | server-4     | \-                         | \-           |
-		| i-5        | server-5     | lb-domain-5                | \-           |
-		| i-5        | server-5     | \-                         | tg-5<br>tg-6 |
+		| i-4        | server-4     | &#45;                      | &#45;        |
+		| i-5        | server-5     | lb-domain-5                | &#45;        |
+		| i-5        | server-5     | &#45;                      | tg-5<br>tg-6 |
 	*/
 
 	table = mintab.NewTable(mintab.WithFormat(mintab.FormatBacklog))
@@ -78,9 +78,9 @@ func main() {
 		| i-1        | server-1     | lb-domain-1                | tg-1         |
 		| i-2        | server-2     | lb-doamin-2&br;lb-doamin-3 | tg-2         |
 		| i-3        | server-3     | lb-doamin-4                | tg-3&br;tg-4 |
-		| i-4        | server-4     | \-                         | \-           |
-		| i-5        | server-5     | lb-domain-5                | \-           |
-		| i-5        | server-5     | \-                         | tg-5&br;tg-6 |
+		| i-4        | server-4     | -                          | -            |
+		| i-5        | server-5     | lb-domain-5                | -            |
+		| i-5        | server-5     | -                          | tg-5&br;tg-6 |
 	*/
 
 	table = mintab.NewTable(mintab.WithHeader(false))
@@ -179,7 +179,7 @@ func main() {
 	*/
 
 	/*
-		Escaping
+		Escaping when select markdown format
 	*/
 
 	type sample2 struct {
@@ -188,18 +188,20 @@ func main() {
 
 	s2 := []sample2{
 		{Domain: "*.example.com"},
+		{Domain: "| _"},
 	}
 
-	table = mintab.NewTable(mintab.WithEscapeTargets([]string{"*"}), mintab.WithFormat(mintab.FormatMarkdown))
+	table = mintab.NewTable(mintab.WithFormat(mintab.FormatMarkdown))
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}
 	fmt.Println(table.Out())
 
 	/*
-		| Domain         |
-		|----------------|
-		| \*.example.com |
+		| Domain             |
+		|--------------------|
+		| &#42;.example.com  |
+		| &#124;&nbsp;&#095; |
 	*/
 
 	/*
@@ -266,4 +268,25 @@ func main() {
 		|            |              | sg-3            | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
 		|            |              | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 	*/
+
+	table = mintab.NewTable(mintab.WithIgnoreFields([]int{1}), mintab.WithFormat(mintab.FormatMarkdown))
+	if err := table.Load(s1); err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(table.Out())
+
+	/*
+		| InstanceID | AttachedLB  | AttachedTG |
+		|------------|-------------|------------|
+		| i-1        | lb-domain-1 | tg-1       |
+		| i-2        | lb-doamin-2 | tg-2       |
+		|            | lb-doamin-3 |            |
+		| i-3        | lb-doamin-4 | tg-3       |
+		|            |             | tg-4       |
+		| i-4        | -           | -          |
+		| i-5        | lb-domain-5 | -          |
+		| i-5        | -           | tg-5       |
+		|            |             | tg-6       |
+	*/
+
 }
