@@ -328,6 +328,7 @@ func (t *Table) setData(v reflect.Value) error {
 		if field.Kind() == reflect.Ptr {
 			field = field.Elem()
 		}
+		merge := true
 		for j, h := range t.header {
 			field := field.FieldByName(h)
 			if !field.IsValid() {
@@ -337,10 +338,14 @@ func (t *Table) setData(v reflect.Value) error {
 			if err != nil {
 				return fmt.Errorf("failed to format field \"%s\": %w", h, err)
 			}
-			if slices.Contains(t.mergedFields, j) && f == prev[j] {
-				f = ""
-			} else {
-				prev[j] = f
+			if slices.Contains(t.mergedFields, j) {
+				if f != prev[j] {
+					merge = false
+					prev[j] = f
+				}
+				if merge {
+					f = ""
+				}
 			}
 			row[j] = f
 			for _, line := range strings.Split(f, "\n") {
