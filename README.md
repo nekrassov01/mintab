@@ -6,23 +6,46 @@ mintab
 [![Go Reference](https://pkg.go.dev/badge/github.com/nekrassov01/mintab.svg)](https://pkg.go.dev/github.com/nekrassov01/mintab)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nekrassov01/mintab)](https://goreportcard.com/report/github.com/nekrassov01/mintab)
 
-mintab is a minimum ASCII table utilities using [tablewriter](https://github.com/olekukonko/tablewriter)
+mintab is a minimum ASCII table utilities written in Go
 
-![terminal](_assets/terminal.png)
+Motivation
+----------
+
+While [tablewriter](https://github.com/olekukonko/tablewriter) is useful, I wanted a smaller package with features such as backlog format support that tablewriter does not have.
+
+Format
+------
+
+Text
+
+![text](_assets/text.png)
+
+Text (merged)
+
+![text_merged](_assets/text_merged.png)
+
+Markdown (merged)
+
+![markdown](_assets/markdown_merged.png)
+
+Backlog (merged)
+
+![backlog](_assets/backlog_merged.png)
 
 Support
 -------
 
+- Text table format
 - Markdown table format
 - Backlog table format
 - Group rows based on previous field value
-- Color rows based on first column value
 - Ignore specified columns
+- Escape HTML special characters
 
 Notes
 -----
 
-- Only non-nested struct slices are accepted (but byte slices are converted to strings)
+- Only non-nested struct slices are accepted
 - Using reflect
 
 Usage
