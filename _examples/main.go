@@ -348,6 +348,39 @@ func main() {
 	*/
 
 	/*
+		Compress only when text format
+	*/
+
+	fmt.Println("/* Compress only when text format */")
+	fmt.Println()
+
+	fmt.Println("// format: text")
+	fmt.Println("// mergeFields: []int{0, 1}")
+	fmt.Println("// compress: true")
+	fmt.Println()
+	table = mintab.New(os.Stdout, mintab.WithMergeFields([]int{0, 1}), mintab.WithCompress(true))
+	if err := table.Load(s2); err != nil {
+		log.Fatal(err)
+	}
+	table.Out()
+
+	/*
+		+------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+		| InstanceID | InstanceName | SecurityGroupID | FlowDirection | IPProtocol | FromPort | ToPort | AddressType   | CidrBlock     |
+		+------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+		| i-1        | server-1     | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
+		|            |              | sg-1            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		|            |              | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
+		|            |              | sg-2            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		+------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+		| i-2        | server-2     | sg-3            | Ingress       | icmp       |       -1 |     -1 | SecurityGroup | sg-11         |
+		|            |              | sg-3            | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
+		|            |              | sg-3            | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
+		|            |              | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		+------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+	*/
+
+	/*
 		Ignore fileds
 	*/
 
@@ -531,16 +564,4 @@ func main() {
 		| i-2        | server-2     | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 		+------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 	*/
-
-	table = mintab.New(os.Stdout, mintab.WithFormat(mintab.FormatMarkdown), mintab.WithMergeFields([]int{0, 1, 2}))
-	if err := table.Load(s2); err != nil {
-		log.Fatal(err)
-	}
-	table.Out()
-
-	table = mintab.New(os.Stdout, mintab.WithFormat(mintab.FormatBacklog), mintab.WithMergeFields([]int{0, 1, 2}))
-	if err := table.Load(s2); err != nil {
-		log.Fatal(err)
-	}
-	table.Out()
 }

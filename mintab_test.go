@@ -191,6 +191,7 @@ func TestNew(t *testing.T) {
 				columnWidths:          nil,
 				hasHeader:             true,
 				hasEscape:             false,
+				compress:              false,
 			},
 		},
 		{
@@ -205,6 +206,7 @@ func TestNew(t *testing.T) {
 					WithMergeFields([]int{0}),
 					WithIgnoreFields([]int{0}),
 					WithEscape(true),
+					WithCompress(true),
 				},
 			},
 			want: &Table{
@@ -221,6 +223,7 @@ func TestNew(t *testing.T) {
 				columnWidths:          nil,
 				hasHeader:             false,
 				hasEscape:             true,
+				compress:              true,
 			},
 		},
 	}
@@ -348,6 +351,7 @@ func TestTable_Out(t *testing.T) {
 		header       []string
 		data         [][]string
 		columnWidths []int
+		compress     bool
 	}
 	tests := []struct {
 		name   string
@@ -368,6 +372,7 @@ func TestTable_Out(t *testing.T) {
 					{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
 				},
 				columnWidths: []int{10, 12, 10, 10},
+				compress:     false,
 			},
 			want: `+------------+--------------+------------+------------+
 | InstanceID | InstanceName | AttachedLB | AttachedTG |
@@ -393,6 +398,40 @@ func TestTable_Out(t *testing.T) {
 `,
 		},
 		{
+			name: "text_with_compressed",
+			fields: fields{
+				format: FormatText,
+				header: []string{"InstanceID", "InstanceName", "SecurityGroupID", "FlowDirection", "IPProtocol", "FromPort", "ToPort", "AddressType", "CidrBlock"},
+				data: [][]string{
+					{"i-1", "server-1", "sg-1", "Ingress", "tcp", "22", "22", "SecurityGroup", "sg-10"},
+					{"", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
+					{"", "", "sg-2", "Ingress", "tcp", "443", "443", "Ipv4", "0.0.0.0/0"},
+					{"", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
+					{"i-2", "server-2", "sg-3", "Ingress", "icmp", "-1", "-1", "SecurityGroup", "sg-11"},
+					{"", "", "", "Ingress", "tcp", "3389", "3389", "Ipv4", "10.1.0.0/16"},
+					{"", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
+					{"", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
+				},
+				columnWidths: []int{10, 12, 15, 13, 10, 8, 6, 13, 13},
+				compress:     true,
+			},
+			want: `+------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+| InstanceID | InstanceName | SecurityGroupID | FlowDirection | IPProtocol | FromPort | ToPort | AddressType   | CidrBlock     |
++------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+| i-1        | server-1     | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
+|            |              |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+|            |              | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
+|            |              |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
++------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+| i-2        | server-2     | sg-3            | Ingress       | icmp       |       -1 |     -1 | SecurityGroup | sg-11         |
+|            |              |                 | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
+|            |              |                 | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
+|            |              |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
++------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+
+`,
+		},
+		{
 			name: "markdown",
 			fields: fields{
 				format: FormatMarkdown,
@@ -406,6 +445,7 @@ func TestTable_Out(t *testing.T) {
 					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
 				},
 				columnWidths: []int{10, 12, 12, 28},
+				compress:     false,
 			},
 			want: `| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |
 |------------|--------------|--------------|------------------------------|
@@ -432,6 +472,7 @@ func TestTable_Out(t *testing.T) {
 					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
 				},
 				columnWidths: []int{10, 12, 12, 28},
+				compress:     false,
 			},
 			want: `| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |h
 | i-1        | server-1     | lb-1         | tg-1                         |
@@ -452,6 +493,7 @@ func TestTable_Out(t *testing.T) {
 			tr.header = tt.fields.header
 			tr.data = tt.fields.data
 			tr.columnWidths = tt.fields.columnWidths
+			tr.compress = tt.fields.compress
 			tr.setBorder()
 			tr.Out()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
@@ -554,8 +596,8 @@ func TestTable_printData(t *testing.T) {
 	type fields struct {
 		data         [][]string
 		format       Format
-		mergedFields []int
 		columnWidths []int
+		compress     bool
 	}
 	tests := []struct {
 		name   string
@@ -575,6 +617,7 @@ func TestTable_printData(t *testing.T) {
 				},
 				format:       FormatText,
 				columnWidths: []int{10, 12, 10, 10},
+				compress:     false,
 			},
 			want: `| i-1        | server-1     | lb-1       | tg-1       |
 +------------+--------------+------------+------------+
@@ -606,8 +649,8 @@ func TestTable_printData(t *testing.T) {
 					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
 				},
 				format:       FormatMarkdown,
-				mergedFields: nil,
 				columnWidths: []int{10, 12, 12, 28},
+				compress:     false,
 			},
 			want: `| i-1        | server-1     | lb-1         | tg-1                         |
 | i-2        | server-2     | lb-2<br>lb-3 | tg-2                         |
@@ -629,8 +672,8 @@ func TestTable_printData(t *testing.T) {
 					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
 				},
 				format:       FormatBacklog,
-				mergedFields: nil,
 				columnWidths: []int{10, 12, 12, 28},
+				compress:     false,
 			},
 			want: `| i-1        | server-1     | lb-1         | tg-1                         |
 | i-2        | server-2     | lb-2&br;lb-3 | tg-2                         |
@@ -641,7 +684,7 @@ func TestTable_printData(t *testing.T) {
 `,
 		},
 		{
-			name: "merge",
+			name: "text_with_compress",
 			fields: fields{
 				data: [][]string{
 					{"i-1", "server-1", "sg-1", "Ingress", "tcp", "22", "22", "SecurityGroup", "sg-10"},
@@ -654,23 +697,17 @@ func TestTable_printData(t *testing.T) {
 					{"", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
 				},
 				format:       FormatText,
-				mergedFields: []int{0, 1, 2},
 				columnWidths: []int{10, 12, 15, 13, 10, 8, 6, 13, 13},
+				compress:     true,
 			},
 			want: `| i-1        | server-1     | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
-+            +              +                 +---------------+------------+----------+--------+---------------+---------------+
 |            |              |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
-+            +              +-----------------+---------------+------------+----------+--------+---------------+---------------+
 |            |              | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
-+            +              +                 +---------------+------------+----------+--------+---------------+---------------+
 |            |              |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 +------------+--------------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 | i-2        | server-2     | sg-3            | Ingress       | icmp       |       -1 |     -1 | SecurityGroup | sg-11         |
-+            +              +                 +---------------+------------+----------+--------+---------------+---------------+
 |            |              |                 | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
-+            +              +                 +---------------+------------+----------+--------+---------------+---------------+
 |            |              |                 | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
-+            +              +                 +---------------+------------+----------+--------+---------------+---------------+
 |            |              |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 `,
 		},
@@ -682,6 +719,8 @@ func TestTable_printData(t *testing.T) {
 			tr.data = tt.fields.data
 			tr.format = tt.fields.format
 			tr.columnWidths = tt.fields.columnWidths
+			tr.compress = tt.fields.compress
+			tr.setBorder()
 			tr.printData()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)

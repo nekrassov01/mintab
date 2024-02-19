@@ -20,15 +20,19 @@ Text
 
 ![text](_assets/text.png)
 
-Text (merged)
+Text merged
 
 ![text_merged](_assets/text_merged.png)
 
-Markdown (merged)
+Text compressed (only when text)
+
+![text_compressed](_assets/text_compressed.png)
+
+Markdown merged
 
 ![markdown](_assets/markdown_merged.png)
 
-Backlog (merged)
+Backlog merged
 
 ![backlog](_assets/backlog_merged.png)
 

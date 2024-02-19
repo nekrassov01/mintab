@@ -63,6 +63,7 @@ type Table struct {
 	columnWidths          []int           // Calculated max width of each column.
 	hasHeader             bool            // Indicates if the header should be rendered.
 	hasEscape             bool            // Indicates if escaping should be performed.
+	compress              bool
 }
 
 // New instantiates a new Table with the specified writer and options.
@@ -137,6 +138,12 @@ func WithIgnoreFields(ignoreFields []int) Option {
 func WithEscape(has bool) Option {
 	return func(t *Table) {
 		t.hasEscape = has
+	}
+}
+
+func WithCompress(has bool) Option {
+	return func(t *Table) {
+		t.compress = has
 	}
 }
 
@@ -217,7 +224,13 @@ func (t *Table) printHeader() {
 func (t *Table) printData() {
 	for ri, row := range t.data {
 		if ri > 0 && t.format == FormatText {
-			t.printDataBorder(row)
+			if t.compress {
+				if row[0] != "" {
+					t.printBorder()
+				}
+			} else {
+				t.printDataBorder(row)
+			}
 		}
 		lines := 1
 		splitFields := make([][]string, len(row))
