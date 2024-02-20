@@ -348,18 +348,10 @@ func main() {
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 	*/
 
-	/*
-		Compress only when text format
-	*/
-
-	fmt.Println("/* Compress only when text format */")
-	fmt.Println()
-
-	fmt.Println("// format: text")
+	fmt.Println("// format: compressed")
 	fmt.Println("// mergeFields: []int{0, 1, 2, 3}")
-	fmt.Println("// compress: true")
 	fmt.Println()
-	table = mintab.New(os.Stdout, mintab.WithMergeFields([]int{0, 1, 2, 3}), mintab.WithCompress(true))
+	table = mintab.New(os.Stdout, mintab.WithFormat(mintab.FormatCompressedText), mintab.WithMergeFields([]int{0, 1, 2, 3}))
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}
@@ -565,4 +557,16 @@ func main() {
 		| i-2        | server-2     | vpc-1 | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 	*/
+
+	table = mintab.New(os.Stdout, mintab.WithFormat(mintab.FormatMarkdown), mintab.WithMergeFields([]int{0, 1, 2, 3}))
+	if err := table.Load(s2); err != nil {
+		log.Fatal(err)
+	}
+	table.Out()
+
+	table = mintab.New(os.Stdout, mintab.WithFormat(mintab.FormatBacklog), mintab.WithMergeFields([]int{0, 1, 2, 3}))
+	if err := table.Load(s2); err != nil {
+		log.Fatal(err)
+	}
+	table.Out()
 }

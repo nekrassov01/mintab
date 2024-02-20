@@ -26,14 +26,16 @@ type Format int
 
 // Enumeration of supported output formats.
 const (
-	FormatText     Format = iota // Plain text format.
-	FormatMarkdown               // Markdown format.
-	FormatBacklog                // Backlog-specific format.
+	FormatText           Format = iota // Plain text format.
+	FormatCompressedText               // Compressed plain text format.
+	FormatMarkdown                     // Markdown format.
+	FormatBacklog                      // Backlog-specific format.
 )
 
 // Formats holds the string representations of each format constant.
 var Formats = []string{
 	"text",
+	"compressed",
 	"markdown",
 	"backlog",
 }
@@ -63,7 +65,6 @@ type Table struct {
 	columnWidths          []int           // Calculated max width of each column.
 	hasHeader             bool            // Indicates if the header should be rendered.
 	hasEscape             bool            // Indicates if escaping should be performed.
-	compress              bool
 }
 
 // New instantiates a new Table with the specified writer and options.
@@ -141,12 +142,6 @@ func WithEscape(has bool) Option {
 	}
 }
 
-func WithCompress(has bool) Option {
-	return func(t *Table) {
-		t.compress = has
-	}
-}
-
 // Load validates the input and converts it into table data.
 // Returns an error if the input is not a slice or if it's empty.
 func (t *Table) Load(input any) error {
@@ -188,7 +183,8 @@ func (t *Table) Load(input any) error {
 // It supports markdown and backlog formats for easy copying and pasting.
 func (t *Table) Out() {
 	if t.hasHeader {
-		if t.format == FormatText {
+		switch t.format {
+		case FormatText, FormatCompressedText:
 			t.printBorder()
 		}
 		t.printHeader()
@@ -197,7 +193,8 @@ func (t *Table) Out() {
 		t.printBorder()
 	}
 	t.printData()
-	if t.format == FormatText {
+	switch t.format {
+	case FormatText, FormatCompressedText:
 		t.printBorder()
 	}
 	fmt.Fprintf(t.writer, "\n")
@@ -223,13 +220,12 @@ func (t *Table) printHeader() {
 // printData renders the table data with dynamic conditional borders.
 func (t *Table) printData() {
 	for ri, row := range t.data {
-		if ri > 0 && t.format == FormatText {
-			if t.compress {
-				if row[0] != "" {
-					t.printBorder()
-				}
-			} else {
+		if ri > 0 {
+			if t.format == FormatText {
 				t.printDataBorder(row)
+			}
+			if t.format == FormatCompressedText && row[0] != "" {
+				t.printBorder()
 			}
 		}
 		lines := 1
@@ -362,9 +358,12 @@ func (t *Table) setData(v reflect.Value) error {
 
 // setBorder computes the table border string based on the calculated column widths.
 func (t *Table) setBorder() {
-	sep := "+"
-	if t.format != FormatText {
+	var sep string
+	switch t.format {
+	case FormatMarkdown, FormatBacklog:
 		sep = "|"
+	default:
+		sep = "+"
 	}
 	t.builder.Reset()
 	for _, width := range t.columnWidths {

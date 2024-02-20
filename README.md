@@ -24,7 +24,7 @@ Text merged
 
 ![text_merged](_assets/text_merged.png)
 
-Text compressed (only when text)
+Compressed-text merged
 
 ![text_compressed](_assets/text_compressed.png)
 
