@@ -382,7 +382,7 @@ func main() {
 	*/
 
 	/*
-		Ignore fileds
+		Ignore fields
 	*/
 
 	fmt.Println("/* Ignore fields */")
@@ -472,6 +472,7 @@ func main() {
 	table.Out()
 
 	/*
+		+-------------------------+-----------------------------------------+
 		| Name                    | EscatableValue                          |
 		+-------------------------+-----------------------------------------+
 		| wildcard domain         | *.example.com                           |
@@ -535,7 +536,6 @@ func main() {
 
 	fmt.Println("// format: text")
 	fmt.Println()
-
 	var builder strings.Builder
 	table = mintab.New(&builder)
 	if err := table.Load(s2); err != nil {
