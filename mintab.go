@@ -219,40 +219,31 @@ func (t *Table) printHeader() {
 
 // printData renders the table data with dynamic conditional borders.
 func (t *Table) printData() {
-	var prev []string
 	for ri, row := range t.data {
-		lines := 1
-		splitedCells := make([][]string, len(row))
-		hasBorder := false
-		for fi, field := range row {
-			splitedCell := strings.Split(field, "\n")
-			splitedCells[fi] = splitedCell
-			if len(splitedCell) > lines {
-				lines = len(splitedCell)
-			}
-			if ri == 0 {
-				continue
-			}
-			if t.format == FormatCompressedText {
-				if field != "" && (len(prev) <= fi || prev[fi] == "") || (row[0] != "") {
-					hasBorder = true
-				}
-			}
+		if ri > 0 {
 			if t.format == FormatText {
-				hasBorder = true
+				t.printDataBorder(row)
+			}
+			if t.format == FormatCompressedText && row[0] != "" {
+				t.printBorder()
 			}
 		}
-		if hasBorder {
-			t.printDataBorder(row)
+		lines := 1
+		splitFields := make([][]string, len(row))
+		for fi, field := range row {
+			splitFields[fi] = strings.Split(field, "\n")
+			if len(splitFields[fi]) > lines {
+				lines = len(splitFields[fi])
+			}
 		}
 		for line := 0; line < lines; line++ {
 			t.builder.Reset()
 			t.builder.WriteString("|")
-			for sfi, splitedCell := range splitedCells {
+			for sfi, splitField := range splitFields {
 				margin := t.getMargin()
 				t.builder.WriteString(margin)
-				if line < len(splitedCell) {
-					t.builder.WriteString(pad(splitedCell[line], t.columnWidths[sfi]))
+				if line < len(splitField) {
+					t.builder.WriteString(pad(splitField[line], t.columnWidths[sfi]))
 				} else {
 					t.builder.WriteString(pad("", t.columnWidths[sfi]))
 				}
@@ -261,7 +252,6 @@ func (t *Table) printData() {
 			}
 			fmt.Fprintln(t.writer, t.builder.String())
 		}
-		prev = row
 	}
 }
 
