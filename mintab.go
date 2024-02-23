@@ -234,7 +234,7 @@ func (t *Table) printData() {
 				continue
 			}
 			if t.format == FormatCompressedText {
-				if field != "" && (len(prev) <= fi || prev[fi] == "") {
+				if field != "" && (len(prev) <= fi || prev[fi] == "") || (row[0] != "") {
 					hasBorder = true
 				}
 			}
