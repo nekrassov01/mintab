@@ -363,6 +363,7 @@ func main() {
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 		| i-1        | server-1     | vpc-1 | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
 		|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+		+            +              +       +-----------------+---------------+------------+----------+--------+---------------+---------------+
 		|            |              |       | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
 		|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
@@ -557,16 +558,4 @@ func main() {
 		| i-2        | server-2     | vpc-1 | sg-3            | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 	*/
-
-	table = mintab.New(os.Stdout, mintab.WithFormat(mintab.FormatMarkdown), mintab.WithMergeFields([]int{0, 1, 2, 3}))
-	if err := table.Load(s2); err != nil {
-		log.Fatal(err)
-	}
-	table.Out()
-
-	table = mintab.New(os.Stdout, mintab.WithFormat(mintab.FormatBacklog), mintab.WithMergeFields([]int{0, 1, 2, 3}))
-	if err := table.Load(s2); err != nil {
-		log.Fatal(err)
-	}
-	table.Out()
 }
