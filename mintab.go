@@ -155,8 +155,8 @@ func (t *Table) Load(input any) error {
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	if v.Kind() != reflect.Slice {
-		return fmt.Errorf("input must be a slice or a pointer to a slice")
+	if v.Kind() == reflect.Struct {
+		v = reflect.Append(reflect.MakeSlice(reflect.SliceOf(v.Type()), 0, 1), v)
 	}
 	if v.Len() == 0 {
 		return fmt.Errorf("no data found")

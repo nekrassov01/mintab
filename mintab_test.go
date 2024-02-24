@@ -40,6 +40,7 @@ type mergedSample struct {
 
 var (
 	basicsample         []basicSample
+	basicsampleNonSlice basicSample
 	basicsampleEmpty    []basicSample
 	nestedsample        []nestedSample
 	mergedsample        []mergedSample
@@ -62,6 +63,12 @@ func setup() {
 		{InstanceID: "i-4", InstanceName: "server-4", AttachedLB: []string{}, AttachedTG: []string{}},
 		{InstanceID: "i-5", InstanceName: "server-5", AttachedLB: []string{"lb-5"}, AttachedTG: []string{}},
 		{InstanceID: "i-6", InstanceName: "server-6", AttachedLB: []string{}, AttachedTG: []string{"tg-5", "tg-6", "tg-7", "tg-8"}},
+	}
+	basicsampleNonSlice = basicSample{
+		InstanceID:   "i-1",
+		InstanceName: "server-1",
+		AttachedLB:   []string{"lb-1"},
+		AttachedTG:   []string{"tg-1"},
 	}
 	basicsampleEmpty = []basicSample{
 		{},
@@ -259,7 +266,7 @@ func TestTable_Load(t *testing.T) {
 		wantErr bool
 	}{
 		{
-			name: "err_margin",
+			name: "signed_margin",
 			fields: fields{
 				margin: -1,
 			},
@@ -269,7 +276,7 @@ func TestTable_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "err_interface{}",
+			name:   "interface{}",
 			fields: fields{},
 			args: args{
 				input: irregularsample,
@@ -277,7 +284,7 @@ func TestTable_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "err_ptr",
+			name:   "ptr",
 			fields: fields{},
 			args: args{
 				input: basicsamplePtr,
@@ -285,7 +292,15 @@ func TestTable_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "err_slice_ptr",
+			name:   "struct",
+			fields: fields{},
+			args: args{
+				input: basicsampleNonSlice,
+			},
+			wantErr: false,
+		},
+		{
+			name:   "slice_ptr",
 			fields: fields{},
 			args: args{
 				input: basicsampleSlicePtr,
@@ -293,7 +308,7 @@ func TestTable_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:   "err_slice_ptr",
+			name:   "string",
 			fields: fields{},
 			args: args{
 				input: "aaa",
@@ -301,7 +316,7 @@ func TestTable_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "err_slice_ptr",
+			name:   "slice_empty",
 			fields: fields{},
 			args: args{
 				input: []string{},
@@ -309,7 +324,7 @@ func TestTable_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "err_struct_in_slice",
+			name:   "slice_string",
 			fields: fields{},
 			args: args{
 				input: []string{"dummy"},
@@ -317,15 +332,7 @@ func TestTable_Load(t *testing.T) {
 			wantErr: true,
 		},
 		{
-			name:   "err_irregular",
-			fields: fields{},
-			args: args{
-				input: irregularsample,
-			},
-			wantErr: true,
-		},
-		{
-			name: "err_irregular",
+			name: "invalid_header",
 			fields: fields{
 				header: []string{"dummmy"},
 			},
