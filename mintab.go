@@ -310,12 +310,6 @@ func (t *Table) setHeader(typ reflect.Type) {
 // setData converts the input data to a matrix of strings and calculates column widths.
 // It also handles field formatting based on the table format and whether fields are merged.
 func (t *Table) setData(v reflect.Value) error {
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
-	}
-	if v.Kind() != reflect.Slice {
-		return fmt.Errorf("input must be a slice or a pointer to a slice")
-	}
 	t.data = make([][]string, v.Len())
 	prev := make([]string, len(t.header))
 	for i := 0; i < v.Len(); i++ {
@@ -400,61 +394,61 @@ func (t *Table) formatField(v reflect.Value) (string, error) {
 		}
 		v = v.Elem()
 	}
-	var ret string
-	switch v.Kind() {
-	case reflect.String:
-		s := v.String()
-		if t.hasEscape {
-			s = t.escape(s)
-		}
-		if t.format == FormatMarkdown && strings.HasPrefix(s, "*") {
-			s = "\\" + s
-		}
-		if s == "" {
-			s = t.emptyFieldPlaceholder
-		}
-		ret = strings.TrimSpace(s)
-	case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-		ret = fmt.Sprint(v.Int())
-	case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-		ret = fmt.Sprint(v.Uint())
-	case reflect.Float32, reflect.Float64:
-		ret = fmt.Sprint(v.Float())
-	case reflect.Slice:
-		switch {
-		case v.Len() == 0:
-			ret = t.emptyFieldPlaceholder
-		case v.Type().Elem().Kind() == reflect.Uint8:
-			ret = string(v.Bytes())
-		default:
-			var sl []string
-			for i := 0; i < v.Len(); i++ {
-				e := v.Index(i)
-				if e.Kind() == reflect.Ptr {
-					if e.IsNil() {
-						sl = append(sl, t.emptyFieldPlaceholder)
-						continue
+	var r string
+	if s, ok := v.Interface().(fmt.Stringer); ok {
+		r = s.String()
+	} else {
+		switch v.Kind() {
+		case reflect.String:
+			r = v.String()
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			r = strconv.FormatInt(v.Int(), 10)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			r = strconv.FormatUint(v.Uint(), 10)
+		case reflect.Float32, reflect.Float64:
+			r = strconv.FormatFloat(v.Float(), 'f', -1, 64)
+		case reflect.Slice:
+			switch {
+			case v.Len() == 0:
+				r = t.emptyFieldPlaceholder
+			case v.Type().Elem().Kind() == reflect.Uint8:
+				r = string(v.Bytes())
+			default:
+				var sl []string
+				for i := 0; i < v.Len(); i++ {
+					e := v.Index(i)
+					if e.Kind() == reflect.Ptr {
+						if e.IsNil() {
+							sl = append(sl, t.emptyFieldPlaceholder)
+							continue
+						}
+						e = e.Elem()
 					}
-					e = e.Elem()
+					if e.Kind() == reflect.Slice || e.Kind() == reflect.Struct {
+						return "", fmt.Errorf("cannot represent nested fields")
+					}
+					f, err := t.formatField(e)
+					if err != nil {
+						return "", err
+					}
+					sl = append(sl, f)
 				}
-				if e.Kind() == reflect.Slice || e.Kind() == reflect.Struct {
-					return "", fmt.Errorf("field must not be nested")
-				}
-				f, err := t.formatField(e)
-				if err != nil {
-					return "", err
-				}
-				sl = append(sl, f)
+				r = strings.Join(sl, t.wordDelimiter)
 			}
-			ret = strings.Join(sl, t.wordDelimiter)
+		default:
+			r = fmt.Sprint(v.Interface())
 		}
-	default:
-		ret = fmt.Sprint(v.Interface())
 	}
-	if v.Kind() == reflect.String || v.Kind() == reflect.Slice {
-		ret = t.replaceNL(ret)
+	if t.hasEscape {
+		r = t.escape(r)
 	}
-	return strings.TrimSpace(ret), nil
+	if t.format == FormatMarkdown && strings.HasPrefix(r, "*") {
+		r = "\\" + r
+	}
+	if r == "" {
+		r = t.emptyFieldPlaceholder
+	}
+	return strings.TrimSpace(t.replaceNL(r)), nil
 }
 
 // getDefaultAttr returns the default empty field placeholder and word delimiter for the table's current format.

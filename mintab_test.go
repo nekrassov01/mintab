@@ -2,10 +2,12 @@ package mintab
 
 import (
 	"bytes"
+	"net"
 	"os"
 	"reflect"
 	"strings"
 	"testing"
+	"time"
 )
 
 type basicSample struct {
@@ -38,12 +40,18 @@ type mergedSample struct {
 	CidrBlock       string
 }
 
+type stringerSample struct {
+	ElapsedTime time.Duration
+	IPAddress   net.IP
+}
+
 var (
 	basicsample         []basicSample
 	basicsampleNonSlice basicSample
 	basicsampleEmpty    []basicSample
 	nestedsample        []nestedSample
 	mergedsample        []mergedSample
+	stringersample      stringerSample
 	basicsamplePtr      []*basicSample
 	basicsampleSlicePtr *[]basicSample
 	irregularsample     []interface{}
@@ -114,6 +122,10 @@ func setup() {
 		{InstanceID: "i-2", InstanceName: "server-2", VPCID: "vpc-1", SecurityGroupID: "sg-3", FlowDirection: "Ingress", IPProtocol: "tcp", FromPort: 3389, ToPort: 3389, AddressType: "Ipv4", CidrBlock: "10.1.0.0/16"},
 		{InstanceID: "i-2", InstanceName: "server-2", VPCID: "vpc-1", SecurityGroupID: "sg-3", FlowDirection: "Ingress", IPProtocol: "tcp", FromPort: 0, ToPort: 65535, AddressType: "PrefixList", CidrBlock: "pl-id/pl-name"},
 		{InstanceID: "i-2", InstanceName: "server-2", VPCID: "vpc-1", SecurityGroupID: "sg-3", FlowDirection: "Egress", IPProtocol: "-1", FromPort: 0, ToPort: 0, AddressType: "Ipv4", CidrBlock: "0.0.0.0/0"},
+	}
+	stringersample = stringerSample{
+		ElapsedTime: 123 * time.Hour,
+		IPAddress:   net.IPv4allsys,
 	}
 	basicsamplePtr = make([]*basicSample, 0, len(basicsample))
 	for i := range basicsample {
@@ -340,6 +352,14 @@ func TestTable_Load(t *testing.T) {
 				input: basicsample,
 			},
 			wantErr: true,
+		},
+		{
+			name:   "stringer",
+			fields: fields{},
+			args: args{
+				input: stringersample,
+			},
+			wantErr: false,
 		},
 	}
 	for _, tt := range tests {
@@ -1171,29 +1191,6 @@ func TestTable_setData(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "slice_ptr",
-			fields: fields{
-				header:                []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
-				mergedFields:          nil,
-				ignoredFields:         nil,
-				columnWidths:          []int{0, 0, 0, 0},
-			},
-			args: args{
-				v: basicsampleSlicePtr,
-			},
-			want: [][]string{
-				{"i-1", "server-1", "lb-1", "tg-1"},
-				{"i-2", "server-2", "lb-2\nlb-3", "tg-2"},
-				{"i-3", "server-3", "lb-4", "tg-3\ntg-4"},
-				{"i-4", "server-4", "-", "-"},
-				{"i-5", "server-5", "lb-5", "-"},
-				{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
-			},
-			wantErr: false,
-		},
-		{
 			name: "invalid_field_name",
 			fields: fields{
 				header: []string{"aaa"},
@@ -1214,18 +1211,6 @@ func TestTable_setData(t *testing.T) {
 				v: nestedsample,
 			},
 			want:    make([][]string, len(nestedsample)),
-			wantErr: true,
-		},
-		{
-			name: "not_slice",
-			fields: fields{
-				header:       []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				columnWidths: []int{0, 0, 0, 0},
-			},
-			args: args{
-				v: "aaa",
-			},
-			want:    nil,
 			wantErr: true,
 		},
 	}
@@ -1756,6 +1741,34 @@ func TestTable_formatField(t *testing.T) {
 				v: []*string{nil, sp(""), sp("aaa")},
 			},
 			want:    DefaultEmptyFieldPlaceholder + DefaultWordDelimiter + DefaultEmptyFieldPlaceholder + DefaultWordDelimiter + "aaa",
+			wantErr: false,
+		},
+		{
+			name: "stringer_duration",
+			fields: fields{
+				format:                FormatText,
+				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
+				wordDelimiter:         DefaultWordDelimiter,
+				hasEscape:             false,
+			},
+			args: args{
+				v: 123 * time.Hour,
+			},
+			want:    "123h0m0s",
+			wantErr: false,
+		},
+		{
+			name: "stringer_ipaddress",
+			fields: fields{
+				format:                FormatText,
+				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
+				wordDelimiter:         DefaultWordDelimiter,
+				hasEscape:             false,
+			},
+			args: args{
+				v: net.IPv4bcast,
+			},
+			want:    "255.255.255.255",
 			wantErr: false,
 		},
 	}
