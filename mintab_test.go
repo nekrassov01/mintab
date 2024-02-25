@@ -46,15 +46,16 @@ type stringerSample struct {
 }
 
 var (
-	basicsample         []basicSample
-	basicsampleNonSlice basicSample
-	basicsampleEmpty    []basicSample
-	nestedsample        []nestedSample
-	mergedsample        []mergedSample
-	stringersample      stringerSample
-	basicsamplePtr      []*basicSample
-	basicsampleSlicePtr *[]basicSample
-	irregularsample     []interface{}
+	basicsample              []basicSample
+	basicsampleEmpty         []basicSample
+	basicsampleNonSlice      basicSample
+	basicsampleNonSliceEmpty basicSample
+	nestedsample             []nestedSample
+	mergedsample             []mergedSample
+	stringersample           stringerSample
+	basicsamplePtr           []*basicSample
+	basicsampleSlicePtr      *[]basicSample
+	irregularsample          []interface{}
 )
 
 func TestMain(m *testing.M) {
@@ -72,15 +73,14 @@ func setup() {
 		{InstanceID: "i-5", InstanceName: "server-5", AttachedLB: []string{"lb-5"}, AttachedTG: []string{}},
 		{InstanceID: "i-6", InstanceName: "server-6", AttachedLB: []string{}, AttachedTG: []string{"tg-5", "tg-6", "tg-7", "tg-8"}},
 	}
+	basicsampleEmpty = []basicSample{}
 	basicsampleNonSlice = basicSample{
 		InstanceID:   "i-1",
 		InstanceName: "server-1",
 		AttachedLB:   []string{"lb-1"},
 		AttachedTG:   []string{"tg-1"},
 	}
-	basicsampleEmpty = []basicSample{
-		{},
-	}
+	basicsampleNonSliceEmpty = basicSample{}
 	nestedsample = []nestedSample{
 		{
 			BucketName: "bucket1",
@@ -312,6 +312,14 @@ func TestTable_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
+			name:   "struct_empty",
+			fields: fields{},
+			args: args{
+				input: basicsampleNonSliceEmpty,
+			},
+			wantErr: true,
+		},
+		{
 			name:   "slice_ptr",
 			fields: fields{},
 			args: args{
@@ -331,7 +339,7 @@ func TestTable_Load(t *testing.T) {
 			name:   "slice_empty",
 			fields: fields{},
 			args: args{
-				input: []string{},
+				input: basicsampleEmpty,
 			},
 			wantErr: true,
 		},
@@ -422,7 +430,6 @@ func TestTable_Out(t *testing.T) {
 |            |              |            | tg-7       |
 |            |              |            | tg-8       |
 +------------+--------------+------------+------------+
-
 `,
 		},
 		{
@@ -455,7 +462,6 @@ func TestTable_Out(t *testing.T) {
 |            |              |       |                 | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
 |            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 +------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
-
 `,
 		},
 		{
@@ -481,7 +487,6 @@ func TestTable_Out(t *testing.T) {
 | i-4        | server-4     | \-           | \-                           |
 | i-5        | server-5     | lb-5         | \-                           |
 | i-6        | server-6     | \-           | tg-5<br>tg-6<br>tg-7<br>tg-8 |
-
 `,
 		},
 		{
@@ -506,7 +511,6 @@ func TestTable_Out(t *testing.T) {
 | i-4        | server-4     | -            | -                            |
 | i-5        | server-5     | lb-5         | -                            |
 | i-6        | server-6     | -            | tg-5&br;tg-6&br;tg-7&br;tg-8 |
-
 `,
 		},
 	}
@@ -1011,7 +1015,7 @@ func TestTable_setHeader(t *testing.T) {
 			},
 			want: want{
 				header:       []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				columnWidths: []int{10, 12, 10, 10},
+				columnWidths: []int{10, 12, 10, 16},
 			},
 		},
 		{
@@ -1021,7 +1025,7 @@ func TestTable_setHeader(t *testing.T) {
 			},
 			want: want{
 				header:       []string{"InstanceID", "AttachedLB", "AttachedTG"},
-				columnWidths: []int{10, 10, 10},
+				columnWidths: []int{10, 10, 16},
 			},
 		},
 		{
@@ -1031,7 +1035,7 @@ func TestTable_setHeader(t *testing.T) {
 			},
 			want: want{
 				header:       []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				columnWidths: []int{10, 12, 10, 10},
+				columnWidths: []int{10, 12, 10, 16},
 			},
 		},
 	}
@@ -1040,7 +1044,7 @@ func TestTable_setHeader(t *testing.T) {
 			tr := &Table{
 				ignoredFields: tt.fields.ignoredFields,
 			}
-			if err := tr.Load(basicsampleEmpty); err != nil {
+			if err := tr.Load(basicsample); err != nil {
 				t.Fatal(err)
 			}
 			tr.setHeader(tt.args.typ)

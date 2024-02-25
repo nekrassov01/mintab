@@ -42,6 +42,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+------------+------------+
@@ -73,6 +74,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |
@@ -92,6 +94,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |h
@@ -111,6 +114,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+------------+------------+
@@ -141,6 +145,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+------------+------------+
@@ -173,6 +178,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+------------+---------------------+
@@ -200,6 +206,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+----------------+------------------+----------------+----------------+
@@ -263,6 +270,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
@@ -294,6 +302,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
@@ -325,6 +334,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
@@ -356,6 +366,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
@@ -399,6 +410,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+---------------+---------------+
@@ -418,6 +430,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+---------------+
@@ -463,6 +476,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		+-------------------------+-----------------------------------------+
@@ -492,6 +506,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		| Name                    | EscatableValue                                                                     |
@@ -510,6 +525,7 @@ func main() {
 		log.Fatal(err)
 	}
 	table.Out()
+	fmt.Println()
 
 	/*
 		| Name                              | EscatableValue                                                                                                                                                                                                  |

@@ -155,7 +155,10 @@ func (t *Table) Load(input any) error {
 	if v.Kind() == reflect.Ptr {
 		v = v.Elem()
 	}
-	if v.Kind() == reflect.Struct {
+	if v.Kind() != reflect.Slice {
+		if v.IsZero() {
+			return fmt.Errorf("no data found")
+		}
 		v = reflect.Append(reflect.MakeSlice(reflect.SliceOf(v.Type()), 0, 1), v)
 	}
 	if v.Len() == 0 {
@@ -197,7 +200,6 @@ func (t *Table) Out() {
 	case FormatText, FormatCompressedText:
 		t.printBorder()
 	}
-	fmt.Fprintf(t.writer, "\n")
 }
 
 // printHeader renders the table header.
@@ -322,7 +324,7 @@ func (t *Table) setData(v reflect.Value) error {
 		for j, h := range t.header {
 			field := field.FieldByName(h)
 			if !field.IsValid() {
-				return fmt.Errorf("field \"%s\" does not exist", h)
+				return fmt.Errorf("invalid field detected: %s", h)
 			}
 			f, err := t.formatField(field)
 			if err != nil {
