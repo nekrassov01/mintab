@@ -55,7 +55,7 @@ Notes
 Usage
 -----
 
-[example](_examples/main.go)
+[example](example_test.go)
 
 Author
 ------
