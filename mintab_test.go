@@ -45,6 +45,12 @@ type stringerSample struct {
 	IPAddress   net.IP
 }
 
+type nestedStringerSample struct {
+	ElapsedTime []time.Duration
+	IPAddress   []net.IP
+	NestedBytes [][]byte
+}
+
 var (
 	basicsample              []basicSample
 	basicsampleEmpty         []basicSample
@@ -53,6 +59,7 @@ var (
 	nestedsample             []nestedSample
 	mergedsample             []mergedSample
 	stringersample           stringerSample
+	nestedstringerSample     nestedStringerSample
 	basicsamplePtr           []*basicSample
 	basicsampleSlicePtr      *[]basicSample
 	irregularsample          []interface{}
@@ -126,6 +133,23 @@ func setup() {
 	stringersample = stringerSample{
 		ElapsedTime: 123 * time.Hour,
 		IPAddress:   net.IPv4allsys,
+	}
+	nestedstringerSample = nestedStringerSample{
+		ElapsedTime: []time.Duration{
+			123 * time.Hour,
+			234 * time.Minute,
+			345 * time.Second,
+		},
+		IPAddress: []net.IP{
+			net.IPv4(192, 168, 1, 1),
+			net.IPv4(10, 0, 0, 1),
+			net.ParseIP("2001:db8::68"),
+		},
+		NestedBytes: [][]byte{
+			[]byte("aaa"),
+			[]byte("bbb"),
+			[]byte("ccc"),
+		},
 	}
 	basicsamplePtr = make([]*basicSample, 0, len(basicsample))
 	for i := range basicsample {
@@ -366,6 +390,14 @@ func TestTable_Load(t *testing.T) {
 			fields: fields{},
 			args: args{
 				input: stringersample,
+			},
+			wantErr: false,
+		},
+		{
+			name:   "nestedStringer",
+			fields: fields{},
+			args: args{
+				input: nestedstringerSample,
 			},
 			wantErr: false,
 		},

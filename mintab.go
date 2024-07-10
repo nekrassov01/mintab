@@ -396,51 +396,50 @@ func (t *Table) formatField(v reflect.Value) (string, error) {
 		}
 		v = v.Elem()
 	}
-	var r string
-	if s, ok := v.Interface().(fmt.Stringer); ok {
-		r = s.String()
-	} else {
-		switch v.Kind() {
-		case reflect.String:
-			r = v.String()
-		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-			r = strconv.FormatInt(v.Int(), 10)
-		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-			r = strconv.FormatUint(v.Uint(), 10)
-		case reflect.Float32, reflect.Float64:
-			r = strconv.FormatFloat(v.Float(), 'f', -1, 64)
-		case reflect.Slice:
-			switch {
-			case v.Len() == 0:
-				r = t.emptyFieldPlaceholder
-			case v.Type().Elem().Kind() == reflect.Uint8:
-				r = string(v.Bytes())
-			default:
-				var sl []string
-				for i := 0; i < v.Len(); i++ {
-					e := v.Index(i)
-					if e.Kind() == reflect.Ptr {
-						if e.IsNil() {
-							sl = append(sl, t.emptyFieldPlaceholder)
-							continue
-						}
-						e = e.Elem()
-					}
-					if e.Kind() == reflect.Slice || e.Kind() == reflect.Struct {
-						return "", fmt.Errorf("cannot represent nested fields")
-					}
-					f, err := t.formatField(e)
-					if err != nil {
-						return "", err
-					}
-					sl = append(sl, f)
-				}
-				r = strings.Join(sl, t.wordDelimiter)
-			}
-		default:
-			r = fmt.Sprint(v.Interface())
-		}
+	r := getString(v)
+	if r != "" {
+		return t.sanitizeField(r), nil
 	}
+	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
+		return t.sanitizeField(fmt.Sprint(v.Interface())), nil
+	}
+	if v.Len() == 0 {
+		return t.emptyFieldPlaceholder, nil
+	}
+	if v.Type().Elem().Kind() == reflect.Uint8 {
+		return string(v.Bytes()), nil
+	}
+	var ss []string
+	for i := 0; i < v.Len(); i++ {
+		e := v.Index(i)
+		if e.Kind() == reflect.Ptr {
+			if e.IsNil() {
+				ss = append(ss, t.emptyFieldPlaceholder)
+				continue
+			}
+			e = e.Elem()
+		}
+		if s := getString(e); s != "" {
+			ss = append(ss, s)
+			continue
+		}
+		if e.Kind() == reflect.Slice && e.Type().Elem().Kind() == reflect.Uint8 {
+			ss = append(ss, string(e.Bytes()))
+			continue
+		}
+		if e.Kind() == reflect.Slice || e.Kind() == reflect.Array || e.Kind() == reflect.Struct {
+			return "", fmt.Errorf("cannot represent nested fields")
+		}
+		f, err := t.formatField(e)
+		if err != nil {
+			return "", err
+		}
+		ss = append(ss, f)
+	}
+	return t.sanitizeField(strings.Join(ss, t.wordDelimiter)), nil
+}
+
+func (t *Table) sanitizeField(r string) string {
 	if t.hasEscape {
 		r = t.escape(r)
 	}
@@ -450,7 +449,16 @@ func (t *Table) formatField(v reflect.Value) (string, error) {
 	if r == "" {
 		r = t.emptyFieldPlaceholder
 	}
-	return strings.TrimSpace(t.replaceNL(r)), nil
+	return strings.TrimSpace(t.replaceNL(r))
+}
+
+func getString(v reflect.Value) string {
+	if v.CanInterface() {
+		if s, ok := v.Interface().(fmt.Stringer); ok {
+			return s.String()
+		}
+	}
+	return ""
 }
 
 // getDefaultAttr returns the default empty field placeholder and word delimiter for the table's current format.
