@@ -7,6 +7,7 @@ import (
 	"slices"
 	"strconv"
 	"strings"
+	"unicode"
 
 	"github.com/mattn/go-runewidth"
 )
@@ -51,20 +52,21 @@ func (o Format) String() string {
 
 // Table represents a table structure for rendering data in a matrix format.
 type Table struct {
-	writer                io.Writer       // Destination for table output.
-	builder               strings.Builder // Builder for string concatenation.
-	data                  [][]string      // Data holds the content of the table.
-	header                []string        // Names of each field in the table header.
-	format                Format          // Output format of the table.
-	border                string          // Pre-computed border based on column widths.
-	margin                int             // Margin size around cell content.
-	emptyFieldPlaceholder string          // Placeholder for empty fields.
-	wordDelimiter         string          // Delimiter for words within a field.
-	mergedFields          []int           // Indices of fields to be merged based on content.
-	ignoredFields         []int           // Indices of fields to be ignored during rendering.
-	columnWidths          []int           // Calculated max width of each column.
-	hasHeader             bool            // Indicates if the header should be rendered.
-	hasEscape             bool            // Indicates if escaping should be performed.
+	writer                io.Writer  // Destination for table output.
+	data                  [][]string // Data holds the content of the table.
+	header                []string   // Names of each field in the table header.
+	format                Format     // Output format of the table.
+	border                string     // Pre-computed border based on column widths.
+	tableWidth            int        //
+	marginWidth           int        //
+	margin                string     // Margin size around cell content.
+	emptyFieldPlaceholder string     // Placeholder for empty fields.
+	wordDelimiter         string     // Delimiter for words within a field.
+	mergedFields          []int      // Indices of fields to be merged based on content.
+	ignoredFields         []int      // Indices of fields to be ignored during rendering.
+	columnWidths          []int      // Calculated max width of each column.
+	hasHeader             bool       // Indicates if the header should be rendered.
+	hasEscape             bool       // Indicates if escaping should be performed.
 }
 
 // New instantiates a new Table with the specified writer and options.
@@ -72,7 +74,7 @@ func New(w io.Writer, opts ...Option) *Table {
 	t := &Table{
 		writer:                w,
 		format:                FormatText,
-		margin:                1,
+		marginWidth:           1,
 		emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 		wordDelimiter:         DefaultWordDelimiter,
 		hasHeader:             true,
@@ -80,6 +82,7 @@ func New(w io.Writer, opts ...Option) *Table {
 	for _, opt := range opts {
 		opt(t)
 	}
+	t.margin = strings.Repeat(" ", t.marginWidth)
 	return t
 }
 
@@ -101,9 +104,9 @@ func WithHeader(has bool) Option {
 }
 
 // WithMargin sets the margin size around cell content.
-func WithMargin(margin int) Option {
+func WithMargin(width int) Option {
 	return func(t *Table) {
-		t.margin = margin
+		t.marginWidth = width
 	}
 }
 
@@ -145,26 +148,26 @@ func WithEscape(has bool) Option {
 // Load validates the input and converts it into table data.
 // Returns an error if the input is not a slice or if it's empty.
 func (t *Table) Load(input any) error {
-	if t.margin < 0 {
+	if t.marginWidth < 0 {
 		return fmt.Errorf("only unsigned integers are allowed in margin")
 	}
 	if _, ok := input.([]interface{}); ok {
 		return fmt.Errorf("elements of slice must not be empty interface")
 	}
-	v := reflect.ValueOf(input)
-	if v.Kind() == reflect.Ptr {
-		v = v.Elem()
+	rv := reflect.ValueOf(input)
+	if rv.Kind() == reflect.Ptr {
+		rv = rv.Elem()
 	}
-	if v.Kind() != reflect.Slice {
-		if v.IsZero() {
+	if rv.Kind() != reflect.Slice {
+		if rv.IsZero() {
 			return fmt.Errorf("no data found")
 		}
-		v = reflect.Append(reflect.MakeSlice(reflect.SliceOf(v.Type()), 0, 1), v)
+		rv = reflect.Append(reflect.MakeSlice(reflect.SliceOf(rv.Type()), 0, 1), rv)
 	}
-	if v.Len() == 0 {
+	if rv.Len() == 0 {
 		return fmt.Errorf("no data found")
 	}
-	e := v.Index(0)
+	e := rv.Index(0)
 	if e.Kind() == reflect.Ptr {
 		e = e.Elem()
 	}
@@ -173,7 +176,7 @@ func (t *Table) Load(input any) error {
 	}
 	t.setAttr()
 	t.setHeader(e.Type())
-	if err := t.setData(v); err != nil {
+	if err := t.setData(rv); err != nil {
 		return err
 	}
 	if t.format != FormatBacklog {
@@ -204,25 +207,23 @@ func (t *Table) Out() {
 
 // printHeader renders the table header.
 func (t *Table) printHeader() {
-	t.builder.Reset()
-	margin := t.getMargin()
-	t.builder.WriteString("|")
+	var b strings.Builder
+	b.Grow(t.tableWidth)
+	b.WriteString("|")
 	for i, h := range t.header {
-		t.builder.WriteString(margin)
-		t.builder.WriteString(pad(h, t.columnWidths[i]))
-		t.builder.WriteString(margin)
-		t.builder.WriteString("|")
+		t.pad(&b, h, t.columnWidths[i])
+		b.WriteString("|")
 	}
 	if t.format == FormatBacklog {
-		t.builder.WriteString("h")
+		b.WriteString("h")
 	}
-	fmt.Fprintln(t.writer, t.builder.String())
+	fmt.Fprintln(t.writer, b.String())
 }
 
 // printData renders the table data with dynamic conditional borders.
 func (t *Table) printData() {
-	for ri, row := range t.data {
-		if ri > 0 {
+	for i, row := range t.data {
+		if i > 0 {
 			if t.format == FormatText {
 				t.printDataBorder(row)
 			}
@@ -230,29 +231,27 @@ func (t *Table) printData() {
 				t.printBorder()
 			}
 		}
-		lines := 1
-		splitFields := make([][]string, len(row))
-		for fi, field := range row {
-			splitFields[fi] = strings.Split(field, "\n")
-			if len(splitFields[fi]) > lines {
-				lines = len(splitFields[fi])
+		splited := make([][]string, len(row))
+		n := 1
+		for j, field := range row {
+			splited[j] = strings.Split(field, "\n")
+			if len(splited[j]) > n {
+				n = len(splited[j])
 			}
 		}
-		for line := 0; line < lines; line++ {
-			t.builder.Reset()
-			t.builder.WriteString("|")
-			for sfi, splitField := range splitFields {
-				margin := t.getMargin()
-				t.builder.WriteString(margin)
-				if line < len(splitField) {
-					t.builder.WriteString(pad(splitField[line], t.columnWidths[sfi]))
+		for k := 0; k < n; k++ {
+			var b strings.Builder
+			b.Grow(t.tableWidth)
+			b.WriteString("|")
+			for l, elem := range splited {
+				if k < len(elem) {
+					t.pad(&b, elem[k], t.columnWidths[l])
 				} else {
-					t.builder.WriteString(pad("", t.columnWidths[sfi]))
+					t.pad(&b, "", t.columnWidths[l])
 				}
-				t.builder.WriteString(margin)
-				t.builder.WriteString("|")
+				b.WriteString("|")
 			}
-			fmt.Fprintln(t.writer, t.builder.String())
+			fmt.Fprintln(t.writer, b.String())
 		}
 	}
 }
@@ -260,19 +259,21 @@ func (t *Table) printData() {
 // printDataBorder prints a conditional border based on the emptiness of fields in the current row,
 // with continuity in border characters based on the emptiness of adjacent fields.
 func (t *Table) printDataBorder(row []string) {
-	t.builder.Reset()
+	var b strings.Builder
+	b.Grow(t.tableWidth)
 	sep := "+"
 	for i, field := range row {
-		t.builder.WriteString(sep)
+		b.WriteString(sep)
 		v := " "
 		if field != "" {
 			v = "-"
 		}
-		segment := strings.Repeat(v, t.columnWidths[i]+t.margin*2)
-		t.builder.WriteString(segment)
+		for j := 0; j < t.columnWidths[i]+t.marginWidth*2; j++ {
+			b.WriteString(v)
+		}
 	}
-	t.builder.WriteString(sep)
-	fmt.Fprintln(t.writer, t.builder.String())
+	b.WriteString(sep)
+	fmt.Fprintln(t.writer, b.String())
 }
 
 // printBorder renders the table border based on column widths.
@@ -283,7 +284,18 @@ func (t *Table) printBorder() {
 // setAttr configures placeholders and delimiters based on the table format.
 // It ensures consistency in the appearance and structure of table output.
 func (t *Table) setAttr() {
-	p, d := t.getDefaultAttr()
+	var p, d string
+	switch t.format {
+	case FormatMarkdown:
+		p = MarkdownDefaultEmptyFieldPlaceholder
+		d = MarkdownDefaultWordDelimiter
+	case FormatBacklog:
+		p = BacklogDefaultEmptyFieldPlaceholder
+		d = BacklogDefaultWordDelimiter
+	default:
+		p = DefaultEmptyFieldPlaceholder
+		d = DefaultWordDelimiter
+	}
 	if t.emptyFieldPlaceholder == DefaultEmptyFieldPlaceholder {
 		t.emptyFieldPlaceholder = p
 	}
@@ -311,12 +323,12 @@ func (t *Table) setHeader(typ reflect.Type) {
 
 // setData converts the input data to a matrix of strings and calculates column widths.
 // It also handles field formatting based on the table format and whether fields are merged.
-func (t *Table) setData(v reflect.Value) error {
-	t.data = make([][]string, v.Len())
+func (t *Table) setData(rv reflect.Value) error {
+	t.data = make([][]string, rv.Len())
 	prev := make([]string, len(t.header))
-	for i := 0; i < v.Len(); i++ {
+	for i := 0; i < rv.Len(); i++ {
 		row := make([]string, len(t.header))
-		field := v.Index(i)
+		field := rv.Index(i)
 		if field.Kind() == reflect.Ptr {
 			field = field.Elem()
 		}
@@ -340,8 +352,9 @@ func (t *Table) setData(v reflect.Value) error {
 				}
 			}
 			row[j] = f
-			for _, line := range strings.Split(f, "\n") {
-				lw := runewidth.StringWidth(line)
+			elems := strings.Split(f, "\n")
+			for _, elem := range elems {
+				lw := runewidth.StringWidth(elem)
 				if lw > t.columnWidths[j] {
 					t.columnWidths[j] = lw
 				}
@@ -361,95 +374,91 @@ func (t *Table) setBorder() {
 	default:
 		sep = "+"
 	}
-	t.builder.Reset()
+	var b strings.Builder
 	for _, width := range t.columnWidths {
-		t.builder.WriteString(sep)
-		t.builder.WriteString(strings.Repeat("-", width+t.margin*2))
+		b.WriteString(sep)
+		for i := 0; i < width+t.marginWidth*2; i++ {
+			b.WriteByte('-')
+		}
 	}
-	t.builder.WriteString(sep)
-	t.border = t.builder.String()
-}
-
-// getDefaultAttr returns the default empty field placeholder and word delimiter for the table's current format.
-func (t *Table) getDefaultAttr() (emptyFieldPlaceholder string, wordDelimiter string) {
-	switch t.format {
-	case FormatMarkdown:
-		return MarkdownDefaultEmptyFieldPlaceholder, MarkdownDefaultWordDelimiter
-	case FormatBacklog:
-		return BacklogDefaultEmptyFieldPlaceholder, BacklogDefaultWordDelimiter
-	default:
-		return DefaultEmptyFieldPlaceholder, DefaultWordDelimiter
-	}
-}
-
-// getMargin returns a string consisting of spaces to be used as margin around cell content.
-func (t *Table) getMargin() string {
-	return strings.Repeat(" ", t.margin)
+	b.WriteString(sep)
+	t.border = b.String()
+	t.tableWidth = len(t.border)
 }
 
 // formatField formats a single field value based on its type and the table's configuration.
 // It applies escaping if enabled and handles various data types, including slices and primitive types.
-func (t *Table) formatField(v reflect.Value) (string, error) {
-	if v.Kind() == reflect.Ptr {
-		if v.IsNil() {
+func (t *Table) formatField(rv reflect.Value) (string, error) {
+	if rv.Kind() == reflect.Ptr {
+		if rv.IsNil() {
 			return t.emptyFieldPlaceholder, nil
 		}
-		v = v.Elem()
+		rv = rv.Elem()
 	}
-	r := getString(v)
-	if r != "" {
-		return t.sanitizeField(r), nil
-	}
-	if v.Kind() != reflect.Slice && v.Kind() != reflect.Array {
-		return t.sanitizeField(fmt.Sprint(v.Interface())), nil
-	}
-	if v.Len() == 0 {
-		return t.emptyFieldPlaceholder, nil
-	}
-	if v.Type().Elem().Kind() == reflect.Uint8 {
-		return string(v.Bytes()), nil
-	}
-	var ss []string
-	for i := 0; i < v.Len(); i++ {
-		e := v.Index(i)
-		if e.Kind() == reflect.Ptr {
-			if e.IsNil() {
-				ss = append(ss, t.emptyFieldPlaceholder)
-				continue
+	v := getString(rv)
+	if v == "" {
+		switch rv.Kind() {
+		case reflect.String:
+			v = rv.String()
+		case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
+			v = strconv.FormatInt(rv.Int(), 10)
+		case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
+			v = strconv.FormatUint(rv.Uint(), 10)
+		case reflect.Float32, reflect.Float64:
+			v = strconv.FormatFloat(rv.Float(), 'f', -1, 64)
+		case reflect.Slice, reflect.Array:
+			switch {
+			case rv.Len() == 0:
+				v = t.emptyFieldPlaceholder
+			case rv.Type().Elem().Kind() == reflect.Uint8:
+				v = string(rv.Bytes())
+			default:
+				ss := make([]string, rv.Len())
+				for i := 0; i < rv.Len(); i++ {
+					e := rv.Index(i)
+					if i != 0 {
+						ss[i] = t.wordDelimiter
+					}
+					if e.Kind() == reflect.Ptr {
+						if e.IsNil() {
+							ss[i] = t.emptyFieldPlaceholder
+							continue
+						}
+						e = e.Elem()
+					}
+					if s := getString(e); s != "" {
+						ss[i] = s
+						continue
+					}
+					if e.Kind() == reflect.Slice && e.Type().Elem().Kind() == reflect.Uint8 {
+						ss[i] = string(e.Bytes())
+						continue
+					}
+					if e.Kind() == reflect.Slice || e.Kind() == reflect.Array || e.Kind() == reflect.Struct {
+						return "", fmt.Errorf("cannot represent nested fields")
+					}
+					f, err := t.formatField(e)
+					if err != nil {
+						return "", err
+					}
+					ss[i] = f
+				}
+				v = strings.Join(ss, t.wordDelimiter)
 			}
-			e = e.Elem()
+		default:
+			v = fmt.Sprint(rv.Interface())
 		}
-		if s := getString(e); s != "" {
-			ss = append(ss, s)
-			continue
-		}
-		if e.Kind() == reflect.Slice && e.Type().Elem().Kind() == reflect.Uint8 {
-			ss = append(ss, string(e.Bytes()))
-			continue
-		}
-		if e.Kind() == reflect.Slice || e.Kind() == reflect.Array || e.Kind() == reflect.Struct {
-			return "", fmt.Errorf("cannot represent nested fields")
-		}
-		f, err := t.formatField(e)
-		if err != nil {
-			return "", err
-		}
-		ss = append(ss, f)
 	}
-	return t.sanitizeField(strings.Join(ss, t.wordDelimiter)), nil
-}
-
-func (t *Table) sanitizeField(r string) string {
 	if t.hasEscape {
-		r = t.escape(r)
+		v = t.escape(v)
 	}
-	if t.format == FormatMarkdown && strings.HasPrefix(r, "*") {
-		r = "\\" + r
+	if t.format == FormatMarkdown && strings.HasPrefix(v, "*") {
+		v = "\\" + v
 	}
-	if r == "" {
-		r = t.emptyFieldPlaceholder
+	if v == "" {
+		v = t.emptyFieldPlaceholder
 	}
-	return strings.TrimSpace(t.replaceNL(r))
+	return strings.TrimSpace(t.replaceNL(v)), nil
 }
 
 func getString(v reflect.Value) string {
@@ -461,84 +470,99 @@ func getString(v reflect.Value) string {
 	return ""
 }
 
-// getDefaultAttr returns the default empty field placeholder and word delimiter for the table's current format.
 func (t *Table) replaceNL(s string) string {
-	_, d := t.getDefaultAttr()
-	if d == "\n" {
+	if t.wordDelimiter == "\n" {
 		return s
 	}
-	t.builder.Reset()
+	var b strings.Builder
 	for _, r := range s {
 		switch r {
 		case '\n':
-			t.builder.WriteString(d)
+			b.WriteString(t.wordDelimiter)
 		default:
-			t.builder.WriteRune(r)
+			b.WriteRune(r)
 		}
 	}
-	return t.builder.String()
+	return b.String()
 }
 
 // escape applies HTML escaping to a string for safe rendering in Markdown and other formats.
 func (t *Table) escape(s string) string {
-	t.builder.Reset()
+	var b strings.Builder
 	for _, r := range s {
 		switch r {
 		case '<':
-			t.builder.WriteString("&lt;")
+			b.WriteString("&lt;")
 		case '>':
-			t.builder.WriteString("&gt;")
+			b.WriteString("&gt;")
 		case '"':
-			t.builder.WriteString("&quot;")
+			b.WriteString("&quot;")
 		case '\'':
-			t.builder.WriteString("&lsquo;")
+			b.WriteString("&lsquo;")
 		case '&':
-			t.builder.WriteString("&amp;")
+			b.WriteString("&amp;")
 		case ' ':
-			t.builder.WriteString("&nbsp;")
+			b.WriteString("&nbsp;")
 		case '*':
-			t.builder.WriteString("&#42;")
+			b.WriteString("&#42;")
 		case '\\':
-			t.builder.WriteString("&#92;")
+			b.WriteString("&#92;")
 		case '_':
-			t.builder.WriteString("&#95;")
+			b.WriteString("&#95;")
 		case '|':
-			t.builder.WriteString("&#124;")
+			b.WriteString("&#124;")
 		default:
-			t.builder.WriteRune(r)
+			b.WriteRune(r)
 		}
 	}
-	return t.builder.String()
+	return b.String()
 }
 
 // pad right-aligns numeric strings and left-aligns all other strings within a field of specified width.
-func pad(s string, w int) string {
-	if isNum(s) {
-		return padL(s, w)
+func (t *Table) pad(b *strings.Builder, s string, width int) {
+	b.WriteString(t.margin)
+	isN := isNum(s)
+	if !isN {
+		b.WriteString(s)
 	}
-	return padR(s, w)
-}
-
-// padR left-aligns a string within a field of specified width.
-func padR(s string, w int) string {
-	p := w - runewidth.StringWidth(s)
+	p := width - runewidth.StringWidth(s)
 	if p > 0 {
-		return s + strings.Repeat(" ", p)
+		for i := 0; i < p; i++ {
+			b.WriteByte(' ')
+		}
 	}
-	return s
-}
-
-// padL right-aligns a string within a field of specified width, primarily for numeric data.
-func padL(s string, w int) string {
-	p := w - runewidth.StringWidth(s)
-	if p > 0 {
-		return strings.Repeat(" ", p) + s
+	if isN {
+		b.WriteString(s)
 	}
-	return s
+	b.WriteString(t.margin)
 }
 
 // isNum checks if a string represents a numeric value.
 func isNum(s string) bool {
-	_, err := strconv.ParseInt(s, 10, 64)
-	return err == nil
+	if len(s) == 0 {
+		return false
+	}
+	start := 0
+	if s[0] == '-' || s[0] == '+' {
+		start = 1
+		if len(s) == 1 {
+			return false
+		}
+	}
+	n := 0
+	d := false
+	for i := start; i < len(s); i++ {
+		if s[i] == '.' {
+			n++
+			if n > 1 {
+				return false
+			}
+			continue
+		}
+		if !unicode.IsDigit(rune(s[i])) {
+			return false
+		}
+		d = true
+	}
+	return d
 }

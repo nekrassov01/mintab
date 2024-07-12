@@ -232,7 +232,8 @@ func TestNew(t *testing.T) {
 				header:                nil,
 				format:                FormatText,
 				border:                "",
-				margin:                1,
+				marginWidth:           1,
+				margin:                " ",
 				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
 				wordDelimiter:         DefaultWordDelimiter,
 				mergedFields:          nil,
@@ -262,7 +263,8 @@ func TestNew(t *testing.T) {
 				header:                nil,
 				format:                FormatMarkdown,
 				border:                "",
-				margin:                2,
+				marginWidth:           2,
+				margin:                "  ",
 				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
 				wordDelimiter:         MarkdownDefaultWordDelimiter,
 				mergedFields:          []int{0},
@@ -289,8 +291,8 @@ func TestNew(t *testing.T) {
 
 func TestTable_Load(t *testing.T) {
 	type fields struct {
-		header []string
-		margin int
+		header      []string
+		marginWidth int
 	}
 	type args struct {
 		input any
@@ -304,7 +306,7 @@ func TestTable_Load(t *testing.T) {
 		{
 			name: "signed_margin",
 			fields: fields{
-				margin: -1,
+				marginWidth: -1,
 			},
 			args: args{
 				input: basicsample,
@@ -405,8 +407,8 @@ func TestTable_Load(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &Table{
-				header: tt.fields.header,
-				margin: tt.fields.margin,
+				header:      tt.fields.header,
+				marginWidth: tt.fields.marginWidth,
 			}
 			if err := tr.Load(tt.args.input); (err != nil) != tt.wantErr {
 				t.Errorf("Table.Load() error = %v, wantErr %v", err, tt.wantErr)
@@ -567,7 +569,7 @@ func TestTable_printHeader(t *testing.T) {
 	type fields struct {
 		header       []string
 		format       Format
-		margin       int
+		marginWidth  int
 		columnWidths []int
 	}
 	tests := []struct {
@@ -580,7 +582,7 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
 				format:       FormatText,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{1, 2, 3},
 			},
 			want: "| a | bb | ccc |\n",
@@ -590,7 +592,7 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
 				format:       FormatMarkdown,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{1, 2, 3},
 			},
 			want: "| a | bb | ccc |\n",
@@ -600,7 +602,7 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
 				format:       FormatBacklog,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{1, 2, 3},
 			},
 			want: "| a | bb | ccc |h\n",
@@ -610,7 +612,7 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
 				format:       FormatText,
-				margin:       3,
+				marginWidth:  3,
 				columnWidths: []int{1, 2, 3},
 			},
 			want: "|   a   |   bb   |   ccc   |\n",
@@ -620,7 +622,7 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
 				format:       FormatText,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{10, 2, 3},
 			},
 			want: "| a          | bb | ccc |\n",
@@ -630,7 +632,7 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
 				format:       FormatText,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{1, 2, 1},
 			},
 			want: "| a | bb | ccc |\n",
@@ -639,10 +641,10 @@ func TestTable_printHeader(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
-			tr := New(buf, WithMargin(tt.fields.margin))
+			tr := New(buf, WithMargin(tt.fields.marginWidth))
 			tr.format = tt.fields.format
 			tr.header = tt.fields.header
-			tr.margin = tt.fields.margin
+			tr.marginWidth = tt.fields.marginWidth
 			tr.columnWidths = tt.fields.columnWidths
 			tr.printHeader()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
@@ -785,7 +787,7 @@ func TestTable_printData(t *testing.T) {
 
 func TestTable_printDataBorder(t *testing.T) {
 	type fields struct {
-		margin       int
+		marginWidth  int
 		columnWidths []int
 	}
 	type args struct {
@@ -800,7 +802,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "basic",
 			fields: fields{
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{4, 5, 6},
 			},
 			args: args{
@@ -811,7 +813,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "margin",
 			fields: fields{
-				margin:       3,
+				marginWidth:  3,
 				columnWidths: []int{4, 5, 6},
 			},
 			args: args{
@@ -822,7 +824,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "long",
 			fields: fields{
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{10, 5, 6},
 			},
 			args: args{
@@ -833,7 +835,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "short",
 			fields: fields{
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{4, 5, 6},
 			},
 			args: args{
@@ -844,7 +846,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "empty_field_included_1",
 			fields: fields{
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{4, 5, 6},
 			},
 			args: args{
@@ -855,7 +857,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "empty_field_included_2",
 			fields: fields{
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{4, 5, 6},
 			},
 			args: args{
@@ -866,7 +868,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "empty_field_included_3",
 			fields: fields{
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{4, 5, 6},
 			},
 			args: args{
@@ -877,7 +879,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		{
 			name: "empty_field_included_4",
 			fields: fields{
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{4, 5, 6},
 			},
 			args: args{
@@ -890,7 +892,7 @@ func TestTable_printDataBorder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
 			tr := New(buf)
-			tr.margin = tt.fields.margin
+			tr.marginWidth = tt.fields.marginWidth
 			tr.columnWidths = tt.fields.columnWidths
 			tr.printDataBorder(tt.args.row)
 			if !reflect.DeepEqual(buf.String(), tt.want) {
@@ -903,7 +905,7 @@ func TestTable_printDataBorder(t *testing.T) {
 func TestTable_printBorder(t *testing.T) {
 	type fields struct {
 		format       Format
-		margin       int
+		marginWidth  int
 		columnWidths []int
 	}
 
@@ -916,7 +918,7 @@ func TestTable_printBorder(t *testing.T) {
 			name: "text",
 			fields: fields{
 				format:       FormatText,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "+----------+--------------+-------+\n",
@@ -925,7 +927,7 @@ func TestTable_printBorder(t *testing.T) {
 			name: "markdown",
 			fields: fields{
 				format:       FormatMarkdown,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "|----------|--------------|-------|\n",
@@ -934,7 +936,7 @@ func TestTable_printBorder(t *testing.T) {
 			name: "backlog",
 			fields: fields{
 				format:       FormatBacklog,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "|----------|--------------|-------|\n",
@@ -943,7 +945,7 @@ func TestTable_printBorder(t *testing.T) {
 			name: "wide-margin",
 			fields: fields{
 				format:       FormatText,
-				margin:       3,
+				marginWidth:  3,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "+--------------+------------------+-----------+\n",
@@ -954,7 +956,7 @@ func TestTable_printBorder(t *testing.T) {
 			buf := new(bytes.Buffer)
 			tr := New(buf)
 			tr.format = tt.fields.format
-			tr.margin = tt.fields.margin
+			tr.marginWidth = tt.fields.marginWidth
 			tr.columnWidths = tt.fields.columnWidths
 			tr.setBorder()
 			tr.printBorder()
@@ -1275,7 +1277,7 @@ func TestTable_setData(t *testing.T) {
 func TestTable_setBorder(t *testing.T) {
 	type fields struct {
 		format       Format
-		margin       int
+		marginWidth  int
 		columnWidths []int
 	}
 	tests := []struct {
@@ -1287,7 +1289,7 @@ func TestTable_setBorder(t *testing.T) {
 			name: "text",
 			fields: fields{
 				format:       FormatText,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "+----------+--------------+-------+",
@@ -1296,7 +1298,7 @@ func TestTable_setBorder(t *testing.T) {
 			name: "markdown",
 			fields: fields{
 				format:       FormatMarkdown,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "|----------|--------------|-------|",
@@ -1305,7 +1307,7 @@ func TestTable_setBorder(t *testing.T) {
 			name: "backlog",
 			fields: fields{
 				format:       FormatBacklog,
-				margin:       1,
+				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "|----------|--------------|-------|",
@@ -1314,7 +1316,7 @@ func TestTable_setBorder(t *testing.T) {
 			name: "wide-margin",
 			fields: fields{
 				format:       FormatText,
-				margin:       3,
+				marginWidth:  3,
 				columnWidths: []int{8, 12, 5},
 			},
 			want: "+--------------+------------------+-----------+",
@@ -1324,49 +1326,12 @@ func TestTable_setBorder(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &Table{
 				format:       tt.fields.format,
-				margin:       tt.fields.margin,
+				marginWidth:  tt.fields.marginWidth,
 				columnWidths: tt.fields.columnWidths,
 			}
 			tr.setBorder()
 			if !reflect.DeepEqual(tr.border, tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", tr.border, tt.want)
-			}
-		})
-	}
-}
-
-func TestTable_getMargin(t *testing.T) {
-	type fields struct {
-		margin int
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		want   string
-	}{
-		{
-			name: "basic",
-			fields: fields{
-				margin: 1,
-			},
-			want: " ",
-		},
-		{
-			name: "basic",
-			fields: fields{
-				margin: 2,
-			},
-			want: "  ",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			tr := &Table{
-				margin: tt.fields.margin,
-			}
-			got := tr.getMargin()
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, tt.want)
 			}
 		})
 	}
@@ -1831,7 +1796,8 @@ func TestTable_formatField(t *testing.T) {
 
 func TestTable_replaceNL(t *testing.T) {
 	type fields struct {
-		format Format
+		format        Format
+		wordDelimiter string
 	}
 	type args struct {
 		s string
@@ -1845,7 +1811,8 @@ func TestTable_replaceNL(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				format: FormatText,
+				format:        FormatText,
+				wordDelimiter: "\n",
 			},
 			args: args{
 				s: "aaa\nbbb\nccc",
@@ -1855,7 +1822,8 @@ func TestTable_replaceNL(t *testing.T) {
 		{
 			name: "markdown",
 			fields: fields{
-				format: FormatMarkdown,
+				format:        FormatMarkdown,
+				wordDelimiter: "<br>",
 			},
 			args: args{
 				s: "aaa\nbbb\nccc",
@@ -1865,7 +1833,8 @@ func TestTable_replaceNL(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				format: FormatBacklog,
+				format:        FormatBacklog,
+				wordDelimiter: "&br;",
 			},
 			args: args{
 				s: "aaa\nbbb\nccc",
@@ -1876,7 +1845,8 @@ func TestTable_replaceNL(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &Table{
-				format: tt.fields.format,
+				format:        tt.fields.format,
+				wordDelimiter: tt.fields.wordDelimiter,
 			}
 			got := tr.replaceNL(tt.args.s)
 			if !reflect.DeepEqual(got, tt.want) {
@@ -1955,168 +1925,9 @@ func TestTable_escape(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &Table{
-				builder: tt.fields.builder,
+				//	builder: tt.fields.builder,
 			}
 			got := tr.escape(tt.args.s)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_pad(t *testing.T) {
-	type args struct {
-		s string
-		w int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "basic",
-			args: args{
-				s: "dummy",
-				w: 10,
-			},
-			want: "dummy     ",
-		},
-		{
-			name: "japanese",
-			args: args{
-				s: "あいうえお",
-				w: 20,
-			},
-			want: "あいうえお          ",
-		},
-		{
-			name: "short",
-			args: args{
-				s: "dummy",
-				w: 2,
-			},
-			want: "dummy",
-		},
-		{
-			name: "int1",
-			args: args{
-				s: "0",
-				w: 10,
-			},
-			want: "         0",
-		},
-		{
-			name: "int2",
-			args: args{
-				s: "-1",
-				w: 10,
-			},
-			want: "        -1",
-		},
-		{
-			name: "int3",
-			args: args{
-				s: "01",
-				w: 10,
-			},
-			want: "        01",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := pad(tt.args.s, tt.args.w)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_padR(t *testing.T) {
-	type args struct {
-		s string
-		w int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "basic",
-			args: args{
-				s: "dummy",
-				w: 10,
-			},
-			want: "dummy     ",
-		},
-		{
-			name: "japanese",
-			args: args{
-				s: "あいうえお",
-				w: 20,
-			},
-			want: "あいうえお          ",
-		},
-		{
-			name: "short",
-			args: args{
-				s: "dummy",
-				w: 2,
-			},
-			want: "dummy",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := padR(tt.args.s, tt.args.w)
-			if !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, tt.want)
-			}
-		})
-	}
-}
-
-func Test_padL(t *testing.T) {
-	type args struct {
-		s string
-		w int
-	}
-	tests := []struct {
-		name string
-		args args
-		want string
-	}{
-		{
-			name: "basic",
-			args: args{
-				s: "dummy",
-				w: 10,
-			},
-			want: "     dummy",
-		},
-		{
-			name: "japanese",
-			args: args{
-				s: "あいうえお",
-				w: 20,
-			},
-			want: "          あいうえお",
-		},
-		{
-			name: "short",
-			args: args{
-				s: "dummy",
-				w: 2,
-			},
-			want: "dummy",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			got := padL(tt.args.s, tt.args.w)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, tt.want)
 			}
