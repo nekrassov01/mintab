@@ -71,23 +71,23 @@ go test -run=^$ -bench=. -benchmem -count 5
 goos: darwin
 goarch: arm64
 pkg: github.com/nekrassov01/mintab
-BenchmarkMintab-8                  45578             25500 ns/op           20527 B/op        399 allocs/op
-BenchmarkMintab-8                  46488             25449 ns/op           20527 B/op        399 allocs/op
-BenchmarkMintab-8                  44702             26457 ns/op           20528 B/op        399 allocs/op
-BenchmarkMintab-8                  42699             28344 ns/op           20527 B/op        399 allocs/op
-BenchmarkMintab-8                  45213             31852 ns/op           20527 B/op        399 allocs/op
-BenchmarkMintabSimple-8            55597             19234 ns/op           13033 B/op        242 allocs/op
-BenchmarkMintabSimple-8            64444             18966 ns/op           13033 B/op        242 allocs/op
-BenchmarkMintabSimple-8            53935             21939 ns/op           13034 B/op        242 allocs/op
-BenchmarkMintabSimple-8            61573             18596 ns/op           13033 B/op        242 allocs/op
-BenchmarkMintabSimple-8            64854             19147 ns/op           13033 B/op        242 allocs/op
-BenchmarkTableWriter-8             21787             47804 ns/op           25421 B/op        701 allocs/op
-BenchmarkTableWriter-8             26362             45354 ns/op           25365 B/op        701 allocs/op
-BenchmarkTableWriter-8             26691             44275 ns/op           25332 B/op        701 allocs/op
-BenchmarkTableWriter-8             26622             44199 ns/op           25360 B/op        701 allocs/op
-BenchmarkTableWriter-8             27138             44492 ns/op           25297 B/op        701 allocs/op
+BenchmarkMintab-8                  41235             28038 ns/op           20526 B/op        399 allocs/op
+BenchmarkMintab-8                  41691             28760 ns/op           20526 B/op        399 allocs/op
+BenchmarkMintab-8                  42501             28221 ns/op           20527 B/op        399 allocs/op
+BenchmarkMintab-8                  42108             28884 ns/op           20527 B/op        399 allocs/op
+BenchmarkMintab-8                  41623             28025 ns/op           20527 B/op        399 allocs/op
+BenchmarkMintabSimple-8            53133             21718 ns/op           13033 B/op        242 allocs/op
+BenchmarkMintabSimple-8            55862             21989 ns/op           13033 B/op        242 allocs/op
+BenchmarkMintabSimple-8            52072             21951 ns/op           13033 B/op        242 allocs/op
+BenchmarkMintabSimple-8            49274             25767 ns/op           13033 B/op        242 allocs/op
+BenchmarkMintabSimple-8            56613             20016 ns/op           13033 B/op        242 allocs/op
+BenchmarkTableWriter-8             24984             48162 ns/op           25336 B/op        701 allocs/op
+BenchmarkTableWriter-8             25264             48327 ns/op           25347 B/op        701 allocs/op
+BenchmarkTableWriter-8             24562             53952 ns/op           25398 B/op        701 allocs/op
+BenchmarkTableWriter-8             25231             48222 ns/op           25371 B/op        701 allocs/op
+BenchmarkTableWriter-8             23983             51700 ns/op           25359 B/op        701 allocs/op
 PASS
-ok      github.com/nekrassov01/mintab   24.097s
+ok      github.com/nekrassov01/mintab   23.596s
 ```
 
 Author

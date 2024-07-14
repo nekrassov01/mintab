@@ -1,12 +1,10 @@
-package mintab_test
+package mintab
 
 import (
 	"fmt"
 	"log"
 	"os"
 	"strings"
-
-	"github.com/nekrassov01/mintab"
 )
 
 type sample1 struct {
@@ -60,8 +58,8 @@ var s3 = []sample3{
 }
 
 type sample4 struct {
-	Name           string
-	EscatableValue string
+	Name  string
+	Value string
 }
 
 var jsonSample = `{
@@ -74,14 +72,14 @@ var jsonSample = `{
 `
 
 var s4 = []sample4{
-	{Name: "wildcard domain", EscatableValue: "*.example.com"},
-	{Name: "empty field placeholder", EscatableValue: ""},
-	{Name: "html tag", EscatableValue: "<span style=\"color:#d70910;\">red</span>"},
-	{Name: "JSON", EscatableValue: jsonSample},
+	{Name: "wildcard domain", Value: "*.example.com"},
+	{Name: "empty field placeholder", Value: ""},
+	{Name: "html tag", Value: "<span style=\"color:#d70910;\">red</span>"},
+	{Name: "JSON", Value: jsonSample},
 }
 
 func ExampleTable_Load_basic() {
-	table := mintab.New(os.Stdout)
+	table := New(os.Stdout)
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -111,7 +109,7 @@ func ExampleTable_Load_basic() {
 }
 
 func ExampleTable_Load_markdown() {
-	table := mintab.New(os.Stdout, mintab.WithFormat(mintab.MarkdownFormat))
+	table := New(os.Stdout, WithFormat(MarkdownFormat))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -129,7 +127,7 @@ func ExampleTable_Load_markdown() {
 }
 
 func ExampleTable_Load_backlog() {
-	table := mintab.New(os.Stdout, mintab.WithFormat(mintab.BacklogFormat))
+	table := New(os.Stdout, WithFormat(BacklogFormat))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -146,7 +144,7 @@ func ExampleTable_Load_backlog() {
 }
 
 func ExampleTable_Load_disableheader() {
-	table := mintab.New(os.Stdout, mintab.WithHeader(false))
+	table := New(os.Stdout, WithHeader(false))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -174,7 +172,7 @@ func ExampleTable_Load_disableheader() {
 }
 
 func ExampleTable_Load_emptyfieldplaceholder() {
-	table := mintab.New(os.Stdout, mintab.WithEmptyFieldPlaceholder("NULL"))
+	table := New(os.Stdout, WithEmptyFieldPlaceholder("NULL"))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -204,7 +202,7 @@ func ExampleTable_Load_emptyfieldplaceholder() {
 }
 
 func ExampleTable_Load_worddelimiter() {
-	table := mintab.New(os.Stdout, mintab.WithWordDelimiter(","))
+	table := New(os.Stdout, WithWordDelimiter(","))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -229,7 +227,7 @@ func ExampleTable_Load_worddelimiter() {
 }
 
 func ExampleTable_Load_margin() {
-	table := mintab.New(os.Stdout, mintab.WithMargin(3))
+	table := New(os.Stdout, WithMargin(3))
 	if err := table.Load(s1); err != nil {
 		log.Fatal(err)
 	}
@@ -259,7 +257,7 @@ func ExampleTable_Load_margin() {
 }
 
 func ExampleTable_Load_mergefields1() {
-	table := mintab.New(os.Stdout)
+	table := New(os.Stdout)
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}
@@ -288,7 +286,7 @@ func ExampleTable_Load_mergefields1() {
 }
 
 func ExampleTable_Load_mergefields2() {
-	table := mintab.New(os.Stdout, mintab.WithMergeFields([]int{0, 1, 2, 3}))
+	table := New(os.Stdout, WithMergeFields([]int{0, 1, 2, 3}))
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}
@@ -317,7 +315,7 @@ func ExampleTable_Load_mergefields2() {
 }
 
 func ExampleTable_Load_mergefields3() {
-	table := mintab.New(os.Stdout, mintab.WithFormat(mintab.CompressedTextFormat), mintab.WithMergeFields([]int{0, 1, 2, 3}))
+	table := New(os.Stdout, WithFormat(CompressedTextFormat), WithMergeFields([]int{0, 1, 2, 3}))
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}
@@ -340,7 +338,7 @@ func ExampleTable_Load_mergefields3() {
 }
 
 func ExampleTable_Load_ignorefields1() {
-	table := mintab.New(os.Stdout, mintab.WithIgnoreFields(nil))
+	table := New(os.Stdout, WithIgnoreFields(nil))
 	if err := table.Load(s3); err != nil {
 		log.Fatal(err)
 	}
@@ -357,7 +355,7 @@ func ExampleTable_Load_ignorefields1() {
 }
 
 func ExampleTable_Load_ignorefields2() {
-	table := mintab.New(os.Stdout, mintab.WithIgnoreFields([]int{1}))
+	table := New(os.Stdout, WithIgnoreFields([]int{1}))
 	if err := table.Load(s3); err != nil {
 		log.Fatal(err)
 	}
@@ -374,7 +372,7 @@ func ExampleTable_Load_ignorefields2() {
 }
 
 func ExampleTable_Load_escape1() {
-	table := mintab.New(os.Stdout, mintab.WithEscape(false))
+	table := New(os.Stdout, WithEscape(false))
 	if err := table.Load(s4); err != nil {
 		log.Fatal(err)
 	}
@@ -382,7 +380,7 @@ func ExampleTable_Load_escape1() {
 
 	// Output:
 	// +-------------------------+-----------------------------------------+
-	// | Name                    | EscatableValue                          |
+	// | Name                    | Value                                   |
 	// +-------------------------+-----------------------------------------+
 	// | wildcard domain         | *.example.com                           |
 	// +-------------------------+-----------------------------------------+
@@ -401,14 +399,14 @@ func ExampleTable_Load_escape1() {
 }
 
 func ExampleTable_Load_escape2() {
-	table := mintab.New(os.Stdout, mintab.WithFormat(mintab.MarkdownFormat), mintab.WithEscape(false))
+	table := New(os.Stdout, WithFormat(MarkdownFormat), WithEscape(false))
 	if err := table.Load(s4); err != nil {
 		log.Fatal(err)
 	}
 	table.Render()
 
 	// Output:
-	// | Name                    | EscatableValue                                                                     |
+	// | Name                    | Value                                                                              |
 	// |-------------------------|------------------------------------------------------------------------------------|
 	// | wildcard domain         | \*.example.com                                                                     |
 	// | empty field placeholder | \-                                                                                 |
@@ -417,14 +415,14 @@ func ExampleTable_Load_escape2() {
 }
 
 func ExampleTable_Load_escape3() {
-	table := mintab.New(os.Stdout, mintab.WithFormat(mintab.MarkdownFormat), mintab.WithEscape(true))
+	table := New(os.Stdout, WithFormat(MarkdownFormat), WithEscape(true))
 	if err := table.Load(s4); err != nil {
 		log.Fatal(err)
 	}
 	table.Render()
 
 	// Output:
-	// | Name                              | EscatableValue                                                                                                                                                                                                  |
+	// | Name                              | Value                                                                                                                                                                                                           |
 	// |-----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
 	// | wildcard&nbsp;domain              | &#42;.example.com                                                                                                                                                                                               |
 	// | empty&nbsp;field&nbsp;placeholder | \-                                                                                                                                                                                                              |
@@ -434,7 +432,7 @@ func ExampleTable_Load_escape3() {
 
 func ExampleTable_Load_string() {
 	builder := &strings.Builder{}
-	table := mintab.New(builder)
+	table := New(builder)
 	if err := table.Load(s2); err != nil {
 		log.Fatal(err)
 	}

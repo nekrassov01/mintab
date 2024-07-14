@@ -11,7 +11,7 @@ func BenchmarkMintab(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		table := New(&bytes.Buffer{})
-		if err := table.Load(basicsample); err != nil {
+		if err := table.Load(s1); err != nil {
 			b.Fatal(err)
 		}
 		table.Render()
