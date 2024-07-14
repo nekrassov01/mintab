@@ -58,9 +58,9 @@ jobs:
       - name: Run tests
         run: |
           git diff --cached --exit-code
-          go test ./... -v -cover -coverprofile=cover.out
+          go test ./... -v -cover -coverprofile=cover.Render
 
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v3
         with:
-          files: ./cover.out
+          files: ./cover.Render

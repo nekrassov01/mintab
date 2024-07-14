@@ -8,6 +8,8 @@ import (
 	"strings"
 	"testing"
 	"time"
+
+	"github.com/google/go-cmp/cmp"
 )
 
 type basicSample struct {
@@ -178,22 +180,22 @@ func TestFormat_String(t *testing.T) {
 	}{
 		{
 			name: "text",
-			o:    FormatText,
+			o:    TextFormat,
 			want: "text",
 		},
 		{
 			name: "compressed",
-			o:    FormatCompressedText,
+			o:    CompressedTextFormat,
 			want: "compressed",
 		},
 		{
 			name: "markdown",
-			o:    FormatMarkdown,
+			o:    MarkdownFormat,
 			want: "markdown",
 		},
 		{
 			name: "backlog",
-			o:    FormatBacklog,
+			o:    BacklogFormat,
 			want: "backlog",
 		},
 		{
@@ -230,12 +232,13 @@ func TestNew(t *testing.T) {
 				writer:                &bytes.Buffer{},
 				data:                  nil,
 				header:                nil,
-				format:                FormatText,
+				format:                TextFormat,
+				newLine:               textNewLine,
 				border:                "",
 				marginWidth:           1,
 				margin:                " ",
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				mergedFields:          nil,
 				ignoredFields:         nil,
 				columnWidths:          nil,
@@ -247,7 +250,7 @@ func TestNew(t *testing.T) {
 			name: "not-default",
 			args: args{
 				opts: []Option{
-					WithFormat(FormatMarkdown),
+					WithFormat(MarkdownFormat),
 					WithHeader(false),
 					WithMargin(2),
 					WithEmptyFieldPlaceholder(MarkdownDefaultEmptyFieldPlaceholder),
@@ -261,7 +264,8 @@ func TestNew(t *testing.T) {
 				writer:                &bytes.Buffer{},
 				data:                  nil,
 				header:                nil,
-				format:                FormatMarkdown,
+				format:                MarkdownFormat,
+				newLine:               textNewLine, // change after setAttr()
 				border:                "",
 				marginWidth:           2,
 				margin:                "  ",
@@ -417,12 +421,15 @@ func TestTable_Load(t *testing.T) {
 	}
 }
 
-func TestTable_Out(t *testing.T) {
+func TestTable_Render(t *testing.T) {
 	type fields struct {
-		format       Format
-		header       []string
-		data         [][]string
+		format      Format
+		header      []string
+		data        [][]string
+		splitedData [][][]string
+
 		columnWidths []int
+		lineHeights  []int
 	}
 	tests := []struct {
 		name   string
@@ -432,7 +439,7 @@ func TestTable_Out(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				format: FormatText,
+				format: TextFormat,
 				header: []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
 				data: [][]string{
 					{"i-1", "server-1", "lb-1", "tg-1"},
@@ -442,7 +449,16 @@ func TestTable_Out(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
 				},
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
+					{{"i-2"}, {"server-2"}, {"lb-2", "lb-3"}, {"tg-2"}},
+					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3", "tg-4"}},
+					{{"i-4"}, {"server-4"}, {"-"}, {"-"}},
+					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
+					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5", "tg-6", "tg-7", "tg-8"}},
+				},
 				columnWidths: []int{10, 12, 10, 10},
+				lineHeights:  []int{1, 2, 2, 1, 1, 4},
 			},
 			want: `+------------+--------------+------------+------------+
 | InstanceID | InstanceName | AttachedLB | AttachedTG |
@@ -469,7 +485,7 @@ func TestTable_Out(t *testing.T) {
 		{
 			name: "text_with_compressed",
 			fields: fields{
-				format: FormatCompressedText,
+				format: CompressedTextFormat,
 				header: []string{"InstanceID", "InstanceName", "VPCID", "SecurityGroupID", "FlowDirection", "IPProtocol", "FromPort", "ToPort", "AddressType", "CidrBlock"},
 				data: [][]string{
 					{"i-1", "server-1", "vpc-1", "sg-1", "Ingress", "tcp", "22", "22", "SecurityGroup", "sg-10"},
@@ -481,7 +497,18 @@ func TestTable_Out(t *testing.T) {
 					{"", "", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
 					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
 				},
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"vpc-1"}, {"sg-1"}, {"Ingress"}, {"tcp"}, {"22"}, {"22"}, {"SecurityGroup"}, {"sg-10"}},
+					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
+					{{""}, {""}, {""}, {"sg-2"}, {"Ingress"}, {"tcp"}, {"443"}, {"443"}, {"Ipv4"}, {"0.0.0.0/0"}},
+					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
+					{{"i-2"}, {"server-2"}, {"vpc-1"}, {"sg-3"}, {"Ingress"}, {"icmp"}, {"-1"}, {"-1"}, {"SecurityGroup"}, {"sg-11"}},
+					{{""}, {""}, {""}, {""}, {"Ingress"}, {"tcp"}, {"3389"}, {"3389"}, {"Ipv4"}, {"10.1.0.0/16"}},
+					{{""}, {""}, {""}, {""}, {"Ingress"}, {"tcp"}, {"0"}, {"65535"}, {"PrefixList"}, {"pl-id/pl-name"}},
+					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
+				},
 				columnWidths: []int{10, 12, 5, 15, 13, 10, 8, 6, 13, 13},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1, 1, 1},
 			},
 			want: `+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 | InstanceID | InstanceName | VPCID | SecurityGroupID | FlowDirection | IPProtocol | FromPort | ToPort | AddressType   | CidrBlock     |
@@ -501,7 +528,7 @@ func TestTable_Out(t *testing.T) {
 		{
 			name: "markdown",
 			fields: fields{
-				format: FormatMarkdown,
+				format: MarkdownFormat,
 				header: []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
 				data: [][]string{
 					{"i-1", "server-1", "lb-1", "tg-1"},
@@ -511,7 +538,16 @@ func TestTable_Out(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "\\-"},
 					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
 				},
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
+					{{"i-2"}, {"server-2"}, {"lb-2<br>lb-3"}, {"tg-2"}},
+					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3<br>tg-4"}},
+					{{"i-4"}, {"server-4"}, {"\\-"}, {"\\-"}},
+					{{"i-5"}, {"server-5"}, {"lb-5"}, {"\\-"}},
+					{{"i-6"}, {"server-6"}, {"\\-"}, {"tg-5<br>tg-6<br>tg-7<br>tg-8"}},
+				},
 				columnWidths: []int{10, 12, 12, 28},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1},
 			},
 			want: `| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |
 |------------|--------------|--------------|------------------------------|
@@ -526,7 +562,7 @@ func TestTable_Out(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				format: FormatBacklog,
+				format: BacklogFormat,
 				header: []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
 				data: [][]string{
 					{"i-1", "server-1", "lb-1", "tg-1"},
@@ -536,7 +572,16 @@ func TestTable_Out(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
 				},
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
+					{{"i-2"}, {"server-2"}, {"lb-2&br;lb-3"}, {"tg-2"}},
+					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3&br;tg-4"}},
+					{{"i-4"}, {"server-4"}, {"-"}, {"-"}},
+					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
+					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5&br;tg-6&br;tg-7&br;tg-8"}},
+				},
 				columnWidths: []int{10, 12, 12, 28},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1},
 			},
 			want: `| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |h
 | i-1        | server-1     | lb-1         | tg-1                         |
@@ -555,11 +600,16 @@ func TestTable_Out(t *testing.T) {
 			tr.format = tt.fields.format
 			tr.header = tt.fields.header
 			tr.data = tt.fields.data
+			tr.splitedData = tt.fields.splitedData
 			tr.columnWidths = tt.fields.columnWidths
+			tr.lineHeights = tt.fields.lineHeights
 			tr.setBorder()
-			tr.Out()
+			tr.Render()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
+			}
+			if diff := cmp.Diff(buf.String(), tt.want); diff != "" {
+				t.Errorf(diff)
 			}
 		})
 	}
@@ -581,7 +631,7 @@ func TestTable_printHeader(t *testing.T) {
 			name: "text",
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  1,
 				columnWidths: []int{1, 2, 3},
 			},
@@ -591,7 +641,7 @@ func TestTable_printHeader(t *testing.T) {
 			name: "markdown",
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
-				format:       FormatMarkdown,
+				format:       MarkdownFormat,
 				marginWidth:  1,
 				columnWidths: []int{1, 2, 3},
 			},
@@ -601,7 +651,7 @@ func TestTable_printHeader(t *testing.T) {
 			name: "backlog",
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
-				format:       FormatBacklog,
+				format:       BacklogFormat,
 				marginWidth:  1,
 				columnWidths: []int{1, 2, 3},
 			},
@@ -611,7 +661,7 @@ func TestTable_printHeader(t *testing.T) {
 			name: "margin",
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  3,
 				columnWidths: []int{1, 2, 3},
 			},
@@ -621,7 +671,7 @@ func TestTable_printHeader(t *testing.T) {
 			name: "long",
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  1,
 				columnWidths: []int{10, 2, 3},
 			},
@@ -631,7 +681,7 @@ func TestTable_printHeader(t *testing.T) {
 			name: "short",
 			fields: fields{
 				header:       []string{"a", "bb", "ccc"},
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  1,
 				columnWidths: []int{1, 2, 1},
 			},
@@ -657,8 +707,10 @@ func TestTable_printHeader(t *testing.T) {
 func TestTable_printData(t *testing.T) {
 	type fields struct {
 		data         [][]string
+		splitedData  [][][]string
 		format       Format
 		columnWidths []int
+		lineHeights  []int
 	}
 	tests := []struct {
 		name   string
@@ -676,8 +728,17 @@ func TestTable_printData(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
 				},
-				format:       FormatText,
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
+					{{"i-2"}, {"server-2"}, {"lb-2", "lb-3"}, {"tg-2"}},
+					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3", "tg-4"}},
+					{{"i-4"}, {"server-4"}, {"-"}, {"-"}},
+					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
+					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5", "tg-6", "tg-7", "tg-8"}},
+				},
+				format:       TextFormat,
 				columnWidths: []int{10, 12, 10, 10},
+				lineHeights:  []int{1, 2, 2, 1, 1, 4},
 			},
 			want: `| i-1        | server-1     | lb-1       | tg-1       |
 +------------+--------------+------------+------------+
@@ -698,6 +759,44 @@ func TestTable_printData(t *testing.T) {
 `,
 		},
 		{
+			name: "text_with_compress",
+			fields: fields{
+				data: [][]string{
+					{"i-1", "server-1", "vpc-1", "sg-1", "Ingress", "tcp", "22", "22", "SecurityGroup", "sg-10"},
+					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
+					{"", "", "", "sg-2", "Ingress", "tcp", "443", "443", "Ipv4", "0.0.0.0/0"},
+					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
+					{"i-2", "server-2", "vpc-1", "sg-3", "Ingress", "icmp", "-1", "-1", "SecurityGroup", "sg-11"},
+					{"", "", "", "", "Ingress", "tcp", "3389", "3389", "Ipv4", "10.1.0.0/16"},
+					{"", "", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
+					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
+				},
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"vpc-1"}, {"sg-1"}, {"Ingress"}, {"tcp"}, {"22"}, {"22"}, {"SecurityGroup"}, {"sg-10"}},
+					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
+					{{""}, {""}, {""}, {"sg-2"}, {"Ingress"}, {"tcp"}, {"443"}, {"443"}, {"Ipv4"}, {"0.0.0.0/0"}},
+					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
+					{{"i-2"}, {"server-2"}, {"vpc-1"}, {"sg-3"}, {"Ingress"}, {"icmp"}, {"-1"}, {"-1"}, {"SecurityGroup"}, {"sg-11"}},
+					{{""}, {""}, {""}, {""}, {"Ingress"}, {"tcp"}, {"3389"}, {"3389"}, {"Ipv4"}, {"10.1.0.0/16"}},
+					{{""}, {""}, {""}, {""}, {"Ingress"}, {"tcp"}, {"0"}, {"65535"}, {"PrefixList"}, {"pl-id/pl-name"}},
+					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
+				},
+				format:       CompressedTextFormat,
+				columnWidths: []int{10, 12, 5, 15, 13, 10, 8, 6, 13, 13},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1, 1, 1},
+			},
+			want: `| i-1        | server-1     | vpc-1 | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
+|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+|            |              |       | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
+|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
++------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+| i-2        | server-2     | vpc-1 | sg-3            | Ingress       | icmp       |       -1 |     -1 | SecurityGroup | sg-11         |
+|            |              |       |                 | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
+|            |              |       |                 | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
+|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
+`,
+		},
+		{
 			name: "markdown",
 			fields: fields{
 				data: [][]string{
@@ -708,8 +807,17 @@ func TestTable_printData(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "\\-"},
 					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
 				},
-				format:       FormatMarkdown,
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
+					{{"i-2"}, {"server-2"}, {"lb-2<br>lb-3"}, {"tg-2"}},
+					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3<br>tg-4"}},
+					{{"i-4"}, {"server-4"}, {"\\-"}, {"\\-"}},
+					{{"i-5"}, {"server-5"}, {"lb-5"}, {"\\-"}},
+					{{"i-6"}, {"server-6"}, {"\\-"}, {"tg-5<br>tg-6<br>tg-7<br>tg-8"}},
+				},
+				format:       MarkdownFormat,
 				columnWidths: []int{10, 12, 12, 28},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1},
 			},
 			want: `| i-1        | server-1     | lb-1         | tg-1                         |
 | i-2        | server-2     | lb-2<br>lb-3 | tg-2                         |
@@ -730,8 +838,17 @@ func TestTable_printData(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
 				},
-				format:       FormatBacklog,
+				splitedData: [][][]string{
+					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
+					{{"i-2"}, {"server-2"}, {"lb-2&br;lb-3"}, {"tg-2"}},
+					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3&br;tg-4"}},
+					{{"i-4"}, {"server-4"}, {"-"}, {"-"}},
+					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
+					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5&br;tg-6&br;tg-7&br;tg-8"}},
+				},
+				format:       BacklogFormat,
 				columnWidths: []int{10, 12, 12, 28},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1},
 			},
 			want: `| i-1        | server-1     | lb-1         | tg-1                         |
 | i-2        | server-2     | lb-2&br;lb-3 | tg-2                         |
@@ -741,41 +858,16 @@ func TestTable_printData(t *testing.T) {
 | i-6        | server-6     | -            | tg-5&br;tg-6&br;tg-7&br;tg-8 |
 `,
 		},
-		{
-			name: "text_with_compress",
-			fields: fields{
-				data: [][]string{
-					{"i-1", "server-1", "vpc-1", "sg-1", "Ingress", "tcp", "22", "22", "SecurityGroup", "sg-10"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-					{"", "", "", "sg-2", "Ingress", "tcp", "443", "443", "Ipv4", "0.0.0.0/0"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-					{"i-2", "server-2", "vpc-1", "sg-3", "Ingress", "icmp", "-1", "-1", "SecurityGroup", "sg-11"},
-					{"", "", "", "", "Ingress", "tcp", "3389", "3389", "Ipv4", "10.1.0.0/16"},
-					{"", "", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-				},
-				format:       FormatCompressedText,
-				columnWidths: []int{10, 12, 5, 15, 13, 10, 8, 6, 13, 13},
-			},
-			want: `| i-1        | server-1     | vpc-1 | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
-|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
-|            |              |       | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
-|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
-+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
-| i-2        | server-2     | vpc-1 | sg-3            | Ingress       | icmp       |       -1 |     -1 | SecurityGroup | sg-11         |
-|            |              |       |                 | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
-|            |              |       |                 | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
-|            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
-`,
-		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			buf := new(bytes.Buffer)
 			tr := New(buf)
 			tr.data = tt.fields.data
+			tr.splitedData = tt.fields.splitedData
 			tr.format = tt.fields.format
 			tr.columnWidths = tt.fields.columnWidths
+			tr.lineHeights = tt.fields.lineHeights
 			tr.setBorder()
 			tr.printData()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
@@ -917,7 +1009,7 @@ func TestTable_printBorder(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -926,7 +1018,7 @@ func TestTable_printBorder(t *testing.T) {
 		{
 			name: "markdown",
 			fields: fields{
-				format:       FormatMarkdown,
+				format:       MarkdownFormat,
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -935,7 +1027,7 @@ func TestTable_printBorder(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				format:       FormatBacklog,
+				format:       BacklogFormat,
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -944,7 +1036,7 @@ func TestTable_printBorder(t *testing.T) {
 		{
 			name: "wide-margin",
 			fields: fields{
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  3,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -983,17 +1075,17 @@ func TestTable_setAttr(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				format: FormatText,
+				format: TextFormat,
 			},
 			want: want{
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 			},
 		},
 		{
 			name: "markdown",
 			fields: fields{
-				format: FormatMarkdown,
+				format: MarkdownFormat,
 			},
 			want: want{
 				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
@@ -1003,7 +1095,7 @@ func TestTable_setAttr(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				format: FormatBacklog,
+				format: BacklogFormat,
 			},
 			want: want{
 				emptyFieldPlaceholder: BacklogDefaultEmptyFieldPlaceholder,
@@ -1115,8 +1207,8 @@ func TestTable_setData(t *testing.T) {
 			name: "text",
 			fields: fields{
 				header:                []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				mergedFields:          nil,
 				ignoredFields:         nil,
 				columnWidths:          []int{0, 0, 0, 0},
@@ -1184,8 +1276,8 @@ func TestTable_setData(t *testing.T) {
 			name: "merge",
 			fields: fields{
 				header:                []string{"InstanceID", "InstanceName", "SecurityGroupID", "FlowDirection", "IPProtocol", "FromPort", "ToPort", "AddressType", "CidrBlock"},
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				mergedFields:          []int{0, 1, 2},
 				ignoredFields:         nil,
 				columnWidths:          []int{0, 0, 0, 0, 0, 0, 0, 0, 0},
@@ -1209,8 +1301,8 @@ func TestTable_setData(t *testing.T) {
 			name: "included_ptr",
 			fields: fields{
 				header:                []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				mergedFields:          nil,
 				ignoredFields:         nil,
 				columnWidths:          []int{0, 0, 0, 0},
@@ -1288,7 +1380,7 @@ func TestTable_setBorder(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -1297,7 +1389,7 @@ func TestTable_setBorder(t *testing.T) {
 		{
 			name: "markdown",
 			fields: fields{
-				format:       FormatMarkdown,
+				format:       MarkdownFormat,
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -1306,7 +1398,7 @@ func TestTable_setBorder(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				format:       FormatBacklog,
+				format:       BacklogFormat,
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -1315,7 +1407,7 @@ func TestTable_setBorder(t *testing.T) {
 		{
 			name: "wide-margin",
 			fields: fields{
-				format:       FormatText,
+				format:       TextFormat,
 				marginWidth:  3,
 				columnWidths: []int{8, 12, 5},
 			},
@@ -1360,9 +1452,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1374,23 +1466,23 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "string_empty",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: "",
 			},
-			want:    DefaultEmptyFieldPlaceholder,
+			want:    TextDefaultEmptyFieldPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "byte_slice",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1402,9 +1494,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "escape",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             true,
 			},
 			args: args{
@@ -1416,7 +1508,7 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "asterisk_prefix_at_markdown",
 			fields: fields{
-				format:                FormatMarkdown,
+				format:                MarkdownFormat,
 				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
 				wordDelimiter:         MarkdownDefaultWordDelimiter,
 				hasEscape:             false,
@@ -1430,9 +1522,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "int",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1444,9 +1536,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "int_signed",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1458,9 +1550,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "uint",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1472,9 +1564,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "float",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1486,9 +1578,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "ptr",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1500,37 +1592,37 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "nil_ptr",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: (*string)(nil),
 			},
-			want:    DefaultEmptyFieldPlaceholder,
+			want:    TextDefaultEmptyFieldPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "non_nil_ptr_string",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: new(string),
 			},
-			want:    DefaultEmptyFieldPlaceholder,
+			want:    TextDefaultEmptyFieldPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "non_nil_ptr_int",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1542,93 +1634,121 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_string",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []string{"a", "b"},
 			},
-			want:    "a" + DefaultWordDelimiter + "b",
+			want:    "a" + TextDefaultWordDelimiter + "b",
 			wantErr: false,
 		},
 		{
 			name: "slice_string_included_empty",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []string{"a", "", "b"},
 			},
-			want:    "a" + DefaultWordDelimiter + DefaultEmptyFieldPlaceholder + DefaultWordDelimiter + "b",
+			want:    "a" + TextDefaultWordDelimiter + TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + "b",
 			wantErr: false,
 		},
 		{
 			name: "slice_int",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []int{0, 1, 2},
 			},
-			want:    "0" + DefaultWordDelimiter + "1" + DefaultWordDelimiter + "2",
+			want:    "0" + TextDefaultWordDelimiter + "1" + TextDefaultWordDelimiter + "2",
 			wantErr: false,
 		},
 		{
 			name: "slice_uint",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []uint{0, 1, 2},
 			},
-			want:    "0" + DefaultWordDelimiter + "1" + DefaultWordDelimiter + "2",
+			want:    "0" + TextDefaultWordDelimiter + "1" + TextDefaultWordDelimiter + "2",
+			wantErr: false,
+		},
+		{
+			name: "slice_float32",
+			fields: fields{
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
+				hasEscape:             false,
+			},
+			args: args{
+				v: []float32{0.1, 1.25, 2.001},
+			},
+			want:    "0.1" + TextDefaultWordDelimiter + "1.25" + TextDefaultWordDelimiter + "2.001",
+			wantErr: false,
+		},
+		{
+			name: "slice_float64",
+			fields: fields{
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
+				hasEscape:             false,
+			},
+			args: args{
+				v: []float64{0.1, 1.25, 2.001},
+			},
+			want:    "0.1" + TextDefaultWordDelimiter + "1.25" + TextDefaultWordDelimiter + "2.001",
 			wantErr: false,
 		},
 		{
 			name: "slice_nil",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: ([]string)(nil),
 			},
-			want:    DefaultEmptyFieldPlaceholder,
+			want:    TextDefaultEmptyFieldPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_empty",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []string{},
 			},
-			want:    DefaultEmptyFieldPlaceholder,
+			want:    TextDefaultEmptyFieldPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_with_byte_slice",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1640,9 +1760,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_slice",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1657,9 +1777,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_struct",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1677,79 +1797,79 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_ptr",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: &[]string{"a", "b"},
 			},
-			want:    "a" + DefaultWordDelimiter + "b",
+			want:    "a" + TextDefaultWordDelimiter + "b",
 			wantErr: false,
 		},
 		{
 			name: "slice_with_ptr_to_strings",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []*string{sp(""), sp("a"), sp("b")},
 			},
-			want:    DefaultEmptyFieldPlaceholder + DefaultWordDelimiter + "a" + DefaultWordDelimiter + "b",
+			want:    TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + "a" + TextDefaultWordDelimiter + "b",
 			wantErr: false,
 		},
 		{
 			name: "slice_with_ptr_to_string_empty",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []*string{},
 			},
-			want:    DefaultEmptyFieldPlaceholder,
+			want:    TextDefaultEmptyFieldPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_with_nil_ptr",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []*int{nil},
 			},
-			want:    DefaultEmptyFieldPlaceholder,
+			want:    TextDefaultEmptyFieldPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_with_ptr_mixed",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
 				v: []*string{nil, sp(""), sp("aaa")},
 			},
-			want:    DefaultEmptyFieldPlaceholder + DefaultWordDelimiter + DefaultEmptyFieldPlaceholder + DefaultWordDelimiter + "aaa",
+			want:    TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + "aaa",
 			wantErr: false,
 		},
 		{
 			name: "stringer_duration",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1761,9 +1881,9 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "stringer_ipaddress",
 			fields: fields{
-				format:                FormatText,
-				emptyFieldPlaceholder: DefaultEmptyFieldPlaceholder,
-				wordDelimiter:         DefaultWordDelimiter,
+				format:                TextFormat,
+				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
+				wordDelimiter:         TextDefaultWordDelimiter,
 				hasEscape:             false,
 			},
 			args: args{
@@ -1811,7 +1931,7 @@ func TestTable_replaceNL(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				format:        FormatText,
+				format:        TextFormat,
 				wordDelimiter: "\n",
 			},
 			args: args{
@@ -1822,7 +1942,7 @@ func TestTable_replaceNL(t *testing.T) {
 		{
 			name: "markdown",
 			fields: fields{
-				format:        FormatMarkdown,
+				format:        MarkdownFormat,
 				wordDelimiter: "<br>",
 			},
 			args: args{
@@ -1833,7 +1953,7 @@ func TestTable_replaceNL(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				format:        FormatBacklog,
+				format:        BacklogFormat,
 				wordDelimiter: "&br;",
 			},
 			args: args{
@@ -1848,7 +1968,8 @@ func TestTable_replaceNL(t *testing.T) {
 				format:        tt.fields.format,
 				wordDelimiter: tt.fields.wordDelimiter,
 			}
-			got := tr.replaceNL(tt.args.s)
+			tr.setAttr()
+			got := tr.sanitize(tt.args.s)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, tt.want)
 			}

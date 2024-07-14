@@ -14,7 +14,7 @@ func BenchmarkMintab(b *testing.B) {
 		if err := table.Load(basicsample); err != nil {
 			b.Fatal(err)
 		}
-		table.Out()
+		table.Render()
 	}
 }
 
@@ -37,12 +37,11 @@ func BenchmarkMintabSimple(b *testing.B) {
 		if err := table.Load(data); err != nil {
 			b.Fatal(err)
 		}
-		table.Out()
+		table.Render()
 	}
 }
 
 func BenchmarkTableWriter(b *testing.B) {
-	header := []string{"InstanceID", "InstanceName", "InstanceState"}
 	data := [][]string{
 		{"i-1", "server-1", "running"},
 		{"i-2", "server-2", "stopped"},
@@ -54,10 +53,7 @@ func BenchmarkTableWriter(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		table := tablewriter.NewWriter(&bytes.Buffer{})
-		table.SetHeader(header)
-		for _, v := range data {
-			table.Append(v)
-		}
+		table.AppendBulk(data)
 		table.Render()
 	}
 }
