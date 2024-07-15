@@ -1051,7 +1051,7 @@ func TestTable_printBorder(t *testing.T) {
 			tr.marginWidth = tt.fields.marginWidth
 			tr.columnWidths = tt.fields.columnWidths
 			tr.setBorder()
-			tr.printBorder()
+			tr.print(tr.border)
 			if !reflect.DeepEqual(buf.String(), tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
 			}
@@ -1384,7 +1384,7 @@ func TestTable_setBorder(t *testing.T) {
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
-			want: "+----------+--------------+-------+",
+			want: "+----------+--------------+-------+\n",
 		},
 		{
 			name: "markdown",
@@ -1393,7 +1393,7 @@ func TestTable_setBorder(t *testing.T) {
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
-			want: "|----------|--------------|-------|",
+			want: "|----------|--------------|-------|\n",
 		},
 		{
 			name: "backlog",
@@ -1402,7 +1402,7 @@ func TestTable_setBorder(t *testing.T) {
 				marginWidth:  1,
 				columnWidths: []int{8, 12, 5},
 			},
-			want: "|----------|--------------|-------|",
+			want: "|----------|--------------|-------|\n",
 		},
 		{
 			name: "wide-margin",
@@ -1411,7 +1411,7 @@ func TestTable_setBorder(t *testing.T) {
 				marginWidth:  3,
 				columnWidths: []int{8, 12, 5},
 			},
-			want: "+--------------+------------------+-----------+",
+			want: "+--------------+------------------+-----------+\n",
 		},
 	}
 	for _, tt := range tests {

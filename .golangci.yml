@@ -24,6 +24,9 @@ linters:
     - unused
     - wastedassign
     - whitespace
+linters-settings:
+  errcheck:
+    ignore: "WriteString"
 issues:
   exclude-rules:
     - linters:

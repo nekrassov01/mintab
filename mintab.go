@@ -219,7 +219,8 @@ func (t *Table) printHeader() {
 	if t.format == BacklogFormat {
 		b.WriteString("h")
 	}
-	fmt.Fprintln(t.writer, b.String())
+	b.WriteString("\n")
+	t.print(b.String())
 }
 
 func (t *Table) printData() {
@@ -244,7 +245,8 @@ func (t *Table) printData() {
 				}
 				b.WriteString("|")
 			}
-			fmt.Fprintln(t.writer, b.String())
+			b.WriteString("\n")
+			t.print(b.String())
 		}
 	}
 }
@@ -264,11 +266,16 @@ func (t *Table) printDataBorder(row []string) {
 		}
 	}
 	b.WriteString(sep)
-	fmt.Fprintln(t.writer, b.String())
+	b.WriteString("\n")
+	t.print(b.String())
+}
+
+func (t *Table) print(s string) {
+	io.WriteString(t.writer, s)
 }
 
 func (t *Table) printBorder() {
-	fmt.Fprintln(t.writer, t.border)
+	io.WriteString(t.writer, t.border)
 }
 
 func (t *Table) writeField(b *strings.Builder, s string, width int) {
@@ -427,6 +434,7 @@ func (t *Table) setBorder() {
 		}
 	}
 	b.WriteString(sep)
+	b.WriteString("\n")
 	t.border = b.String()
 	t.tableWidth = len(t.border)
 }
