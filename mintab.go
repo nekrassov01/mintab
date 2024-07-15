@@ -58,17 +58,17 @@ type Table struct {
 	writer                io.Writer    // Destination for table output
 	data                  [][]string   // Table data
 	multilineData         [][][]string // Table data with strings divided by newlines
-	header                []string     // Names of each field in the table header
+	header                []string     // Table header
 	format                Format       // Output format
-	newLine               string       //
+	newLine               string       // New line string: "\n"|"<br>"|"&br;"
 	emptyFieldPlaceholder string       // Placeholder for empty fields
 	wordDelimiter         string       // Delimiter for words within a field
-	lineHeights           []int        //
+	lineHeights           []int        // Height of lines consisting of fields containing line breaks
 	columnWidths          []int        // Max widths of each columns
 	border                string       // Border line based on column widths
-	tableWidth            int          //
-	marginWidth           int          // Margin size around field values
-	margin                string       // Repeating whitespace chars as margins
+	tableWidth            int          // Table full width
+	marginWidth           int          // Margin size around the field
+	margin                string       // Whitespaces around the field
 	hasHeader             bool         // Whether header rendering
 	hasEscape             bool         // Whether HTML escaping
 	mergedFields          []int        // Indices of fields to be merged
@@ -124,21 +124,21 @@ func WithEmptyFieldPlaceholder(emptyFieldPlaceholder string) Option {
 	}
 }
 
-// WithWordDelimiter sets the delimiter for splitting words in a field.
+// WithWordDelimiter sets the delimiter to split words in a field.
 func WithWordDelimiter(wordDelimiter string) Option {
 	return func(t *Table) {
 		t.wordDelimiter = wordDelimiter
 	}
 }
 
-// WithMergeFields specifies columns for merging.
+// WithMergeFields sets column indices to be merged.
 func WithMergeFields(mergeFields []int) Option {
 	return func(t *Table) {
 		t.mergedFields = mergeFields
 	}
 }
 
-// WithIgnoreFields specifies columns to be ignored.
+// WithIgnoreFields sets column indices to be ignored.
 func WithIgnoreFields(ignoreFields []int) Option {
 	return func(t *Table) {
 		t.ignoredFields = ignoreFields
@@ -152,7 +152,7 @@ func WithEscape(has bool) Option {
 	}
 }
 
-// Load validates the input and converts it into table data.
+// Load validates the input and converts it into struct Table.
 func (t *Table) Load(v any) error {
 	if t.marginWidth < 0 {
 		return fmt.Errorf("only unsigned integers are allowed in margin")
@@ -185,14 +185,11 @@ func (t *Table) Load(v any) error {
 	if err := t.setData(rv); err != nil {
 		return err
 	}
-	if t.format != BacklogFormat {
-		t.setBorder()
-	}
+	t.setBorder()
 	return nil
 }
 
-// Render renders the table to the specified writer.
-// It supports markdown and backlog formats for easy copying and pasting.
+// Render renders the table to the writer.
 func (t *Table) Render() {
 	if t.hasHeader {
 		switch t.format {
@@ -239,9 +236,9 @@ func (t *Table) printData() {
 			var b strings.Builder
 			b.Grow(t.tableWidth)
 			b.WriteString("|")
-			for k, elem := range t.multilineData[i] {
-				if j < len(elem) {
-					t.writeField(&b, elem[j], t.columnWidths[k])
+			for k, elems := range t.multilineData[i] {
+				if j < len(elems) {
+					t.writeField(&b, elems[j], t.columnWidths[k])
 				} else {
 					t.writeField(&b, "", t.columnWidths[k])
 				}
@@ -274,30 +271,73 @@ func (t *Table) printBorder() {
 	fmt.Fprintln(t.writer, t.border)
 }
 
+func (t *Table) writeField(b *strings.Builder, s string, width int) {
+	b.WriteString(t.margin)
+	isN := isNum(s)
+	if !isN {
+		b.WriteString(s)
+	}
+	p := width - runewidth.StringWidth(s)
+	if p > 0 {
+		for i := 0; i < p; i++ {
+			b.WriteByte(' ')
+		}
+	}
+	if isN {
+		b.WriteString(s)
+	}
+	b.WriteString(t.margin)
+}
+
+func isNum(s string) bool {
+	if len(s) == 0 {
+		return false
+	}
+	start := 0
+	if s[0] == '-' {
+		start = 1
+		if len(s) == 1 {
+			return false
+		}
+	}
+	n := 0
+	d := false
+	for i := start; i < len(s); i++ {
+		if s[i] == '.' {
+			n++
+			if n > 1 {
+				return false
+			}
+			continue
+		}
+		if !unicode.IsDigit(rune(s[i])) {
+			return false
+		}
+		d = true
+	}
+	return d
+}
+
 func (t *Table) setAttr() {
-	var p, d, n string
+	var p, d string
 	switch t.format {
 	case MarkdownFormat:
 		p = MarkdownDefaultEmptyFieldPlaceholder
 		d = MarkdownDefaultWordDelimiter
-		n = markdownNewLine
+		t.newLine = markdownNewLine
 	case BacklogFormat:
 		p = BacklogDefaultEmptyFieldPlaceholder
 		d = BacklogDefaultWordDelimiter
-		n = backlogNewLine
+		t.newLine = backlogNewLine
 	default:
 		p = TextDefaultEmptyFieldPlaceholder
 		d = TextDefaultWordDelimiter
-		n = textNewLine
 	}
 	if t.emptyFieldPlaceholder == TextDefaultEmptyFieldPlaceholder {
 		t.emptyFieldPlaceholder = p
 	}
 	if t.wordDelimiter == TextDefaultWordDelimiter {
 		t.wordDelimiter = d
-	}
-	if t.format != TextFormat {
-		t.newLine = n
 	}
 }
 
@@ -470,6 +510,15 @@ func (t *Table) formatField(rv reflect.Value) (string, error) {
 	return strings.TrimSuffix(t.sanitize(v), "\n"), nil
 }
 
+func stringer(rv reflect.Value) string {
+	if rv.CanInterface() {
+		if s, ok := rv.Interface().(fmt.Stringer); ok {
+			return s.String()
+		}
+	}
+	return ""
+}
+
 func (t *Table) sanitize(s string) string {
 	if s == "" {
 		return t.emptyFieldPlaceholder
@@ -524,60 +573,4 @@ func (t *Table) escape(s string) string {
 		}
 	}
 	return b.String()
-}
-
-func stringer(rv reflect.Value) string {
-	if rv.CanInterface() {
-		if s, ok := rv.Interface().(fmt.Stringer); ok {
-			return s.String()
-		}
-	}
-	return ""
-}
-
-func (t *Table) writeField(b *strings.Builder, s string, width int) {
-	b.WriteString(t.margin)
-	isN := isNum(s)
-	if !isN {
-		b.WriteString(s)
-	}
-	p := width - runewidth.StringWidth(s)
-	if p > 0 {
-		for i := 0; i < p; i++ {
-			b.WriteByte(' ')
-		}
-	}
-	if isN {
-		b.WriteString(s)
-	}
-	b.WriteString(t.margin)
-}
-
-func isNum(s string) bool {
-	if len(s) == 0 {
-		return false
-	}
-	start := 0
-	if s[0] == '-' {
-		start = 1
-		if len(s) == 1 {
-			return false
-		}
-	}
-	n := 0
-	d := false
-	for i := start; i < len(s); i++ {
-		if s[i] == '.' {
-			n++
-			if n > 1 {
-				return false
-			}
-			continue
-		}
-		if !unicode.IsDigit(rune(s[i])) {
-			return false
-		}
-		d = true
-	}
-	return d
 }
