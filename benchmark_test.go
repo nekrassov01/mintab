@@ -4,6 +4,7 @@ import (
 	"bytes"
 	"testing"
 
+	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/olekukonko/tablewriter"
 )
 
@@ -55,5 +56,23 @@ func BenchmarkTableWriter(b *testing.B) {
 		table := tablewriter.NewWriter(&bytes.Buffer{})
 		table.AppendBulk(data)
 		table.Render()
+	}
+}
+
+func BenchmarkGoPrettyTable(b *testing.B) {
+	data := []table.Row{
+		{"i-1", "server-1", "running"},
+		{"i-2", "server-2", "stopped"},
+		{"i-3", "server-3", "pending"},
+		{"i-4", "server-4", "terminated"},
+		{"i-5", "server-5", "stopping"},
+		{"i-6", "server-6", "shutting-down"},
+	}
+	b.ResetTimer()
+	for i := 0; i < b.N; i++ {
+		t := table.NewWriter()
+		t.SetOutputMirror(&bytes.Buffer{})
+		t.AppendRows(data)
+		t.Render()
 	}
 }
