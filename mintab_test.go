@@ -423,10 +423,10 @@ func TestTable_Load(t *testing.T) {
 
 func TestTable_Render(t *testing.T) {
 	type fields struct {
-		format      Format
-		header      []string
-		data        [][]string
-		splitedData [][][]string
+		format        Format
+		header        []string
+		data          [][]string
+		multilineData [][][]string
 
 		columnWidths []int
 		lineHeights  []int
@@ -449,7 +449,7 @@ func TestTable_Render(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2", "lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3", "tg-4"}},
@@ -497,7 +497,7 @@ func TestTable_Render(t *testing.T) {
 					{"", "", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
 					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"vpc-1"}, {"sg-1"}, {"Ingress"}, {"tcp"}, {"22"}, {"22"}, {"SecurityGroup"}, {"sg-10"}},
 					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
 					{{""}, {""}, {""}, {"sg-2"}, {"Ingress"}, {"tcp"}, {"443"}, {"443"}, {"Ipv4"}, {"0.0.0.0/0"}},
@@ -538,7 +538,7 @@ func TestTable_Render(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "\\-"},
 					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2<br>lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3<br>tg-4"}},
@@ -572,7 +572,7 @@ func TestTable_Render(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2&br;lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3&br;tg-4"}},
@@ -600,7 +600,7 @@ func TestTable_Render(t *testing.T) {
 			tr.format = tt.fields.format
 			tr.header = tt.fields.header
 			tr.data = tt.fields.data
-			tr.splitedData = tt.fields.splitedData
+			tr.multilineData = tt.fields.multilineData
 			tr.columnWidths = tt.fields.columnWidths
 			tr.lineHeights = tt.fields.lineHeights
 			tr.setBorder()
@@ -706,11 +706,11 @@ func TestTable_printHeader(t *testing.T) {
 
 func TestTable_printData(t *testing.T) {
 	type fields struct {
-		data         [][]string
-		splitedData  [][][]string
-		format       Format
-		columnWidths []int
-		lineHeights  []int
+		data          [][]string
+		multilineData [][][]string
+		format        Format
+		columnWidths  []int
+		lineHeights   []int
 	}
 	tests := []struct {
 		name   string
@@ -728,7 +728,7 @@ func TestTable_printData(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2", "lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3", "tg-4"}},
@@ -771,7 +771,7 @@ func TestTable_printData(t *testing.T) {
 					{"", "", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
 					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"vpc-1"}, {"sg-1"}, {"Ingress"}, {"tcp"}, {"22"}, {"22"}, {"SecurityGroup"}, {"sg-10"}},
 					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
 					{{""}, {""}, {""}, {"sg-2"}, {"Ingress"}, {"tcp"}, {"443"}, {"443"}, {"Ipv4"}, {"0.0.0.0/0"}},
@@ -807,7 +807,7 @@ func TestTable_printData(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "\\-"},
 					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2<br>lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3<br>tg-4"}},
@@ -838,7 +838,7 @@ func TestTable_printData(t *testing.T) {
 					{"i-5", "server-5", "lb-5", "-"},
 					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
 				},
-				splitedData: [][][]string{
+				multilineData: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2&br;lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3&br;tg-4"}},
@@ -864,7 +864,7 @@ func TestTable_printData(t *testing.T) {
 			buf := new(bytes.Buffer)
 			tr := New(buf)
 			tr.data = tt.fields.data
-			tr.splitedData = tt.fields.splitedData
+			tr.multilineData = tt.fields.multilineData
 			tr.format = tt.fields.format
 			tr.columnWidths = tt.fields.columnWidths
 			tr.lineHeights = tt.fields.lineHeights

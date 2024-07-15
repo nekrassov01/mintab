@@ -57,7 +57,7 @@ func (o Format) String() string {
 type Table struct {
 	writer                io.Writer    // Destination for table output
 	data                  [][]string   // Table data
-	splitedData           [][][]string // Table data with strings divided by newlines
+	multilineData         [][][]string // Table data with strings divided by newlines
 	header                []string     // Names of each field in the table header
 	format                Format       // Output format
 	newLine               string       //
@@ -239,7 +239,7 @@ func (t *Table) printData() {
 			var b strings.Builder
 			b.Grow(t.tableWidth)
 			b.WriteString("|")
-			for k, elem := range t.splitedData[i] {
+			for k, elem := range t.multilineData[i] {
 				if j < len(elem) {
 					t.writeField(&b, elem[j], t.columnWidths[k])
 				} else {
@@ -318,7 +318,7 @@ func (t *Table) setHeader(typ reflect.Type) {
 
 func (t *Table) setData(rv reflect.Value) error {
 	t.data = make([][]string, rv.Len())
-	t.splitedData = make([][][]string, rv.Len())
+	t.multilineData = make([][][]string, rv.Len())
 	t.lineHeights = make([]int, rv.Len())
 	prev := make([]string, len(t.header))
 	for i := 0; i < rv.Len(); i++ {
@@ -327,7 +327,7 @@ func (t *Table) setData(rv reflect.Value) error {
 			e = e.Elem()
 		}
 		row := make([]string, len(t.header))
-		splitedRow := make([][]string, len(t.header))
+		multilineRow := make([][]string, len(t.header))
 		isMerge := true
 		n := 1
 		for j, h := range t.header {
@@ -350,7 +350,7 @@ func (t *Table) setData(rv reflect.Value) error {
 			}
 			row[j] = v
 			elems := strings.Split(v, "\n")
-			splitedRow[j] = elems
+			multilineRow[j] = elems
 			for _, elem := range elems {
 				width := runewidth.StringWidth(elem)
 				if width > t.columnWidths[j] {
@@ -365,7 +365,7 @@ func (t *Table) setData(rv reflect.Value) error {
 			}
 		}
 		t.data[i] = row
-		t.splitedData[i] = splitedRow
+		t.multilineData[i] = multilineRow
 		t.lineHeights[i] = n
 	}
 	return nil
