@@ -37,11 +37,11 @@ endif
 
 .PHONY: test
 test:
-	go test ./... -v -cover -coverprofile=cover.Render
+	go test ./... -v -cover -coverprofile=cover.out
 
 .PHONY: cover
 cover:
-	go tool cover -html=cover.Render -o cover.html
+	go tool cover -html=cover.out -o cover.html
 
 .PHONY: bench
 bench:
@@ -78,4 +78,4 @@ publish: deps-gobump check-git
 .PHONY: clean
 clean:
 	go clean
-	rm -f cover.Render cover.html cpu.prof mem.prof $(BIN).test
+	rm -f cover.out cover.html cpu.prof mem.prof $(BIN).test
