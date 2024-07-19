@@ -6,7 +6,7 @@ mintab
 [![Go Reference](https://pkg.go.dev/badge/github.com/nekrassov01/mintab.svg)](https://pkg.go.dev/github.com/nekrassov01/mintab)
 [![Go Report Card](https://goreportcard.com/badge/github.com/nekrassov01/mintab)](https://goreportcard.com/report/github.com/nekrassov01/mintab)
 
-mintab is a minimum ASCII table utilities written in Go
+mintab is a minimum ASCII table utilities for Golang
 
 Motivation
 ----------
@@ -58,6 +58,11 @@ Usage
 -----
 
 [Example](example_test.go)
+
+Todo
+----
+
+- Paging
 
 Author
 ------
