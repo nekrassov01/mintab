@@ -72,6 +72,8 @@ func BenchmarkMintabStruct(b *testing.B) {
 	}
 }
 
+/*
+
 func BenchmarkMintabInputLarge(b *testing.B) {
 	data := Input{
 		Header: []string{
@@ -170,3 +172,5 @@ func BenchmarkMintabStructLarge(b *testing.B) {
 		t.Render()
 	}
 }
+
+*/
