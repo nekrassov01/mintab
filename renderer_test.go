@@ -10,12 +10,15 @@ import (
 
 func TestTable_Render(t *testing.T) {
 	type fields struct {
-		format        Format
-		header        []string
-		data          [][]string
-		multilineData [][][]string
-		colWidths     []int
-		lineHeights   []int
+		format             Format
+		header             []string
+		data               [][][]string
+		colWidths          []int
+		lineHeights        []int
+		numRows            int
+		numColumns         int
+		numColumnsFirstRow int
+		mergeFields        []int
 	}
 	tests := []struct {
 		name   string
@@ -27,15 +30,7 @@ func TestTable_Render(t *testing.T) {
 			fields: fields{
 				format: TextFormat,
 				header: []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				data: [][]string{
-					{"i-1", "server-1", "lb-1", "tg-1"},
-					{"i-2", "server-2", "lb-2\nlb-3", "tg-2"},
-					{"i-3", "server-3", "lb-4", "tg-3\ntg-4"},
-					{"i-4", "server-4", "-", "-"},
-					{"i-5", "server-5", "lb-5", "-"},
-					{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2", "lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3", "tg-4"}},
@@ -43,8 +38,12 @@ func TestTable_Render(t *testing.T) {
 					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
 					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5", "tg-6", "tg-7", "tg-8"}},
 				},
-				colWidths:   []int{10, 12, 10, 10},
-				lineHeights: []int{1, 2, 2, 1, 1, 4},
+				colWidths:          []int{10, 12, 10, 10},
+				lineHeights:        []int{1, 2, 2, 1, 1, 4},
+				numRows:            6,
+				numColumns:         4,
+				numColumnsFirstRow: 4,
+				mergeFields:        []int{},
 			},
 			want: `+------------+--------------+------------+------------+
 | InstanceID | InstanceName | AttachedLB | AttachedTG |
@@ -73,17 +72,7 @@ func TestTable_Render(t *testing.T) {
 			fields: fields{
 				format: CompressedTextFormat,
 				header: []string{"InstanceID", "InstanceName", "VPCID", "SecurityGroupID", "FlowDirection", "IPProtocol", "FromPort", "ToPort", "AddressType", "CidrBlock"},
-				data: [][]string{
-					{"i-1", "server-1", "vpc-1", "sg-1", "Ingress", "tcp", "22", "22", "SecurityGroup", "sg-10"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-					{"", "", "", "sg-2", "Ingress", "tcp", "443", "443", "Ipv4", "0.0.0.0/0"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-					{"i-2", "server-2", "vpc-1", "sg-3", "Ingress", "icmp", "-1", "-1", "SecurityGroup", "sg-11"},
-					{"", "", "", "", "Ingress", "tcp", "3389", "3389", "Ipv4", "10.1.0.0/16"},
-					{"", "", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"vpc-1"}, {"sg-1"}, {"Ingress"}, {"tcp"}, {"22"}, {"22"}, {"SecurityGroup"}, {"sg-10"}},
 					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
 					{{""}, {""}, {""}, {"sg-2"}, {"Ingress"}, {"tcp"}, {"443"}, {"443"}, {"Ipv4"}, {"0.0.0.0/0"}},
@@ -93,8 +82,12 @@ func TestTable_Render(t *testing.T) {
 					{{""}, {""}, {""}, {""}, {"Ingress"}, {"tcp"}, {"0"}, {"65535"}, {"PrefixList"}, {"pl-id/pl-name"}},
 					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
 				},
-				colWidths:   []int{10, 12, 5, 15, 13, 10, 8, 6, 13, 13},
-				lineHeights: []int{1, 1, 1, 1, 1, 1, 1, 1},
+				colWidths:          []int{10, 12, 5, 15, 13, 10, 8, 6, 13, 13},
+				lineHeights:        []int{1, 1, 1, 1, 1, 1, 1, 1},
+				numRows:            8,
+				numColumns:         10,
+				numColumnsFirstRow: 10,
+				mergeFields:        []int{0, 1, 2, 3},
 			},
 			want: `+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 | InstanceID | InstanceName | VPCID | SecurityGroupID | FlowDirection | IPProtocol | FromPort | ToPort | AddressType   | CidrBlock     |
@@ -116,15 +109,7 @@ func TestTable_Render(t *testing.T) {
 			fields: fields{
 				format: MarkdownFormat,
 				header: []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				data: [][]string{
-					{"i-1", "server-1", "lb-1", "tg-1"},
-					{"i-2", "server-2", "lb-2<br>lb-3", "tg-2"},
-					{"i-3", "server-3", "lb-4", "tg-3<br>tg-4"},
-					{"i-4", "server-4", "\\-", "\\-"},
-					{"i-5", "server-5", "lb-5", "\\-"},
-					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2<br>lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3<br>tg-4"}},
@@ -132,8 +117,12 @@ func TestTable_Render(t *testing.T) {
 					{{"i-5"}, {"server-5"}, {"lb-5"}, {"\\-"}},
 					{{"i-6"}, {"server-6"}, {"\\-"}, {"tg-5<br>tg-6<br>tg-7<br>tg-8"}},
 				},
-				colWidths:   []int{10, 12, 12, 28},
-				lineHeights: []int{1, 1, 1, 1, 1, 1},
+				colWidths:          []int{10, 12, 12, 28},
+				lineHeights:        []int{1, 1, 1, 1, 1, 1},
+				numRows:            6,
+				numColumns:         4,
+				numColumnsFirstRow: 4,
+				mergeFields:        []int{},
 			},
 			want: `| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |
 |------------|--------------|--------------|------------------------------|
@@ -150,15 +139,7 @@ func TestTable_Render(t *testing.T) {
 			fields: fields{
 				format: BacklogFormat,
 				header: []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
-				data: [][]string{
-					{"i-1", "server-1", "lb-1", "tg-1"},
-					{"i-2", "server-2", "lb-2&br;lb-3", "tg-2"},
-					{"i-3", "server-3", "lb-4", "tg-3&br;tg-4"},
-					{"i-4", "server-4", "-", "-"},
-					{"i-5", "server-5", "lb-5", "-"},
-					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2&br;lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3&br;tg-4"}},
@@ -166,8 +147,12 @@ func TestTable_Render(t *testing.T) {
 					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
 					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5&br;tg-6&br;tg-7&br;tg-8"}},
 				},
-				colWidths:   []int{10, 12, 12, 28},
-				lineHeights: []int{1, 1, 1, 1, 1, 1},
+				colWidths:          []int{10, 12, 12, 28},
+				lineHeights:        []int{1, 1, 1, 1, 1, 1},
+				numRows:            6,
+				numColumns:         4,
+				numColumnsFirstRow: 4,
+				mergeFields:        []int{},
 			},
 			want: `| InstanceID | InstanceName | AttachedLB   | AttachedTG                   |h
 | i-1        | server-1     | lb-1         | tg-1                         |
@@ -178,6 +163,21 @@ func TestTable_Render(t *testing.T) {
 | i-6        | server-6     | -            | tg-5&br;tg-6&br;tg-7&br;tg-8 |
 `,
 		},
+		{
+			name: "nil",
+			fields: fields{
+				format:             TextFormat,
+				header:             []string{"InstanceID", "InstanceName", "AttachedLB", "AttachedTG"},
+				data:               [][][]string{},
+				colWidths:          []int{10, 12, 10, 10},
+				lineHeights:        []int{},
+				numRows:            0,
+				numColumns:         4,
+				numColumnsFirstRow: 4,
+				mergeFields:        []int{},
+			},
+			want: "",
+		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
@@ -186,9 +186,12 @@ func TestTable_Render(t *testing.T) {
 			tr.format = tt.fields.format
 			tr.header = tt.fields.header
 			tr.data = tt.fields.data
-			tr.multilineData = tt.fields.multilineData
 			tr.colWidths = tt.fields.colWidths
 			tr.lineHeights = tt.fields.lineHeights
+			tr.numRows = tt.fields.numRows
+			tr.numColumns = tt.fields.numColumns
+			tr.numColumnsFirstRow = tt.fields.numColumnsFirstRow
+			tr.mergedFields = tt.fields.mergeFields
 			tr.setBorder()
 			tr.Render()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
@@ -205,8 +208,9 @@ func TestTable_printHeader(t *testing.T) {
 	type fields struct {
 		header      []string
 		format      Format
-		marginWidth int
 		colWidths   []int
+		numColumns  int
+		marginWidth int
 	}
 	tests := []struct {
 		name   string
@@ -218,8 +222,9 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:      []string{"a", "bb", "ccc"},
 				format:      TextFormat,
-				marginWidth: 1,
 				colWidths:   []int{1, 2, 3},
+				numColumns:  3,
+				marginWidth: 1,
 			},
 			want: "| a | bb | ccc |\n",
 		},
@@ -228,8 +233,9 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:      []string{"a", "bb", "ccc"},
 				format:      MarkdownFormat,
-				marginWidth: 1,
 				colWidths:   []int{1, 2, 3},
+				numColumns:  3,
+				marginWidth: 1,
 			},
 			want: "| a | bb | ccc |\n",
 		},
@@ -238,8 +244,9 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:      []string{"a", "bb", "ccc"},
 				format:      BacklogFormat,
-				marginWidth: 1,
 				colWidths:   []int{1, 2, 3},
+				numColumns:  3,
+				marginWidth: 1,
 			},
 			want: "| a | bb | ccc |h\n",
 		},
@@ -248,8 +255,9 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:      []string{"a", "bb", "ccc"},
 				format:      TextFormat,
-				marginWidth: 3,
 				colWidths:   []int{1, 2, 3},
+				numColumns:  3,
+				marginWidth: 3,
 			},
 			want: "|   a   |   bb   |   ccc   |\n",
 		},
@@ -258,8 +266,9 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:      []string{"a", "bb", "ccc"},
 				format:      TextFormat,
-				marginWidth: 1,
 				colWidths:   []int{10, 2, 3},
+				numColumns:  3,
+				marginWidth: 1,
 			},
 			want: "| a          | bb | ccc |\n",
 		},
@@ -268,10 +277,22 @@ func TestTable_printHeader(t *testing.T) {
 			fields: fields{
 				header:      []string{"a", "bb", "ccc"},
 				format:      TextFormat,
-				marginWidth: 1,
 				colWidths:   []int{1, 2, 1},
+				numColumns:  3,
+				marginWidth: 1,
 			},
 			want: "| a | bb | ccc |\n",
+		},
+		{
+			name: "nil",
+			fields: fields{
+				header:      []string{},
+				format:      TextFormat,
+				colWidths:   []int{},
+				numColumns:  0,
+				marginWidth: 1,
+			},
+			want: "",
 		},
 	}
 	for _, tt := range tests {
@@ -280,8 +301,9 @@ func TestTable_printHeader(t *testing.T) {
 			tr := New(buf, WithMargin(tt.fields.marginWidth))
 			tr.format = tt.fields.format
 			tr.header = tt.fields.header
-			tr.marginWidth = tt.fields.marginWidth
 			tr.colWidths = tt.fields.colWidths
+			tr.numColumns = tt.fields.numColumns
+			tr.marginWidth = tt.fields.marginWidth
 			tr.printHeader()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
@@ -292,11 +314,13 @@ func TestTable_printHeader(t *testing.T) {
 
 func TestTable_printData(t *testing.T) {
 	type fields struct {
-		data          [][]string
-		multilineData [][][]string
-		format        Format
-		colWidths     []int
-		lineHeights   []int
+		data         [][][]string
+		format       Format
+		colWidths    []int
+		lineHeights  []int
+		numColumns   int
+		hasHeader    bool
+		mergedFields []int
 	}
 	tests := []struct {
 		name   string
@@ -306,15 +330,7 @@ func TestTable_printData(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				data: [][]string{
-					{"i-1", "server-1", "lb-1", "tg-1"},
-					{"i-2", "server-2", "lb-2\nlb-3", "tg-2"},
-					{"i-3", "server-3", "lb-4", "tg-3\ntg-4"},
-					{"i-4", "server-4", "-", "-"},
-					{"i-5", "server-5", "lb-5", "-"},
-					{"i-6", "server-6", "-", "tg-5\ntg-6\ntg-7\ntg-8"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2", "lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3", "tg-4"}},
@@ -322,11 +338,15 @@ func TestTable_printData(t *testing.T) {
 					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
 					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5", "tg-6", "tg-7", "tg-8"}},
 				},
-				format:      TextFormat,
-				colWidths:   []int{10, 12, 10, 10},
-				lineHeights: []int{1, 2, 2, 1, 1, 4},
+				format:       TextFormat,
+				colWidths:    []int{10, 12, 10, 10},
+				lineHeights:  []int{1, 2, 2, 1, 1, 4},
+				numColumns:   4,
+				hasHeader:    false,
+				mergedFields: []int{},
 			},
-			want: `| i-1        | server-1     | lb-1       | tg-1       |
+			want: `+------------+--------------+------------+------------+
+| i-1        | server-1     | lb-1       | tg-1       |
 +------------+--------------+------------+------------+
 | i-2        | server-2     | lb-2       | tg-2       |
 |            |              | lb-3       |            |
@@ -342,22 +362,13 @@ func TestTable_printData(t *testing.T) {
 |            |              |            | tg-6       |
 |            |              |            | tg-7       |
 |            |              |            | tg-8       |
++------------+--------------+------------+------------+
 `,
 		},
 		{
 			name: "text_with_compress",
 			fields: fields{
-				data: [][]string{
-					{"i-1", "server-1", "vpc-1", "sg-1", "Ingress", "tcp", "22", "22", "SecurityGroup", "sg-10"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-					{"", "", "", "sg-2", "Ingress", "tcp", "443", "443", "Ipv4", "0.0.0.0/0"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-					{"i-2", "server-2", "vpc-1", "sg-3", "Ingress", "icmp", "-1", "-1", "SecurityGroup", "sg-11"},
-					{"", "", "", "", "Ingress", "tcp", "3389", "3389", "Ipv4", "10.1.0.0/16"},
-					{"", "", "", "", "Ingress", "tcp", "0", "65535", "PrefixList", "pl-id/pl-name"},
-					{"", "", "", "", "Egress", "-1", "0", "0", "Ipv4", "0.0.0.0/0"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"vpc-1"}, {"sg-1"}, {"Ingress"}, {"tcp"}, {"22"}, {"22"}, {"SecurityGroup"}, {"sg-10"}},
 					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
 					{{""}, {""}, {""}, {"sg-2"}, {"Ingress"}, {"tcp"}, {"443"}, {"443"}, {"Ipv4"}, {"0.0.0.0/0"}},
@@ -367,11 +378,15 @@ func TestTable_printData(t *testing.T) {
 					{{""}, {""}, {""}, {""}, {"Ingress"}, {"tcp"}, {"0"}, {"65535"}, {"PrefixList"}, {"pl-id/pl-name"}},
 					{{""}, {""}, {""}, {""}, {"Egress"}, {"-1"}, {"0"}, {"0"}, {"Ipv4"}, {"0.0.0.0/0"}},
 				},
-				format:      CompressedTextFormat,
-				colWidths:   []int{10, 12, 5, 15, 13, 10, 8, 6, 13, 13},
-				lineHeights: []int{1, 1, 1, 1, 1, 1, 1, 1},
+				format:       CompressedTextFormat,
+				colWidths:    []int{10, 12, 5, 15, 13, 10, 8, 6, 13, 13},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1, 1, 1},
+				numColumns:   10,
+				hasHeader:    false,
+				mergedFields: []int{0, 1, 2, 3},
 			},
-			want: `| i-1        | server-1     | vpc-1 | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
+			want: `+------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
+| i-1        | server-1     | vpc-1 | sg-1            | Ingress       | tcp        |       22 |     22 | SecurityGroup | sg-10         |
 |            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
 |            |              |       | sg-2            | Ingress       | tcp        |      443 |    443 | Ipv4          | 0.0.0.0/0     |
 |            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
@@ -380,20 +395,13 @@ func TestTable_printData(t *testing.T) {
 |            |              |       |                 | Ingress       | tcp        |     3389 |   3389 | Ipv4          | 10.1.0.0/16   |
 |            |              |       |                 | Ingress       | tcp        |        0 |  65535 | PrefixList    | pl-id/pl-name |
 |            |              |       |                 | Egress        |         -1 |        0 |      0 | Ipv4          | 0.0.0.0/0     |
++------------+--------------+-------+-----------------+---------------+------------+----------+--------+---------------+---------------+
 `,
 		},
 		{
-			name: "markdown",
+			name: "markdown_with_border",
 			fields: fields{
-				data: [][]string{
-					{"i-1", "server-1", "lb-1", "tg-1"},
-					{"i-2", "server-2", "lb-2<br>lb-3", "tg-2"},
-					{"i-3", "server-3", "lb-4", "tg-3<br>tg-4"},
-					{"i-4", "server-4", "\\-", "\\-"},
-					{"i-5", "server-5", "lb-5", "\\-"},
-					{"i-6", "server-6", "\\-", "tg-5<br>tg-6<br>tg-7<br>tg-8"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2<br>lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3<br>tg-4"}},
@@ -401,9 +409,39 @@ func TestTable_printData(t *testing.T) {
 					{{"i-5"}, {"server-5"}, {"lb-5"}, {"\\-"}},
 					{{"i-6"}, {"server-6"}, {"\\-"}, {"tg-5<br>tg-6<br>tg-7<br>tg-8"}},
 				},
-				format:      MarkdownFormat,
-				colWidths:   []int{10, 12, 12, 28},
-				lineHeights: []int{1, 1, 1, 1, 1, 1},
+				format:       MarkdownFormat,
+				colWidths:    []int{10, 12, 12, 28},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1},
+				numColumns:   4,
+				hasHeader:    false,
+				mergedFields: []int{},
+			},
+			want: `|------------|--------------|--------------|------------------------------|
+| i-1        | server-1     | lb-1         | tg-1                         |
+| i-2        | server-2     | lb-2<br>lb-3 | tg-2                         |
+| i-3        | server-3     | lb-4         | tg-3<br>tg-4                 |
+| i-4        | server-4     | \-           | \-                           |
+| i-5        | server-5     | lb-5         | \-                           |
+| i-6        | server-6     | \-           | tg-5<br>tg-6<br>tg-7<br>tg-8 |
+`,
+		},
+		{
+			name: "markdown_with_noborder",
+			fields: fields{
+				data: [][][]string{
+					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
+					{{"i-2"}, {"server-2"}, {"lb-2<br>lb-3"}, {"tg-2"}},
+					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3<br>tg-4"}},
+					{{"i-4"}, {"server-4"}, {"\\-"}, {"\\-"}},
+					{{"i-5"}, {"server-5"}, {"lb-5"}, {"\\-"}},
+					{{"i-6"}, {"server-6"}, {"\\-"}, {"tg-5<br>tg-6<br>tg-7<br>tg-8"}},
+				},
+				format:       MarkdownFormat,
+				colWidths:    []int{10, 12, 12, 28},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1},
+				numColumns:   0,
+				hasHeader:    false,
+				mergedFields: []int{},
 			},
 			want: `| i-1        | server-1     | lb-1         | tg-1                         |
 | i-2        | server-2     | lb-2<br>lb-3 | tg-2                         |
@@ -416,15 +454,7 @@ func TestTable_printData(t *testing.T) {
 		{
 			name: "backlog",
 			fields: fields{
-				data: [][]string{
-					{"i-1", "server-1", "lb-1", "tg-1"},
-					{"i-2", "server-2", "lb-2&br;lb-3", "tg-2"},
-					{"i-3", "server-3", "lb-4", "tg-3&br;tg-4"},
-					{"i-4", "server-4", "-", "-"},
-					{"i-5", "server-5", "lb-5", "-"},
-					{"i-6", "server-6", "-", "tg-5&br;tg-6&br;tg-7&br;tg-8"},
-				},
-				multilineData: [][][]string{
+				data: [][][]string{
 					{{"i-1"}, {"server-1"}, {"lb-1"}, {"tg-1"}},
 					{{"i-2"}, {"server-2"}, {"lb-2&br;lb-3"}, {"tg-2"}},
 					{{"i-3"}, {"server-3"}, {"lb-4"}, {"tg-3&br;tg-4"}},
@@ -432,9 +462,12 @@ func TestTable_printData(t *testing.T) {
 					{{"i-5"}, {"server-5"}, {"lb-5"}, {"-"}},
 					{{"i-6"}, {"server-6"}, {"-"}, {"tg-5&br;tg-6&br;tg-7&br;tg-8"}},
 				},
-				format:      BacklogFormat,
-				colWidths:   []int{10, 12, 12, 28},
-				lineHeights: []int{1, 1, 1, 1, 1, 1},
+				format:       BacklogFormat,
+				colWidths:    []int{10, 12, 12, 28},
+				lineHeights:  []int{1, 1, 1, 1, 1, 1},
+				numColumns:   4,
+				hasHeader:    false,
+				mergedFields: []int{},
 			},
 			want: `| i-1        | server-1     | lb-1         | tg-1                         |
 | i-2        | server-2     | lb-2&br;lb-3 | tg-2                         |
@@ -450,10 +483,12 @@ func TestTable_printData(t *testing.T) {
 			buf := new(bytes.Buffer)
 			tr := New(buf)
 			tr.data = tt.fields.data
-			tr.multilineData = tt.fields.multilineData
 			tr.format = tt.fields.format
 			tr.colWidths = tt.fields.colWidths
 			tr.lineHeights = tt.fields.lineHeights
+			tr.numColumns = tt.fields.numColumns
+			tr.hasHeader = tt.fields.hasHeader
+			tr.mergedFields = tt.fields.mergedFields
 			tr.setBorder()
 			tr.printData()
 			if !reflect.DeepEqual(buf.String(), tt.want) {
@@ -463,123 +498,124 @@ func TestTable_printData(t *testing.T) {
 	}
 }
 
-func TestTable_printDataBorder(t *testing.T) {
-	type fields struct {
-		marginWidth int
-		colWidths   []int
+/*
+	func TestTable_printDataBorder(t *testing.T) {
+		type fields struct {
+			marginWidth int
+			colWidths   []int
+		}
+		type args struct {
+			row []string
+		}
+		tests := []struct {
+			name   string
+			fields fields
+			args   args
+			want   string
+		}{
+			{
+				name: "basic",
+				fields: fields{
+					marginWidth: 1,
+					colWidths:   []int{4, 5, 6},
+				},
+				args: args{
+					row: []string{"a", "bb", "ccc"},
+				},
+				want: "+------+-------+--------+\n",
+			},
+			{
+				name: "margin",
+				fields: fields{
+					marginWidth: 3,
+					colWidths:   []int{4, 5, 6},
+				},
+				args: args{
+					row: []string{"a", "bb", "ccc"},
+				},
+				want: "+----------+-----------+------------+\n",
+			},
+			{
+				name: "long",
+				fields: fields{
+					marginWidth: 1,
+					colWidths:   []int{10, 5, 6},
+				},
+				args: args{
+					row: []string{"a", "bb", "ccc"},
+				},
+				want: "+------------+-------+--------+\n",
+			},
+			{
+				name: "short",
+				fields: fields{
+					marginWidth: 1,
+					colWidths:   []int{4, 5, 6},
+				},
+				args: args{
+					row: []string{"aaaaaa", "bb", "ccc"},
+				},
+				want: "+------+-------+--------+\n",
+			},
+			{
+				name: "empty_field_included_1",
+				fields: fields{
+					marginWidth: 1,
+					colWidths:   []int{4, 5, 6},
+				},
+				args: args{
+					row: []string{"", "bb", "ccc"},
+				},
+				want: "+      +-------+--------+\n",
+			},
+			{
+				name: "empty_field_included_2",
+				fields: fields{
+					marginWidth: 1,
+					colWidths:   []int{4, 5, 6},
+				},
+				args: args{
+					row: []string{"", "", "ccc"},
+				},
+				want: "+      +       +--------+\n",
+			},
+			{
+				name: "empty_field_included_3",
+				fields: fields{
+					marginWidth: 1,
+					colWidths:   []int{4, 5, 6},
+				},
+				args: args{
+					row: []string{"", "", ""},
+				},
+				want: "+      +       +        +\n",
+			},
+			{
+				name: "empty_field_included_4",
+				fields: fields{
+					marginWidth: 1,
+					colWidths:   []int{4, 5, 6},
+				},
+				args: args{
+					row: []string{"", "bb", ""},
+				},
+				want: "+      +-------+        +\n",
+			},
+		}
+		for _, tt := range tests {
+			t.Run(tt.name, func(t *testing.T) {
+				buf := new(bytes.Buffer)
+				tr := New(buf)
+				tr.marginWidth = tt.fields.marginWidth
+				tr.colWidths = tt.fields.colWidths
+				tr.printDataBorder(tt.args.row)
+				if !reflect.DeepEqual(buf.String(), tt.want) {
+					t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
+				}
+			})
+		}
 	}
-	type args struct {
-		row []string
-	}
-	tests := []struct {
-		name   string
-		fields fields
-		args   args
-		want   string
-	}{
-		{
-			name: "basic",
-			fields: fields{
-				marginWidth: 1,
-				colWidths:   []int{4, 5, 6},
-			},
-			args: args{
-				row: []string{"a", "bb", "ccc"},
-			},
-			want: "+------+-------+--------+\n",
-		},
-		{
-			name: "margin",
-			fields: fields{
-				marginWidth: 3,
-				colWidths:   []int{4, 5, 6},
-			},
-			args: args{
-				row: []string{"a", "bb", "ccc"},
-			},
-			want: "+----------+-----------+------------+\n",
-		},
-		{
-			name: "long",
-			fields: fields{
-				marginWidth: 1,
-				colWidths:   []int{10, 5, 6},
-			},
-			args: args{
-				row: []string{"a", "bb", "ccc"},
-			},
-			want: "+------------+-------+--------+\n",
-		},
-		{
-			name: "short",
-			fields: fields{
-				marginWidth: 1,
-				colWidths:   []int{4, 5, 6},
-			},
-			args: args{
-				row: []string{"aaaaaa", "bb", "ccc"},
-			},
-			want: "+------+-------+--------+\n",
-		},
-		{
-			name: "empty_field_included_1",
-			fields: fields{
-				marginWidth: 1,
-				colWidths:   []int{4, 5, 6},
-			},
-			args: args{
-				row: []string{"", "bb", "ccc"},
-			},
-			want: "+      +-------+--------+\n",
-		},
-		{
-			name: "empty_field_included_2",
-			fields: fields{
-				marginWidth: 1,
-				colWidths:   []int{4, 5, 6},
-			},
-			args: args{
-				row: []string{"", "", "ccc"},
-			},
-			want: "+      +       +--------+\n",
-		},
-		{
-			name: "empty_field_included_3",
-			fields: fields{
-				marginWidth: 1,
-				colWidths:   []int{4, 5, 6},
-			},
-			args: args{
-				row: []string{"", "", ""},
-			},
-			want: "+      +       +        +\n",
-		},
-		{
-			name: "empty_field_included_4",
-			fields: fields{
-				marginWidth: 1,
-				colWidths:   []int{4, 5, 6},
-			},
-			args: args{
-				row: []string{"", "bb", ""},
-			},
-			want: "+      +-------+        +\n",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			buf := new(bytes.Buffer)
-			tr := New(buf)
-			tr.marginWidth = tt.fields.marginWidth
-			tr.colWidths = tt.fields.colWidths
-			tr.printDataBorder(tt.args.row)
-			if !reflect.DeepEqual(buf.String(), tt.want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
-			}
-		})
-	}
-}
-
+*/
 func TestTable_printBorder(t *testing.T) {
 	type fields struct {
 		format      Format

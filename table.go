@@ -65,15 +65,14 @@ type Input struct {
 type Table struct {
 	w                     io.Writer       // Destination for table output
 	b                     strings.Builder // Internal string builder
-	data                  [][]string      // Matrix after parsing
-	multilineData         [][][]string    // Matrix after parsing with each field divided by new lines
-	header                []string        // Table header after parsing
 	format                Format          // Output table format: text|compressed-text|markdown|backlog
+	header                []string        // Table header after parsing
+	data                  [][][]string    // Matrix after parsing with each field divided by new lines
 	newLine               string          // New line string representation: "\n"|"<br>"|"&br;"
 	emptyFieldPlaceholder string          // Placeholder for empty fields
 	wordDelimiter         string          // Delimiter for words within a field
-	lineHeights           []int           // Heights of lines with fields containing line breaks
 	colWidths             []int           // Max widths of each columns
+	lineHeights           []int           // Heights of lines with fields containing line breaks
 	numColumns            int             // Number of columns
 	numColumnsFirstRow    int             // Number of columns of the first data row
 	numRows               int             // Number of rows
@@ -82,11 +81,11 @@ type Table struct {
 	marginWidth           int             // Margin size around the field
 	margin                string          // Whitespaces around the field
 	hasHeader             bool            // Whether header rendering
-	isEscape              bool            // Whether HTML escaping
-	mergedFields          []int           // Indices of columns to merge
-	ignoredFields         []int           // Indices of columns to ignore
+	isEscape              bool            // Whether HTML escaping (mainly designed for markdown)
 	isMerge               bool            // Track whether to merge fields
 	prevRow               []string        // Retain previous row
+	mergedFields          []int           // Indices of columns to merge
+	ignoredFields         []int           // Indices of columns to ignore
 }
 
 // New instantiates a new Table with the writer and options.
@@ -137,30 +136,33 @@ func WithMargin(width int) Option {
 }
 
 // WithEmptyFieldPlaceholder sets the placeholder for empty fields.
-func WithEmptyFieldPlaceholder(emptyFieldPlaceholder string) Option {
+func WithEmptyFieldPlaceholder(placeholder string) Option {
+	if placeholder == "" {
+		placeholder = " "
+	}
 	return func(t *Table) {
-		t.emptyFieldPlaceholder = emptyFieldPlaceholder
+		t.emptyFieldPlaceholder = placeholder
 	}
 }
 
 // WithWordDelimiter sets the delimiter to split words in a field.
-func WithWordDelimiter(wordDelimiter string) Option {
+func WithWordDelimiter(delimiter string) Option {
 	return func(t *Table) {
-		t.wordDelimiter = wordDelimiter
+		t.wordDelimiter = delimiter
 	}
 }
 
 // WithMergeFields sets column indices to be merged.
-func WithMergeFields(mergeFields []int) Option {
+func WithMergeFields(indices []int) Option {
 	return func(t *Table) {
-		t.mergedFields = mergeFields
+		t.mergedFields = indices
 	}
 }
 
 // WithIgnoreFields sets column indices to be ignored.
-func WithIgnoreFields(ignoreFields []int) Option {
+func WithIgnoreFields(indices []int) Option {
 	return func(t *Table) {
-		t.ignoredFields = ignoreFields
+		t.ignoredFields = indices
 	}
 }
 

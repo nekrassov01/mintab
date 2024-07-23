@@ -10,23 +10,19 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-// Load validates v and converts it to a structure Table.
-// v must be passed in one of the following two ways:
+// Load validates v and converts it to a structure Table. v must be passed in one of the following two ways:
 //
-// 1. Struct `Input` with `Header` and `Data`
+// 1. Struct `Input`
 //   - The number of columns in all rows must be the same.
 //   - Header is allowd to be nil.
 //
 // 2. Any struct slices
-//   - If a struct is passed, it is converted to a slice
-//     with one element.
-//   - If the field is a slice with primitive data type or
-//     a slice of byte slice, it is converted to a string.
-//   - If the field is struct, an error is returned (nested
-//     structs are not supported)
+//   - If a struct is passed, it is converted to a slice with one element.
+//   - If the field is a slice with primitive data type or a slice of byte slice, it is converted to a string.
+//   - If the field is struct, an error is returned (nested structs are not supported)
 func (t *Table) Load(v any) error {
 	if _, ok := v.([]any); ok {
-		return fmt.Errorf("elements of slice must not be \"any\"")
+		return fmt.Errorf("cannot load input: elements of slice must not be \"any\"")
 	}
 	switch tv := v.(type) {
 	case nil:
@@ -68,7 +64,7 @@ func (t *Table) loadStruct(v any) error {
 	if rv.Kind() == reflect.Ptr {
 		rv = rv.Elem()
 	}
-	if rv.Kind() != reflect.Slice {
+	if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
 		if rv.IsZero() {
 			return nil
 		}
@@ -117,7 +113,7 @@ func (t *Table) setInputHeader(v Input) error {
 	firstRow := v.Data[0]
 	t.numColumnsFirstRow = len(firstRow)
 	if t.numColumns > 0 {
-		if t.numColumns != len(firstRow) {
+		if t.numColumns != t.numColumnsFirstRow {
 			return fmt.Errorf("cannot load input: number of columns must be the same as header")
 		}
 		t.header = make([]string, 0, t.numColumns)
@@ -129,6 +125,7 @@ func (t *Table) setInputHeader(v Input) error {
 			t.colWidths = append(t.colWidths, runewidth.StringWidth(h))
 		}
 	}
+	t.numColumns = len(t.colWidths)
 	if t.numColumns == 0 {
 		for i := range firstRow {
 			if !slices.Contains(t.ignoredFields, i) {
@@ -136,7 +133,6 @@ func (t *Table) setInputHeader(v Input) error {
 			}
 		}
 	}
-	t.numColumns = len(t.colWidths)
 	return nil
 }
 
@@ -167,42 +163,41 @@ func (t *Table) setStructHeader(rv reflect.Value) error {
 }
 
 func (t *Table) setInputData(v Input) error {
-	t.data = make([][]string, t.numRows)
-	t.multilineData = make([][][]string, t.numRows)
+	t.data = make([][][]string, t.numRows)
 	t.lineHeights = make([]int, t.numRows)
-	t.prevRow = make([]string, t.numColumns)
+	n := t.numColumns
+	if n == 0 {
+		n = t.numColumnsFirstRow
+	}
+	t.prevRow = make([]string, n)
 	for i, r := range v.Data {
 		if i > 0 && len(r) != t.numColumnsFirstRow {
-			return fmt.Errorf("number of columns must be the same for all rows")
+			return fmt.Errorf("cannot load input: number of columns must be the same for all rows")
 		}
-		row := make([]string, t.numColumns)
-		multilineRow := make([][]string, t.numColumns)
+		row := make([][]string, n)
 		t.isMerge = true
 		t.lineHeights[i] = 1
 		for j, field := range r {
 			if slices.Contains(t.ignoredFields, j) {
 				continue
 			}
-			s, err := t.formatInputField(field)
+			s, err := t.formatField(reflect.ValueOf(field))
 			if err != nil {
 				return err
 			}
-			s = t.mergeColumn(s, j)
-			row[j] = s
+			s = t.merge(s, j)
 			elems := strings.Split(s, "\n")
-			multilineRow[j] = elems
+			row[j] = elems
 			t.updateColWidths(elems, j)
 			t.getLineHeight(elems, i)
 		}
 		t.data[i] = row
-		t.multilineData[i] = multilineRow
 	}
 	return nil
 }
 
 func (t *Table) setStructData(rv reflect.Value) error {
-	t.data = make([][]string, t.numRows)
-	t.multilineData = make([][][]string, t.numRows)
+	t.data = make([][][]string, t.numRows)
 	t.lineHeights = make([]int, t.numRows)
 	t.prevRow = make([]string, t.numColumns)
 	for i := 0; i < t.numRows; i++ {
@@ -210,33 +205,30 @@ func (t *Table) setStructData(rv reflect.Value) error {
 		if e.Kind() == reflect.Ptr {
 			e = e.Elem()
 		}
-		row := make([]string, t.numColumns)
-		multilineRow := make([][]string, t.numColumns)
+		row := make([][]string, t.numColumns)
 		t.isMerge = true
 		t.lineHeights[i] = 1
 		for j, h := range t.header {
 			field := e.FieldByName(h)
 			if !field.IsValid() {
-				return fmt.Errorf("invalid field detected: %s", h)
+				return fmt.Errorf("cannot load input: invalid field detected: %s", h)
 			}
-			s, err := t.formatStructField(field)
+			s, err := t.formatField(field)
 			if err != nil {
 				return err
 			}
-			s = t.mergeColumn(s, j)
-			row[j] = s
+			s = t.merge(s, j)
 			elems := strings.Split(s, "\n")
-			multilineRow[j] = elems
+			row[j] = elems
 			t.updateColWidths(elems, j)
 			t.getLineHeight(elems, i)
 		}
 		t.data[i] = row
-		t.multilineData[i] = multilineRow
 	}
 	return nil
 }
 
-func (t *Table) mergeColumn(s string, i int) string {
+func (t *Table) merge(s string, i int) string {
 	if slices.Contains(t.mergedFields, i) {
 		if s != t.prevRow[i] {
 			t.isMerge = false
@@ -259,7 +251,8 @@ func (t *Table) updateColWidths(elems []string, i int) {
 }
 
 func (t *Table) getLineHeight(elems []string, i int) {
-	if t.format == TextFormat {
+	switch t.format {
+	case TextFormat, CompressedTextFormat:
 		height := len(elems)
 		if height > t.lineHeights[i] {
 			t.lineHeights[i] = height
@@ -288,14 +281,14 @@ func (t *Table) setBorder() {
 	t.tableWidth = len(t.border)
 }
 
-func (t *Table) formatStructField(rv reflect.Value) (string, error) {
+func (t *Table) formatField(rv reflect.Value) (string, error) {
 	if rv.Kind() == reflect.Ptr {
 		if rv.IsNil() {
 			return t.emptyFieldPlaceholder, nil
 		}
 		rv = rv.Elem()
 	}
-	if s := getStructStringer(rv); s != "" {
+	if s := getStringer(rv); s != "" {
 		return t.sanitize(s), nil
 	}
 	switch rv.Kind() {
@@ -309,6 +302,8 @@ func (t *Table) formatStructField(rv reflect.Value) (string, error) {
 		return strconv.FormatFloat(rv.Float(), 'f', -1, 32), nil
 	case reflect.Float64:
 		return strconv.FormatFloat(rv.Float(), 'f', -1, 64), nil
+	case reflect.Struct:
+		return "", fmt.Errorf("cannot load input: nested fields not supported")
 	case reflect.Slice, reflect.Array:
 		s, err := t.formatSlice(rv)
 		if err != nil {
@@ -320,60 +315,12 @@ func (t *Table) formatStructField(rv reflect.Value) (string, error) {
 	}
 }
 
-func (t *Table) formatInputField(v any) (string, error) {
-	if s := getInputStringer(v); s != "" {
-		return t.sanitize(s), nil
-	}
-	switch tv := v.(type) {
-	case nil:
-		return t.emptyFieldPlaceholder, nil
-	case string:
-		return t.sanitize(tv), nil
-	case int:
-		return strconv.FormatInt(int64(tv), 10), nil
-	case int8:
-		return strconv.FormatInt(int64(tv), 10), nil
-	case int16:
-		return strconv.FormatInt(int64(tv), 10), nil
-	case int32:
-		return strconv.FormatInt(int64(tv), 10), nil
-	case int64:
-		return strconv.FormatInt(tv, 10), nil
-	case uint:
-		return strconv.FormatUint(uint64(tv), 10), nil
-	case uint8:
-		return strconv.FormatUint(uint64(tv), 10), nil
-	case uint16:
-		return strconv.FormatUint(uint64(tv), 10), nil
-	case uint32:
-		return strconv.FormatUint(uint64(tv), 10), nil
-	case uint64:
-		return strconv.FormatUint(tv, 10), nil
-	case float32:
-		return strconv.FormatFloat(float64(tv), 'f', -1, 32), nil
-	case float64:
-		return strconv.FormatFloat(tv, 'f', -1, 64), nil
-	case []byte:
-		if len(tv) == 0 {
-			return t.emptyFieldPlaceholder, nil
-		}
-		return t.sanitize(string(tv)), nil
-	default:
-		s, err := t.formatSlice(reflect.ValueOf(tv))
-		if err != nil {
-			return "", err
-		}
-		return t.sanitize(s), nil
-	}
-}
-
 func (t *Table) formatSlice(rv reflect.Value) (string, error) {
-	var s string
 	switch {
 	case rv.Len() == 0:
-		s = t.emptyFieldPlaceholder
+		return t.emptyFieldPlaceholder, nil
 	case rv.Type().Elem().Kind() == reflect.Uint8:
-		s = string(rv.Bytes())
+		return string(rv.Bytes()), nil
 	default:
 		t.b.Reset()
 		for i := 0; i < rv.Len(); i++ {
@@ -388,8 +335,8 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 				}
 				e = e.Elem()
 			}
-			if f := getStructStringer(e); f != "" {
-				t.b.WriteString(f)
+			if s := getStringer(e); s != "" {
+				t.b.WriteString(s)
 				continue
 			}
 			if e.Kind() == reflect.Slice && e.Type().Elem().Kind() == reflect.Uint8 {
@@ -397,38 +344,33 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 				continue
 			}
 			if e.Kind() == reflect.Slice || e.Kind() == reflect.Array || e.Kind() == reflect.Struct {
-				return "", fmt.Errorf("cannot represent nested fields")
+				return "", fmt.Errorf("cannot load input: nested fields not supported")
 			}
 			switch e.Kind() {
 			case reflect.String:
-				s = e.String()
+				if e.IsZero() {
+					t.b.WriteString(t.emptyFieldPlaceholder)
+				} else {
+					t.b.WriteString(e.String())
+				}
 			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				s = strconv.FormatInt(e.Int(), 10)
+				t.b.WriteString(strconv.FormatInt(e.Int(), 10))
 			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				s = strconv.FormatUint(e.Uint(), 10)
+				t.b.WriteString(strconv.FormatUint(e.Uint(), 10))
 			case reflect.Float32:
-				s = strconv.FormatFloat(e.Float(), 'f', -1, 32)
+				t.b.WriteString(strconv.FormatFloat(e.Float(), 'f', -1, 32))
 			case reflect.Float64:
-				s = strconv.FormatFloat(e.Float(), 'f', -1, 64)
+				t.b.WriteString(strconv.FormatFloat(e.Float(), 'f', -1, 64))
 			default:
-				s = fmt.Sprint(e.Interface())
+				t.b.WriteString(fmt.Sprint(e.Interface()))
 			}
-			if s == "" {
-				s = t.emptyFieldPlaceholder
-			}
-			t.b.WriteString(s)
 		}
-		s = t.b.String()
+		return t.b.String(), nil
 	}
-	return s, nil
 }
 
-func getStructStringer(rv reflect.Value) string {
-	return getInputStringer(rv.Interface())
-}
-
-func getInputStringer(v any) string {
-	if s, ok := v.(fmt.Stringer); ok {
+func getStringer(rv reflect.Value) string {
+	if s, ok := rv.Interface().(fmt.Stringer); ok {
 		return s.String()
 	}
 	return ""
@@ -447,16 +389,7 @@ func (t *Table) sanitize(s string) string {
 	if t.format == TextFormat {
 		return s
 	}
-	t.b.Reset()
-	for _, r := range s {
-		switch r {
-		case '\n':
-			t.b.WriteString(t.newLine)
-		default:
-			t.b.WriteRune(r)
-		}
-	}
-	return strings.TrimSpace(t.b.String())
+	return strings.TrimSpace(strings.ReplaceAll(s, "\n", t.newLine))
 }
 
 func (t *Table) escape(s string) string {
