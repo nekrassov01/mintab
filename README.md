@@ -42,16 +42,17 @@ Support
 - Text table format
 - Markdown table format
 - Backlog table format
-- Group rows based on previous field value
+- Load struct slices directly
+- Merge columns based on previous field value
 - Ignore specified columns
-- Escape HTML special characters
+- Escape HTML special characters (mainly designed for markdown)
 - Set multiple values to a field as a joined string
 - Set byte slices as a string
 
 Notes
 -----
 
-- Only non-nested struct slices are accepted
+- Nested structures are not supported, but the slices of primitive data types are converted to strings
 - Using reflect
 
 Usage
@@ -62,7 +63,9 @@ Usage
 Todo
 ----
 
-- Paging
+- Add paging for large inputs
+- Improve performance and reduce memory allocations
+- Minimal styling
 
 Author
 ------
