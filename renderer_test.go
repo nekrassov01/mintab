@@ -498,171 +498,68 @@ func TestTable_printData(t *testing.T) {
 	}
 }
 
-/*
-	func TestTable_printDataBorder(t *testing.T) {
-		type fields struct {
-			marginWidth int
-			colWidths   []int
-		}
-		type args struct {
-			row []string
-		}
-		tests := []struct {
-			name   string
-			fields fields
-			args   args
-			want   string
-		}{
-			{
-				name: "basic",
-				fields: fields{
-					marginWidth: 1,
-					colWidths:   []int{4, 5, 6},
-				},
-				args: args{
-					row: []string{"a", "bb", "ccc"},
-				},
-				want: "+------+-------+--------+\n",
-			},
-			{
-				name: "margin",
-				fields: fields{
-					marginWidth: 3,
-					colWidths:   []int{4, 5, 6},
-				},
-				args: args{
-					row: []string{"a", "bb", "ccc"},
-				},
-				want: "+----------+-----------+------------+\n",
-			},
-			{
-				name: "long",
-				fields: fields{
-					marginWidth: 1,
-					colWidths:   []int{10, 5, 6},
-				},
-				args: args{
-					row: []string{"a", "bb", "ccc"},
-				},
-				want: "+------------+-------+--------+\n",
-			},
-			{
-				name: "short",
-				fields: fields{
-					marginWidth: 1,
-					colWidths:   []int{4, 5, 6},
-				},
-				args: args{
-					row: []string{"aaaaaa", "bb", "ccc"},
-				},
-				want: "+------+-------+--------+\n",
-			},
-			{
-				name: "empty_field_included_1",
-				fields: fields{
-					marginWidth: 1,
-					colWidths:   []int{4, 5, 6},
-				},
-				args: args{
-					row: []string{"", "bb", "ccc"},
-				},
-				want: "+      +-------+--------+\n",
-			},
-			{
-				name: "empty_field_included_2",
-				fields: fields{
-					marginWidth: 1,
-					colWidths:   []int{4, 5, 6},
-				},
-				args: args{
-					row: []string{"", "", "ccc"},
-				},
-				want: "+      +       +--------+\n",
-			},
-			{
-				name: "empty_field_included_3",
-				fields: fields{
-					marginWidth: 1,
-					colWidths:   []int{4, 5, 6},
-				},
-				args: args{
-					row: []string{"", "", ""},
-				},
-				want: "+      +       +        +\n",
-			},
-			{
-				name: "empty_field_included_4",
-				fields: fields{
-					marginWidth: 1,
-					colWidths:   []int{4, 5, 6},
-				},
-				args: args{
-					row: []string{"", "bb", ""},
-				},
-				want: "+      +-------+        +\n",
-			},
-		}
-		for _, tt := range tests {
-			t.Run(tt.name, func(t *testing.T) {
-				buf := new(bytes.Buffer)
-				tr := New(buf)
-				tr.marginWidth = tt.fields.marginWidth
-				tr.colWidths = tt.fields.colWidths
-				tr.printDataBorder(tt.args.row)
-				if !reflect.DeepEqual(buf.String(), tt.want) {
-					t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
-				}
-			})
-		}
-	}
-*/
 func TestTable_printBorder(t *testing.T) {
 	type fields struct {
-		format      Format
-		marginWidth int
-		colWidths   []int
+		format               Format
+		marginWidth          int
+		marginWidthBothSides int
+		colWidths            []int
 	}
-
+	type want struct {
+		border string
+	}
 	tests := []struct {
 		name   string
 		fields fields
-		want   string
+		want   want
 	}{
 		{
 			name: "text",
 			fields: fields{
-				format:      TextFormat,
-				marginWidth: 1,
-				colWidths:   []int{8, 12, 5},
+				format:               TextFormat,
+				marginWidth:          1,
+				marginWidthBothSides: 2,
+				colWidths:            []int{8, 12, 5},
 			},
-			want: "+----------+--------------+-------+\n",
+			want: want{
+				border: "+----------+--------------+-------+\n",
+			},
 		},
 		{
 			name: "markdown",
 			fields: fields{
-				format:      MarkdownFormat,
-				marginWidth: 1,
-				colWidths:   []int{8, 12, 5},
+				format:               MarkdownFormat,
+				marginWidth:          1,
+				marginWidthBothSides: 2,
+				colWidths:            []int{8, 12, 5},
 			},
-			want: "|----------|--------------|-------|\n",
+			want: want{
+				border: "|----------|--------------|-------|\n",
+			},
 		},
 		{
 			name: "backlog",
 			fields: fields{
-				format:      BacklogFormat,
-				marginWidth: 1,
-				colWidths:   []int{8, 12, 5},
+				format:               BacklogFormat,
+				marginWidth:          1,
+				marginWidthBothSides: 2,
+				colWidths:            []int{8, 12, 5},
 			},
-			want: "|----------|--------------|-------|\n",
+			want: want{
+				border: "|----------|--------------|-------|\n",
+			},
 		},
 		{
 			name: "wide-margin",
 			fields: fields{
-				format:      TextFormat,
-				marginWidth: 3,
-				colWidths:   []int{8, 12, 5},
+				format:               TextFormat,
+				marginWidth:          3,
+				marginWidthBothSides: 6,
+				colWidths:            []int{8, 12, 5},
 			},
-			want: "+--------------+------------------+-----------+\n",
+			want: want{
+				border: "+--------------+------------------+-----------+\n",
+			},
 		},
 	}
 	for _, tt := range tests {
@@ -671,11 +568,12 @@ func TestTable_printBorder(t *testing.T) {
 			tr := New(buf)
 			tr.format = tt.fields.format
 			tr.marginWidth = tt.fields.marginWidth
+			tr.marginWidthBothSides = tt.fields.marginWidthBothSides
 			tr.colWidths = tt.fields.colWidths
 			tr.setBorder()
 			tr.print(tr.border)
-			if !reflect.DeepEqual(buf.String(), tt.want) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
+			if !reflect.DeepEqual(buf.String(), tt.want.border) {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want.border)
 			}
 		})
 	}
@@ -712,9 +610,23 @@ func Test_isNum(t *testing.T) {
 			want: true,
 		},
 		{
+			name: "float",
+			args: args{
+				s: "0.1",
+			},
+			want: true,
+		},
+		{
 			name: "string",
 			args: args{
 				s: "dummy",
+			},
+			want: false,
+		},
+		{
+			name: "string",
+			args: args{
+				s: "0.0.1",
 			},
 			want: false,
 		},

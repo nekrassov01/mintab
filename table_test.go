@@ -1163,6 +1163,7 @@ func TestNew(t *testing.T) {
 				newLine:               textNewLine,
 				border:                "",
 				marginWidth:           1,
+				marginWidthBothSides:  2,
 				margin:                " ",
 				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
 				wordDelimiter:         TextDefaultWordDelimiter,
@@ -1195,6 +1196,7 @@ func TestNew(t *testing.T) {
 				newLine:               textNewLine, // change after setFormat()
 				border:                "",
 				marginWidth:           2,
+				marginWidthBothSides:  4,
 				margin:                "  ",
 				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
 				wordDelimiter:         MarkdownDefaultWordDelimiter,

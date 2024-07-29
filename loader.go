@@ -269,9 +269,10 @@ func (t *Table) setBorder() {
 		sep = "+"
 	}
 	t.b.Reset()
+	t.b.Grow(128)
 	for _, w := range t.colWidths {
 		t.b.WriteString(sep)
-		for i := 0; i < w+t.marginWidth*2; i++ {
+		for i := 0; i < w+t.marginWidthBothSides; i++ {
 			t.b.WriteByte('-')
 		}
 	}

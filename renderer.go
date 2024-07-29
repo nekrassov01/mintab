@@ -113,7 +113,7 @@ func (t *Table) writeDataBorder(row [][]string) {
 		if field[0] != "" {
 			v = "-"
 		}
-		for j := 0; j < t.colWidths[i]+t.marginWidth*2; j++ {
+		for j := 0; j < t.colWidths[i]+t.marginWidthBothSides; j++ {
 			t.b.WriteString(v)
 		}
 	}

@@ -474,9 +474,10 @@ func TestTable_setInputHeader(t *testing.T) {
 
 func TestTable_setBorder(t *testing.T) {
 	type fields struct {
-		format      Format
-		marginWidth int
-		colWidths   []int
+		format               Format
+		marginWidth          int
+		marginWidthBothSides int
+		colWidths            []int
 	}
 	tests := []struct {
 		name   string
@@ -486,36 +487,40 @@ func TestTable_setBorder(t *testing.T) {
 		{
 			name: "text",
 			fields: fields{
-				format:      TextFormat,
-				marginWidth: 1,
-				colWidths:   []int{8, 12, 5},
+				format:               TextFormat,
+				marginWidth:          1,
+				marginWidthBothSides: 2,
+				colWidths:            []int{8, 12, 5},
 			},
 			want: "+----------+--------------+-------+\n",
 		},
 		{
 			name: "markdown",
 			fields: fields{
-				format:      MarkdownFormat,
-				marginWidth: 1,
-				colWidths:   []int{8, 12, 5},
+				format:               MarkdownFormat,
+				marginWidth:          1,
+				marginWidthBothSides: 2,
+				colWidths:            []int{8, 12, 5},
 			},
 			want: "|----------|--------------|-------|\n",
 		},
 		{
 			name: "backlog",
 			fields: fields{
-				format:      BacklogFormat,
-				marginWidth: 1,
-				colWidths:   []int{8, 12, 5},
+				format:               BacklogFormat,
+				marginWidth:          1,
+				marginWidthBothSides: 2,
+				colWidths:            []int{8, 12, 5},
 			},
 			want: "|----------|--------------|-------|\n",
 		},
 		{
 			name: "wide-margin",
 			fields: fields{
-				format:      TextFormat,
-				marginWidth: 3,
-				colWidths:   []int{8, 12, 5},
+				format:               TextFormat,
+				marginWidth:          3,
+				marginWidthBothSides: 6,
+				colWidths:            []int{8, 12, 5},
 			},
 			want: "+--------------+------------------+-----------+\n",
 		},
@@ -523,9 +528,10 @@ func TestTable_setBorder(t *testing.T) {
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := &Table{
-				format:      tt.fields.format,
-				marginWidth: tt.fields.marginWidth,
-				colWidths:   tt.fields.colWidths,
+				format:               tt.fields.format,
+				marginWidth:          tt.fields.marginWidth,
+				marginWidthBothSides: tt.fields.marginWidthBothSides,
+				colWidths:            tt.fields.colWidths,
 			}
 			tr.setBorder()
 			if !reflect.DeepEqual(tr.border, tt.want) {

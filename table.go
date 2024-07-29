@@ -79,6 +79,7 @@ type Table struct {
 	border                string          // Border line based on column widths
 	tableWidth            int             // Table full width
 	marginWidth           int             // Margin size around the field
+	marginWidthBothSides  int             // Twice of margin size
 	margin                string          // Whitespaces around the field
 	hasHeader             bool            // Whether header rendering
 	isEscape              bool            // Whether HTML escaping (mainly designed for markdown)
@@ -99,6 +100,7 @@ func New(w io.Writer, opts ...Option) *Table {
 		emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
 		wordDelimiter:         TextDefaultWordDelimiter,
 		marginWidth:           1,
+		marginWidthBothSides:  2,
 		hasHeader:             true,
 	}
 	for _, opt := range opts {
@@ -132,6 +134,7 @@ func WithMargin(width int) Option {
 	}
 	return func(t *Table) {
 		t.marginWidth = width
+		t.marginWidthBothSides = width * 2
 	}
 }
 
