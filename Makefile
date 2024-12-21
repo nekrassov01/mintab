@@ -43,10 +43,6 @@ test:
 cover:
 	go tool cover -html=cover.out -o cover.html
 
-.PHONY: bench
-bench:
-	go test -run=^$$ -bench=. -benchmem -count 5 -cpuprofile=cpu.prof -memprofile=mem.prof
-
 .PHONY: golangci-lint
 golangci-lint: deps-lint
 	golangci-lint run ./... -v
