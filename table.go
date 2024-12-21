@@ -1,6 +1,8 @@
 package mintab
 
 import (
+	"encoding/json"
+	"fmt"
 	"io"
 	"strings"
 )
@@ -39,20 +41,41 @@ const (
 	BacklogFormat                      // Backlog-specific table format.
 )
 
-// Formats are string representations of output format.
-var Formats = []string{
-	"text",
-	"compressed",
-	"markdown",
-	"backlog",
+// MarshalJSON marshals a Format into JSON.
+func (t Format) MarshalJSON() ([]byte, error) {
+	return json.Marshal(t.String())
 }
 
 // String returns the string representation of a Format.
-func (o Format) String() string {
-	if o >= 0 && int(o) < len(Formats) {
-		return Formats[o]
+func (t Format) String() string {
+	switch t {
+	case TextFormat:
+		return "text"
+	case CompressedTextFormat:
+		return "compressed"
+	case MarkdownFormat:
+		return "markdown"
+	case BacklogFormat:
+		return "backlog"
+	default:
+		return ""
 	}
-	return ""
+}
+
+// ParseFormat parses a string into a Format.
+func ParseFormat(s string) (Format, error) {
+	switch s {
+	case TextFormat.String():
+		return TextFormat, nil
+	case CompressedTextFormat.String():
+		return CompressedTextFormat, nil
+	case MarkdownFormat.String():
+		return MarkdownFormat, nil
+	case BacklogFormat.String():
+		return BacklogFormat, nil
+	default:
+		return 0, fmt.Errorf("unsupported format: %q", s)
+	}
 }
 
 // Input is a struct for loading values into Table
@@ -91,10 +114,9 @@ type Table struct {
 
 // New instantiates a new Table with the writer and options.
 func New(w io.Writer, opts ...Option) *Table {
-	var b strings.Builder
 	t := &Table{
 		w:                     w,
-		b:                     b,
+		b:                     strings.Builder{},
 		format:                TextFormat,
 		newLine:               textNewLine,
 		emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
