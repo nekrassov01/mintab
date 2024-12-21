@@ -89,19 +89,19 @@ func (t *Table) setFormat() {
 	var p, d string
 	switch t.format {
 	case MarkdownFormat:
-		p = MarkdownDefaultEmptyFieldPlaceholder
+		p = MarkdownDefaultPlaceholder
 		d = MarkdownDefaultWordDelimiter
 		t.newLine = markdownNewLine
 	case BacklogFormat:
-		p = BacklogDefaultEmptyFieldPlaceholder
+		p = BacklogDefaultPlaceholder
 		d = BacklogDefaultWordDelimiter
 		t.newLine = backlogNewLine
 	default:
-		p = TextDefaultEmptyFieldPlaceholder
+		p = TextDefaultPlaceholder
 		d = TextDefaultWordDelimiter
 	}
-	if t.emptyFieldPlaceholder == TextDefaultEmptyFieldPlaceholder {
-		t.emptyFieldPlaceholder = p
+	if t.placeholder == TextDefaultPlaceholder {
+		t.placeholder = p
 	}
 	if t.wordDelimiter == TextDefaultWordDelimiter {
 		t.wordDelimiter = d
@@ -285,7 +285,7 @@ func (t *Table) setBorder() {
 func (t *Table) formatField(rv reflect.Value) (string, error) {
 	if rv.Kind() == reflect.Ptr {
 		if rv.IsNil() {
-			return t.emptyFieldPlaceholder, nil
+			return t.placeholder, nil
 		}
 		rv = rv.Elem()
 	}
@@ -320,7 +320,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 	l := rv.Len()
 	switch {
 	case l == 0:
-		return t.emptyFieldPlaceholder, nil
+		return t.placeholder, nil
 	case rv.Type().Elem().Kind() == reflect.Uint8:
 		return string(rv.Bytes()), nil
 	default:
@@ -332,7 +332,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 			}
 			if e.Kind() == reflect.Ptr {
 				if e.IsNil() {
-					t.b.WriteString(t.emptyFieldPlaceholder)
+					t.b.WriteString(t.placeholder)
 					continue
 				}
 				e = e.Elem()
@@ -351,7 +351,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 			switch v := e.Interface().(type) {
 			case string:
 				if v == "" {
-					t.b.WriteString(t.emptyFieldPlaceholder)
+					t.b.WriteString(t.placeholder)
 				} else {
 					t.b.WriteString(v)
 				}
@@ -380,7 +380,7 @@ func getStringer(rv reflect.Value) string {
 
 func (t *Table) sanitize(s string) string {
 	if s == "" {
-		return t.emptyFieldPlaceholder
+		return t.placeholder
 	}
 	if t.isEscape {
 		s = t.escape(s)

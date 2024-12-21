@@ -231,8 +231,8 @@ func TestTable_setFormat(t *testing.T) {
 		format Format
 	}
 	type want struct {
-		emptyFieldPlaceholder string
-		wordDelimiter         string
+		placeholder   string
+		wordDelimiter string
 	}
 	tests := []struct {
 		name   string
@@ -245,8 +245,8 @@ func TestTable_setFormat(t *testing.T) {
 				format: TextFormat,
 			},
 			want: want{
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
 			},
 		},
 		{
@@ -255,8 +255,8 @@ func TestTable_setFormat(t *testing.T) {
 				format: MarkdownFormat,
 			},
 			want: want{
-				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         MarkdownDefaultWordDelimiter,
+				placeholder:   MarkdownDefaultPlaceholder,
+				wordDelimiter: MarkdownDefaultWordDelimiter,
 			},
 		},
 		{
@@ -265,8 +265,8 @@ func TestTable_setFormat(t *testing.T) {
 				format: BacklogFormat,
 			},
 			want: want{
-				emptyFieldPlaceholder: BacklogDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         BacklogDefaultWordDelimiter,
+				placeholder:   BacklogDefaultPlaceholder,
+				wordDelimiter: BacklogDefaultWordDelimiter,
 			},
 		},
 	}
@@ -274,8 +274,8 @@ func TestTable_setFormat(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			tr := New(os.Stdout, WithFormat(tt.fields.format))
 			tr.setFormat()
-			if !reflect.DeepEqual(tr.emptyFieldPlaceholder, tt.want.emptyFieldPlaceholder) {
-				t.Errorf("\ngot:\n%v\nwant:\n%v\n", tr.emptyFieldPlaceholder, tt.want.emptyFieldPlaceholder)
+			if !reflect.DeepEqual(tr.placeholder, tt.want.placeholder) {
+				t.Errorf("\ngot:\n%v\nwant:\n%v\n", tr.placeholder, tt.want.placeholder)
 			}
 			if !reflect.DeepEqual(tr.wordDelimiter, tt.want.wordDelimiter) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", tr.wordDelimiter, tt.want.wordDelimiter)
@@ -546,10 +546,10 @@ func TestTable_formatField(t *testing.T) {
 		return &s
 	}
 	type fields struct {
-		format                Format
-		emptyFieldPlaceholder string
-		wordDelimiter         string
-		isEscape              bool
+		format        Format
+		placeholder   string
+		wordDelimiter string
+		isEscape      bool
 	}
 	type args struct {
 		v any
@@ -564,10 +564,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "string",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: "aaa",
@@ -578,24 +578,24 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "string_empty",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: "",
 			},
-			want:    TextDefaultEmptyFieldPlaceholder,
+			want:    TextDefaultPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "byte_slice",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []byte("aaa"),
@@ -606,10 +606,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "escape",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              true,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      true,
 			},
 			args: args{
 				v: `<>"'& *\_|`,
@@ -620,10 +620,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "asterisk_prefix_at_markdown",
 			fields: fields{
-				format:                MarkdownFormat,
-				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         MarkdownDefaultWordDelimiter,
-				isEscape:              false,
+				format:        MarkdownFormat,
+				placeholder:   MarkdownDefaultPlaceholder,
+				wordDelimiter: MarkdownDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: "*.example.com",
@@ -634,10 +634,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "int",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: 123,
@@ -648,10 +648,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "int_signed",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: -123,
@@ -662,10 +662,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "uint",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: uint(123),
@@ -676,10 +676,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "float",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: 123.456,
@@ -690,10 +690,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "float32",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: float32(1.5),
@@ -704,10 +704,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "ptr",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: sp("aaa"),
@@ -718,38 +718,38 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "nil_ptr",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: (*string)(nil),
 			},
-			want:    TextDefaultEmptyFieldPlaceholder,
+			want:    TextDefaultPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "non_nil_ptr_string",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: new(string),
 			},
-			want:    TextDefaultEmptyFieldPlaceholder,
+			want:    TextDefaultPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "non_nil_ptr_int",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: new(int),
@@ -760,10 +760,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_string",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []string{"a", "b"},
@@ -774,24 +774,24 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_string_included_empty",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []string{"a", "", "b"},
 			},
-			want:    "a" + TextDefaultWordDelimiter + TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + "b",
+			want:    "a" + TextDefaultWordDelimiter + TextDefaultPlaceholder + TextDefaultWordDelimiter + "b",
 			wantErr: false,
 		},
 		{
 			name: "slice_int",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []int64{0, 1, 2},
@@ -802,10 +802,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_uint",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []uint64{0, 1, 2},
@@ -816,10 +816,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_float32",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []float32{0.1, 1.25, 2.001},
@@ -830,10 +830,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_float64",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []float64{0.1, 1.25, 2.001},
@@ -844,38 +844,38 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_nil",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: ([]string)(nil),
 			},
-			want:    TextDefaultEmptyFieldPlaceholder,
+			want:    TextDefaultPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_empty",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []string{},
 			},
-			want:    TextDefaultEmptyFieldPlaceholder,
+			want:    TextDefaultPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_with_byte_slice",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []byte("aaa"),
@@ -886,10 +886,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_slice",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: [][]string{
@@ -903,10 +903,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_struct",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []struct {
@@ -923,10 +923,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_ptr",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: &[]string{"a", "b"},
@@ -937,66 +937,66 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "slice_with_ptr_to_strings",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []*string{sp(""), sp("a"), sp("b")},
 			},
-			want:    TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + "a" + TextDefaultWordDelimiter + "b",
+			want:    TextDefaultPlaceholder + TextDefaultWordDelimiter + "a" + TextDefaultWordDelimiter + "b",
 			wantErr: false,
 		},
 		{
 			name: "slice_with_ptr_to_string_empty",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []*string{},
 			},
-			want:    TextDefaultEmptyFieldPlaceholder,
+			want:    TextDefaultPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_with_nil_ptr",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []*int{nil},
 			},
-			want:    TextDefaultEmptyFieldPlaceholder,
+			want:    TextDefaultPlaceholder,
 			wantErr: false,
 		},
 		{
 			name: "slice_with_ptr_mixed",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: []*string{nil, sp(""), sp("aaa")},
 			},
-			want:    TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + TextDefaultEmptyFieldPlaceholder + TextDefaultWordDelimiter + "aaa",
+			want:    TextDefaultPlaceholder + TextDefaultWordDelimiter + TextDefaultPlaceholder + TextDefaultWordDelimiter + "aaa",
 			wantErr: false,
 		},
 		{
 			name: "stringer_duration",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: 123 * time.Hour,
@@ -1007,10 +1007,10 @@ func TestTable_formatField(t *testing.T) {
 		{
 			name: "stringer_ipaddress",
 			fields: fields{
-				format:                TextFormat,
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				isEscape:              false,
+				format:        TextFormat,
+				placeholder:   TextDefaultPlaceholder,
+				wordDelimiter: TextDefaultWordDelimiter,
+				isEscape:      false,
 			},
 			args: args{
 				v: net.IPv4bcast,
@@ -1023,10 +1023,10 @@ func TestTable_formatField(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			v := reflect.ValueOf(tt.args.v)
 			tr := &Table{
-				format:                tt.fields.format,
-				emptyFieldPlaceholder: tt.fields.emptyFieldPlaceholder,
-				wordDelimiter:         tt.fields.wordDelimiter,
-				isEscape:              tt.fields.isEscape,
+				format:        tt.fields.format,
+				placeholder:   tt.fields.placeholder,
+				wordDelimiter: tt.fields.wordDelimiter,
+				isEscape:      tt.fields.isEscape,
 			}
 			got, err := tr.formatField(v)
 			if (err != nil) != tt.wantErr {

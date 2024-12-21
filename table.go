@@ -9,19 +9,19 @@ import (
 
 const (
 	// Default placeholder when field is empty in text table format.
-	TextDefaultEmptyFieldPlaceholder = "-"
+	TextDefaultPlaceholder = "-"
 
 	// Default word delimiter in text table format.
 	TextDefaultWordDelimiter = textNewLine
 
 	// Default placeholder when field is empty in markdown table format.
-	MarkdownDefaultEmptyFieldPlaceholder = "\\" + TextDefaultEmptyFieldPlaceholder
+	MarkdownDefaultPlaceholder = "\\" + TextDefaultPlaceholder
 
 	// Default word delimiter in markdown table format.
 	MarkdownDefaultWordDelimiter = markdownNewLine
 
 	// Default placeholder when field is empty in backlog table format.
-	BacklogDefaultEmptyFieldPlaceholder = TextDefaultEmptyFieldPlaceholder
+	BacklogDefaultPlaceholder = TextDefaultPlaceholder
 
 	// Default word delimiter in backlog table format.
 	BacklogDefaultWordDelimiter = backlogNewLine
@@ -86,44 +86,44 @@ type Input struct {
 
 // Table represents a table structure for rendering data.
 type Table struct {
-	w                     io.Writer       // Destination for table output
-	b                     strings.Builder // Internal string builder
-	format                Format          // Output table format: text|compressed-text|markdown|backlog
-	header                []string        // Table header after parsing
-	data                  [][][]string    // Matrix after parsing with each field divided by new lines
-	newLine               string          // New line string representation: "\n"|"<br>"|"&br;"
-	emptyFieldPlaceholder string          // Placeholder for empty fields
-	wordDelimiter         string          // Delimiter for words within a field
-	colWidths             []int           // Max widths of each columns
-	lineHeights           []int           // Heights of lines with fields containing line breaks
-	numColumns            int             // Number of columns
-	numColumnsFirstRow    int             // Number of columns of the first data row
-	numRows               int             // Number of rows
-	border                string          // Border line based on column widths
-	tableWidth            int             // Table full width
-	marginWidth           int             // Margin size around the field
-	marginWidthBothSides  int             // Twice of margin size
-	margin                string          // Whitespaces around the field
-	hasHeader             bool            // Whether header rendering
-	isEscape              bool            // Whether HTML escaping (mainly designed for markdown)
-	isMerge               bool            // Track whether to merge fields
-	prevRow               []string        // Retain previous row
-	mergedFields          []int           // Indices of columns to merge
-	ignoredFields         []int           // Indices of columns to ignore
+	w                    io.Writer       // Destination for table output
+	b                    strings.Builder // Internal string builder
+	format               Format          // Output table format: text|compressed-text|markdown|backlog
+	header               []string        // Table header after parsing
+	data                 [][][]string    // Matrix after parsing with each field divided by new lines
+	newLine              string          // New line string representation: "\n"|"<br>"|"&br;"
+	placeholder          string          // Placeholder for empty fields
+	wordDelimiter        string          // Delimiter for words within a field
+	colWidths            []int           // Max widths of each columns
+	lineHeights          []int           // Heights of lines with fields containing line breaks
+	numColumns           int             // Number of columns
+	numColumnsFirstRow   int             // Number of columns of the first data row
+	numRows              int             // Number of rows
+	border               string          // Border line based on column widths
+	tableWidth           int             // Table full width
+	marginWidth          int             // Margin size around the field
+	marginWidthBothSides int             // Twice of margin size
+	margin               string          // Whitespaces around the field
+	hasHeader            bool            // Whether header rendering
+	isEscape             bool            // Whether HTML escaping (mainly designed for markdown)
+	isMerge              bool            // Track whether to merge fields
+	prevRow              []string        // Retain previous row
+	mergedFields         []int           // Indices of columns to merge
+	ignoredFields        []int           // Indices of columns to ignore
 }
 
 // New instantiates a new Table with the writer and options.
 func New(w io.Writer, opts ...Option) *Table {
 	t := &Table{
-		w:                     w,
-		b:                     strings.Builder{},
-		format:                TextFormat,
-		newLine:               textNewLine,
-		emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-		wordDelimiter:         TextDefaultWordDelimiter,
-		marginWidth:           1,
-		marginWidthBothSides:  2,
-		hasHeader:             true,
+		w:                    w,
+		b:                    strings.Builder{},
+		format:               TextFormat,
+		newLine:              textNewLine,
+		placeholder:          TextDefaultPlaceholder,
+		wordDelimiter:        TextDefaultWordDelimiter,
+		marginWidth:          1,
+		marginWidthBothSides: 2,
+		hasHeader:            true,
 	}
 	for _, opt := range opts {
 		opt(t)
@@ -160,13 +160,13 @@ func WithMargin(width int) Option {
 	}
 }
 
-// WithEmptyFieldPlaceholder sets the placeholder for empty fields.
-func WithEmptyFieldPlaceholder(placeholder string) Option {
+// WithPlaceholder sets the placeholder for empty fields.
+func WithPlaceholder(placeholder string) Option {
 	if placeholder == "" {
 		placeholder = " "
 	}
 	return func(t *Table) {
-		t.emptyFieldPlaceholder = placeholder
+		t.placeholder = placeholder
 	}
 }
 

@@ -490,9 +490,9 @@ func TestTable(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "input_emptyFieldPlaceholder",
+			name: "input_placeholder",
 			args: args{
-				opts: []Option{WithEmptyFieldPlaceholder("")},
+				opts: []Option{WithPlaceholder("")},
 				v:    basicTestInput,
 			},
 			want: `+------------+--------------+------------+------------+
@@ -884,9 +884,9 @@ func TestTable(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "struct_emptyFieldPlaceholder",
+			name: "struct_placeholder",
 			args: args{
-				opts: []Option{WithEmptyFieldPlaceholder("")},
+				opts: []Option{WithPlaceholder("")},
 				v:    basicTestStructSlice,
 			},
 			want: `+------------+--------------+------------+------------+
@@ -1156,22 +1156,22 @@ func TestNew(t *testing.T) {
 				opts: []Option{},
 			},
 			want: &Table{
-				w:                     &bytes.Buffer{},
-				b:                     strings.Builder{},
-				header:                nil,
-				format:                TextFormat,
-				newLine:               textNewLine,
-				border:                "",
-				marginWidth:           1,
-				marginWidthBothSides:  2,
-				margin:                " ",
-				emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         TextDefaultWordDelimiter,
-				mergedFields:          nil,
-				ignoredFields:         nil,
-				colWidths:             nil,
-				hasHeader:             true,
-				isEscape:              false,
+				w:                    &bytes.Buffer{},
+				b:                    strings.Builder{},
+				header:               nil,
+				format:               TextFormat,
+				newLine:              textNewLine,
+				border:               "",
+				marginWidth:          1,
+				marginWidthBothSides: 2,
+				margin:               " ",
+				placeholder:          TextDefaultPlaceholder,
+				wordDelimiter:        TextDefaultWordDelimiter,
+				mergedFields:         nil,
+				ignoredFields:        nil,
+				colWidths:            nil,
+				hasHeader:            true,
+				isEscape:             false,
 			},
 		},
 		{
@@ -1181,7 +1181,7 @@ func TestNew(t *testing.T) {
 					WithFormat(MarkdownFormat),
 					WithHeader(false),
 					WithMargin(2),
-					WithEmptyFieldPlaceholder(MarkdownDefaultEmptyFieldPlaceholder),
+					WithPlaceholder(MarkdownDefaultPlaceholder),
 					WithWordDelimiter(MarkdownDefaultWordDelimiter),
 					WithMergeFields([]int{0}),
 					WithIgnoreFields([]int{0}),
@@ -1189,22 +1189,22 @@ func TestNew(t *testing.T) {
 				},
 			},
 			want: &Table{
-				w:                     &bytes.Buffer{},
-				b:                     strings.Builder{},
-				header:                nil,
-				format:                MarkdownFormat,
-				newLine:               textNewLine, // change after setFormat()
-				border:                "",
-				marginWidth:           2,
-				marginWidthBothSides:  4,
-				margin:                "  ",
-				emptyFieldPlaceholder: MarkdownDefaultEmptyFieldPlaceholder,
-				wordDelimiter:         MarkdownDefaultWordDelimiter,
-				mergedFields:          []int{0},
-				ignoredFields:         []int{0},
-				colWidths:             nil,
-				hasHeader:             false,
-				isEscape:              true,
+				w:                    &bytes.Buffer{},
+				b:                    strings.Builder{},
+				header:               nil,
+				format:               MarkdownFormat,
+				newLine:              textNewLine, // change after setFormat()
+				border:               "",
+				marginWidth:          2,
+				marginWidthBothSides: 4,
+				margin:               "  ",
+				placeholder:          MarkdownDefaultPlaceholder,
+				wordDelimiter:        MarkdownDefaultWordDelimiter,
+				mergedFields:         []int{0},
+				ignoredFields:        []int{0},
+				colWidths:            nil,
+				hasHeader:            false,
+				isEscape:             true,
 			},
 		},
 	}
@@ -1258,28 +1258,28 @@ func TestWithMargin(t *testing.T) {
 
 func TestWithEmptyFieldPlacehplder(t *testing.T) {
 	tests := []struct {
-		name                  string
-		emptyFieldPlaceholder string
-		want                  string
+		name        string
+		placeholder string
+		want        string
 	}{
 		{
-			name:                  "default",
-			emptyFieldPlaceholder: TextDefaultEmptyFieldPlaceholder,
-			want:                  TextDefaultEmptyFieldPlaceholder,
+			name:        "default",
+			placeholder: TextDefaultPlaceholder,
+			want:        TextDefaultPlaceholder,
 		},
 		{
-			name:                  "blank",
-			emptyFieldPlaceholder: "",
-			want:                  " ",
+			name:        "blank",
+			placeholder: "",
+			want:        " ",
 		},
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
 			table := &Table{}
-			opt := WithEmptyFieldPlaceholder(tt.emptyFieldPlaceholder)
+			opt := WithPlaceholder(tt.placeholder)
 			opt(table)
-			if table.emptyFieldPlaceholder != tt.want {
-				t.Errorf("\ngot\n%v\nset\n%v\nwant\n%v\n", tt.emptyFieldPlaceholder, table.emptyFieldPlaceholder, tt.want)
+			if table.placeholder != tt.want {
+				t.Errorf("\ngot\n%v\nset\n%v\nwant\n%v\n", tt.placeholder, table.placeholder, tt.want)
 			}
 		})
 	}
