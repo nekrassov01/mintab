@@ -362,7 +362,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 			case float32:
 				t.b.WriteString(strconv.FormatFloat(float64(v), 'f', -1, 32))
 			case float64:
-				t.b.WriteString(strconv.FormatFloat(float64(v), 'f', -1, 64))
+				t.b.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
 			default:
 				t.b.WriteString(fmt.Sprint(v))
 			}
