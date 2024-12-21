@@ -198,7 +198,7 @@ func TestTable_Render(t *testing.T) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", buf.String(), tt.want)
 			}
 			if diff := cmp.Diff(buf.String(), tt.want); diff != "" {
-				t.Errorf(diff)
+				t.Error(diff)
 			}
 		})
 	}
