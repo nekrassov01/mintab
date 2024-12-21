@@ -794,7 +794,7 @@ func TestTable_formatField(t *testing.T) {
 				isEscape:              false,
 			},
 			args: args{
-				v: []int{0, 1, 2},
+				v: []int64{0, 1, 2},
 			},
 			want:    "0" + TextDefaultWordDelimiter + "1" + TextDefaultWordDelimiter + "2",
 			wantErr: false,
@@ -808,7 +808,7 @@ func TestTable_formatField(t *testing.T) {
 				isEscape:              false,
 			},
 			args: args{
-				v: []uint{0, 1, 2},
+				v: []uint64{0, 1, 2},
 			},
 			want:    "0" + TextDefaultWordDelimiter + "1" + TextDefaultWordDelimiter + "2",
 			wantErr: false,
@@ -1171,9 +1171,7 @@ func TestTable_escape(t *testing.T) {
 	}
 	for _, tt := range tests {
 		t.Run(tt.name, func(t *testing.T) {
-			tr := &Table{
-				//	builder: tt.fields.builder,
-			}
+			tr := &Table{}
 			got := tr.escape(tt.args.s)
 			if !reflect.DeepEqual(got, tt.want) {
 				t.Errorf("\ngot:\n%v\nwant:\n%v\n", got, tt.want)

@@ -10,7 +10,7 @@ import (
 	"github.com/mattn/go-runewidth"
 )
 
-// Load validates v and converts it to a structure Table. v must be passed in one of the following two ways:
+// Load validates v and converts it to a struct Table. v must be passed in one of the following two ways:
 //
 // 1. Struct `Input`
 //   - The number of columns in all rows must be the same.
@@ -22,7 +22,7 @@ import (
 //   - If the field is struct, an error is returned (nested structs are not supported)
 func (t *Table) Load(v any) error {
 	if _, ok := v.([]any); ok {
-		return fmt.Errorf("cannot load input: elements of slice must not be \"any\"")
+		return fmt.Errorf("cannot load input: elements of slice must not be any")
 	}
 	switch tv := v.(type) {
 	case nil:
@@ -317,14 +317,15 @@ func (t *Table) formatField(rv reflect.Value) (string, error) {
 }
 
 func (t *Table) formatSlice(rv reflect.Value) (string, error) {
+	l := rv.Len()
 	switch {
-	case rv.Len() == 0:
+	case l == 0:
 		return t.emptyFieldPlaceholder, nil
 	case rv.Type().Elem().Kind() == reflect.Uint8:
 		return string(rv.Bytes()), nil
 	default:
 		t.b.Reset()
-		for i := 0; i < rv.Len(); i++ {
+		for i := 0; i < l; i++ {
 			e := rv.Index(i)
 			if i != 0 {
 				t.b.WriteString(t.wordDelimiter)
@@ -347,23 +348,23 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 			if e.Kind() == reflect.Slice || e.Kind() == reflect.Array || e.Kind() == reflect.Struct {
 				return "", fmt.Errorf("cannot load input: nested fields not supported")
 			}
-			switch e.Kind() {
-			case reflect.String:
-				if e.IsZero() {
+			switch v := e.Interface().(type) {
+			case string:
+				if v == "" {
 					t.b.WriteString(t.emptyFieldPlaceholder)
 				} else {
-					t.b.WriteString(e.String())
+					t.b.WriteString(v)
 				}
-			case reflect.Int, reflect.Int8, reflect.Int16, reflect.Int32, reflect.Int64:
-				t.b.WriteString(strconv.FormatInt(e.Int(), 10))
-			case reflect.Uint, reflect.Uint8, reflect.Uint16, reflect.Uint32, reflect.Uint64:
-				t.b.WriteString(strconv.FormatUint(e.Uint(), 10))
-			case reflect.Float32:
-				t.b.WriteString(strconv.FormatFloat(e.Float(), 'f', -1, 32))
-			case reflect.Float64:
-				t.b.WriteString(strconv.FormatFloat(e.Float(), 'f', -1, 64))
+			case int, int8, int16, int32, int64:
+				t.b.WriteString(strconv.FormatInt(v.(int64), 10))
+			case uint, uint8, uint16, uint32, uint64:
+				t.b.WriteString(strconv.FormatUint(v.(uint64), 10))
+			case float32:
+				t.b.WriteString(strconv.FormatFloat(float64(v), 'f', -1, 32))
+			case float64:
+				t.b.WriteString(strconv.FormatFloat(float64(v), 'f', -1, 64))
 			default:
-				t.b.WriteString(fmt.Sprint(e.Interface()))
+				t.b.WriteString(fmt.Sprint(v))
 			}
 		}
 		return t.b.String(), nil
@@ -390,7 +391,18 @@ func (t *Table) sanitize(s string) string {
 	if t.format == TextFormat {
 		return s
 	}
-	return strings.TrimSpace(strings.ReplaceAll(s, "\n", t.newLine))
+	t.b.Reset()
+	t.b.Grow(len(s) + len(t.newLine)*strings.Count(s, "\n"))
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			t.b.WriteString(s[start:i])
+			t.b.WriteString(t.newLine)
+			start = i + 1
+		}
+	}
+	t.b.WriteString(s[start:])
+	return strings.TrimSpace(t.b.String())
 }
 
 func (t *Table) escape(s string) string {
