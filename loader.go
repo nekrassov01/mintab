@@ -269,7 +269,7 @@ func (t *Table) setBorder() {
 		sep = "+"
 	}
 	t.b.Reset()
-	t.b.Grow(128)
+	t.b.Grow(256)
 	for _, w := range t.colWidths {
 		t.b.WriteString(sep)
 		for i := 0; i < w+t.marginWidthBothSides; i++ {
@@ -325,6 +325,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 		return string(rv.Bytes()), nil
 	default:
 		t.b.Reset()
+		t.b.Grow(256)
 		for i := 0; i < l; i++ {
 			e := rv.Index(i)
 			if i != 0 {
@@ -391,47 +392,22 @@ func (t *Table) sanitize(s string) string {
 	if t.format == TextFormat {
 		return s
 	}
-	t.b.Reset()
-	t.b.Grow(len(s) + len(t.newLine)*strings.Count(s, "\n"))
-	start := 0
-	for i := 0; i < len(s); i++ {
-		if s[i] == '\n' {
-			t.b.WriteString(s[start:i])
-			t.b.WriteString(t.newLine)
-			start = i + 1
-		}
-	}
-	t.b.WriteString(s[start:])
-	return strings.TrimSpace(t.b.String())
+	rep := strings.NewReplacer("\n", t.newLine)
+	return rep.Replace(s)
 }
 
 func (t *Table) escape(s string) string {
-	t.b.Reset()
-	for _, r := range s {
-		switch r {
-		case '<':
-			t.b.WriteString("&lt;")
-		case '>':
-			t.b.WriteString("&gt;")
-		case '"':
-			t.b.WriteString("&quot;")
-		case '\'':
-			t.b.WriteString("&lsquo;")
-		case '&':
-			t.b.WriteString("&amp;")
-		case ' ':
-			t.b.WriteString("&nbsp;")
-		case '*':
-			t.b.WriteString("&#42;")
-		case '\\':
-			t.b.WriteString("&#92;")
-		case '_':
-			t.b.WriteString("&#95;")
-		case '|':
-			t.b.WriteString("&#124;")
-		default:
-			t.b.WriteRune(r)
-		}
-	}
-	return t.b.String()
+	rep := strings.NewReplacer(
+		"<", "&lt;",
+		">", "&gt;",
+		"\"", "&quot;",
+		"'", "&lsquo;",
+		"&", "&amp;",
+		" ", "&nbsp;",
+		"*", "&#42;",
+		"\\", "&#92;",
+		"_", "&#95;",
+		"|", "&#124;",
+	)
+	return rep.Replace(s)
 }
