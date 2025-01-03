@@ -130,33 +130,34 @@ Benchmark
 mintab is memory-efficient.
 
 ```text
+$ make bench
 go test -run=^$ -bench=. -benchmem -count 5 -cpuprofile=cpu.prof -memprofile=mem.prof
 goos: darwin
 goarch: arm64
 pkg: benchmarks
 cpu: Apple M2
-BenchmarkMintabInput-8     	   39860	     29566 ns/op	    3848 B/op	      46 allocs/op
-BenchmarkMintabInput-8     	   41198	     29765 ns/op	    3848 B/op	      46 allocs/op
-BenchmarkMintabInput-8     	   40148	     29447 ns/op	    3848 B/op	      46 allocs/op
-BenchmarkMintabInput-8     	   39190	     29306 ns/op	    3848 B/op	      46 allocs/op
-BenchmarkMintabInput-8     	   40102	     29769 ns/op	    3848 B/op	      46 allocs/op
-BenchmarkMintabStruct-8    	   38478	     31208 ns/op	    4281 B/op	      85 allocs/op
-BenchmarkMintabStruct-8    	   37399	     31519 ns/op	    4280 B/op	      85 allocs/op
-BenchmarkMintabStruct-8    	   38781	     31882 ns/op	    4280 B/op	      85 allocs/op
-BenchmarkMintabStruct-8    	   38584	     33231 ns/op	    4280 B/op	      85 allocs/op
-BenchmarkMintabStruct-8    	   37465	     31361 ns/op	    4280 B/op	      85 allocs/op
-BenchmarkTableWriter-8     	   16680	     83253 ns/op	    9661 B/op	     474 allocs/op
-BenchmarkTableWriter-8     	   15483	     74068 ns/op	    9695 B/op	     474 allocs/op
-BenchmarkTableWriter-8     	   16646	     74946 ns/op	    9664 B/op	     474 allocs/op
-BenchmarkTableWriter-8     	   16278	     78036 ns/op	    9663 B/op	     474 allocs/op
-BenchmarkTableWriter-8     	   16555	     74486 ns/op	    9699 B/op	     474 allocs/op
-BenchmarkGoPrettyTable-8   	  115596	     10444 ns/op	    4402 B/op	     134 allocs/op
-BenchmarkGoPrettyTable-8   	  108080	     19097 ns/op	    4402 B/op	     134 allocs/op
-BenchmarkGoPrettyTable-8   	  119058	     10530 ns/op	    4403 B/op	     134 allocs/op
-BenchmarkGoPrettyTable-8   	  113080	     10464 ns/op	    4403 B/op	     134 allocs/op
-BenchmarkGoPrettyTable-8   	  118528	     10465 ns/op	    4403 B/op	     134 allocs/op
+BenchmarkMintabInput-8             38288             30660 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabInput-8             39964             30058 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabInput-8             38894             29954 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabInput-8             39504             30917 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabInput-8             39993             29877 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabStruct-8            37072             31838 ns/op            2920 B/op         80 allocs/op
+BenchmarkMintabStruct-8            38244             32118 ns/op            2920 B/op         80 allocs/op
+BenchmarkMintabStruct-8            38517             31612 ns/op            2920 B/op         80 allocs/op
+BenchmarkMintabStruct-8            37584             31750 ns/op            2920 B/op         80 allocs/op
+BenchmarkMintabStruct-8            38352             31989 ns/op            2920 B/op         80 allocs/op
+BenchmarkTableWriter-8             12877             95667 ns/op           11454 B/op        639 allocs/op
+BenchmarkTableWriter-8             12712             95992 ns/op           11457 B/op        639 allocs/op
+BenchmarkTableWriter-8             12834             95187 ns/op           11443 B/op        639 allocs/op
+BenchmarkTableWriter-8             12716             95045 ns/op           11420 B/op        639 allocs/op
+BenchmarkTableWriter-8             12680             94409 ns/op           11449 B/op        639 allocs/op
+BenchmarkGoPrettyTable-8           65367             16973 ns/op            6540 B/op        192 allocs/op
+BenchmarkGoPrettyTable-8           68565             17483 ns/op            6540 B/op        192 allocs/op
+BenchmarkGoPrettyTable-8           70461             17172 ns/op            6540 B/op        192 allocs/op
+BenchmarkGoPrettyTable-8           65881             17300 ns/op            6540 B/op        192 allocs/op
+BenchmarkGoPrettyTable-8           70099             17335 ns/op            6540 B/op        192 allocs/op
 PASS
-ok  	benchmarks	32.812s
+ok      benchmarks      33.220s
 ```
 
 Notes

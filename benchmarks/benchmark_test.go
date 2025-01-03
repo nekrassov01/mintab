@@ -1,13 +1,15 @@
 package benchmarks
 
 import (
-	"bytes"
+	"io"
 	"testing"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/nekrassov01/mintab"
 	"github.com/olekukonko/tablewriter"
 )
+
+var w = io.Discard
 
 func BenchmarkMintabInput(b *testing.B) {
 	data := mintab.Input{
@@ -23,7 +25,7 @@ func BenchmarkMintabInput(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		t := mintab.New(&bytes.Buffer{})
+		t := mintab.New(w)
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
 		}
@@ -46,7 +48,7 @@ func BenchmarkMintabStruct(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		t := mintab.New(&bytes.Buffer{})
+		t := mintab.New(w)
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
 		}
@@ -99,7 +101,7 @@ func BenchmarkMintabInputLarge(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		t := mintab.New(&bytes.Buffer{}, mintab.WithMergeFields([]int{1, 2, 3}))
+		t := mintab.New(w, mintab.WithMergeFields([]int{1, 2, 3}))
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
 		}
@@ -147,7 +149,7 @@ func BenchmarkMintabStructLarge(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		t := mintab.New(&bytes.Buffer{}, mintab.WithMergeFields([]int{1, 2, 3}))
+		t := mintab.New(w, mintab.WithMergeFields([]int{1, 2, 3}))
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
 		}
@@ -168,9 +170,11 @@ func BenchmarkTableWriter(b *testing.B) {
 	}
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
-		table := tablewriter.NewWriter(&bytes.Buffer{})
-		table.AppendBulk(data)
-		table.Render()
+		t := tablewriter.NewWriter(w)
+		t.SetHeader([]string{"InstanceID", "InstanceName", "InstanceState"})
+		t.SetRowLine(true)
+		t.AppendBulk(data)
+		t.Render()
 	}
 }
 
@@ -186,7 +190,9 @@ func BenchmarkGoPrettyTable(b *testing.B) {
 	b.ResetTimer()
 	for i := 0; i < b.N; i++ {
 		t := table.NewWriter()
-		t.SetOutputMirror(&bytes.Buffer{})
+		t.SetOutputMirror(w)
+		t.Style().Options.SeparateRows = true
+		t.AppendHeader(table.Row{"InstanceID", "InstanceName", "InstanceState"})
 		t.AppendRows(data)
 		t.Render()
 	}
