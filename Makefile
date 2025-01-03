@@ -74,4 +74,4 @@ publish: deps-gobump check-git
 .PHONY: clean
 clean:
 	go clean
-	rm -f cover.out cover.html cpu.prof mem.prof $(BIN).test
+	rm -f cover.out cover.html
