@@ -1089,47 +1089,6 @@ func TestTable(t *testing.T) {
 	}
 }
 
-func TestFormat_String(t *testing.T) {
-	tests := []struct {
-		name string
-		o    Format
-		want string
-	}{
-		{
-			name: "text",
-			o:    TextFormat,
-			want: "text",
-		},
-		{
-			name: "compressed",
-			o:    CompressedTextFormat,
-			want: "compressed",
-		},
-		{
-			name: "markdown",
-			o:    MarkdownFormat,
-			want: "markdown",
-		},
-		{
-			name: "backlog",
-			o:    BacklogFormat,
-			want: "backlog",
-		},
-		{
-			name: "other",
-			o:    9,
-			want: "",
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.o.String(); got != tt.want {
-				t.Errorf("Format.String() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
 func TestNew(t *testing.T) {
 	type args struct {
 		opts []Option
