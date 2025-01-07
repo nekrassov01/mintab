@@ -54,11 +54,18 @@ func TestTable_Load(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name: "input_noheader",
+			name: "input_no_header",
 			args: args{
 				v: noHeaderTestInput,
 			},
-			wantErr: false,
+			wantErr: true,
+		},
+		{
+			name: "input_invalid_header",
+			args: args{
+				v: invalidHeaderTestInput,
+			},
+			wantErr: true,
 		},
 		{
 			name: "input_nested_1",

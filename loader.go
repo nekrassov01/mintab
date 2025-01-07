@@ -109,15 +109,16 @@ func (t *Table) setFormat() {
 }
 
 func (t *Table) setInputHeader(v Input) error {
+	if len(v.Header) == 0 {
+		return fmt.Errorf("cannot load input: header is required")
+	}
 	t.numColumns = len(v.Header)
 	firstRow := v.Data[0]
 	t.numColumnsFirstRow = len(firstRow)
-	if t.numColumns > 0 {
-		if t.numColumns != t.numColumnsFirstRow {
-			return fmt.Errorf("cannot load input: number of columns must be the same as header")
-		}
-		t.header = make([]string, 0, t.numColumns)
+	if t.numColumns != t.numColumnsFirstRow {
+		return fmt.Errorf("cannot load input: number of columns must be the same as header")
 	}
+	t.header = make([]string, 0, t.numColumns)
 	t.colWidths = make([]int, 0, t.numColumns)
 	for i, h := range v.Header {
 		if !slices.Contains(t.ignoredFields, i) {
@@ -126,13 +127,6 @@ func (t *Table) setInputHeader(v Input) error {
 		}
 	}
 	t.numColumns = len(t.colWidths)
-	if t.numColumns == 0 {
-		for i := range firstRow {
-			if !slices.Contains(t.ignoredFields, i) {
-				t.colWidths = append(t.colWidths, 0)
-			}
-		}
-	}
 	return nil
 }
 
@@ -166,9 +160,6 @@ func (t *Table) setInputData(v Input) error {
 	t.data = make([][][]string, t.numRows)
 	t.lineHeights = make([]int, t.numRows)
 	n := t.numColumns
-	if n == 0 {
-		n = t.numColumnsFirstRow
-	}
 	t.prevRow = make([]string, n)
 	for i, r := range v.Data {
 		if i > 0 && len(r) != t.numColumnsFirstRow {
@@ -177,9 +168,13 @@ func (t *Table) setInputData(v Input) error {
 		row := make([][]string, n)
 		t.isMerge = true
 		t.lineHeights[i] = 1
+		k := 0
 		for j, field := range r {
 			if slices.Contains(t.ignoredFields, j) {
 				continue
+			}
+			if k >= n {
+				return fmt.Errorf("cannot load input: unexpected column number of non-ignored fields")
 			}
 			s, err := t.formatField(reflect.ValueOf(field))
 			if err != nil {
@@ -187,9 +182,10 @@ func (t *Table) setInputData(v Input) error {
 			}
 			s = t.merge(s, j)
 			elems := strings.Split(s, "\n")
-			row[j] = elems
-			t.updateColWidths(elems, j)
+			row[k] = elems
+			t.updateColWidths(elems, k)
 			t.getLineHeight(elems, i)
+			k++
 		}
 		t.data[i] = row
 	}

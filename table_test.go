@@ -72,6 +72,7 @@ var (
 	mergedTestInput               Input
 	escapedTestInput              Input
 	noHeaderTestInput             Input
+	invalidHeaderTestInput        Input
 	nestedTestInput1              Input
 	nestedTestInput2              Input
 	invalidHeaderIndicesTestInput Input
@@ -155,6 +156,13 @@ func setup() {
 			{"i-4", "server-4", []string{}, []string{}},
 			{"i-5", "server-5", []string{"lb-5"}, []string{}},
 			{"i-6", "server-6", []string{}, []string{"tg-5", "tg-6", "tg-7", "tg-8"}},
+		},
+	}
+
+	invalidHeaderTestInput = Input{
+		Header: []string{"InstanceID", "InstanceName", "AttachedLB"},
+		Data: [][]any{
+			{"id1", "name1", "lb1", "extraField"},
 		},
 	}
 
@@ -691,26 +699,8 @@ func TestTable(t *testing.T) {
 				opts: []Option{},
 				v:    noHeaderTestInput,
 			},
-			want: `+-----+----------+------+------+
-| i-1 | server-1 | lb-1 | tg-1 |
-+-----+----------+------+------+
-| i-2 | server-2 | lb-2 | tg-2 |
-|     |          | lb-3 |      |
-+-----+----------+------+------+
-| i-3 | server-3 | lb-4 | tg-3 |
-|     |          |      | tg-4 |
-+-----+----------+------+------+
-| i-4 | server-4 | -    | -    |
-+-----+----------+------+------+
-| i-5 | server-5 | lb-5 | -    |
-+-----+----------+------+------+
-| i-6 | server-6 | -    | tg-5 |
-|     |          |      | tg-6 |
-|     |          |      | tg-7 |
-|     |          |      | tg-8 |
-+-----+----------+------+------+
-`,
-			wantErr: false,
+			want:    "",
+			wantErr: true,
 		},
 		{
 			name: "struct_text",
