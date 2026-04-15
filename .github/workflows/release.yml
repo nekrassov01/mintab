@@ -15,12 +15,14 @@ concurrency:
 jobs:
   tagpr:
     timeout-minutes: 30
-    runs-on: ubuntu-latest
+    runs-on: ubuntu-slim
     env:
       GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     permissions:
       contents: write
       pull-requests: write
+    outputs:
+      tagpr-tag: ${{ steps.run-tagpr.outputs.tag }}
 
     steps:
       - name: Checkout
@@ -36,3 +38,26 @@ jobs:
       - name: Run tagpr
         uses: Songmu/tagpr@84850af451fc53753c6685a3a6a2af7beef23607 # v1.18.2
         id: run-tagpr
+
+  push-tag:
+    if: needs.tagpr.outputs.tagpr-tag != ''
+    needs: tagpr
+    timeout-minutes: 30
+    runs-on: ubuntu-slim
+    env:
+      GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    permissions:
+      contents: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@de0fac2e4500dabe0009e67214ff5f5447ce83dd # v6.0.2
+        with:
+          persist-credentials: false
+          fetch-depth: 0
+          fetch-tags: true
+
+      - name: Push tag
+        run: |
+          git tag ${{ needs.tagpr.outputs.tagpr-tag }}
+          git push origin "refs/tags/${{ needs.tagpr.outputs.tagpr-tag }}"

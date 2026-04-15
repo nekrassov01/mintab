@@ -14,7 +14,7 @@ import (
 //
 // 1. Struct `Input`
 //   - The number of columns in all rows must be the same.
-//   - Header is allowd to be nil.
+//   - Header is not allowd to be nil.
 //
 // 2. Any struct slices
 //   - If a struct is passed, it is converted to a slice with one element.
