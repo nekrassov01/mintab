@@ -87,7 +87,7 @@ func (t *Table) printBorder() {
 }
 
 func (t *Table) print(s string) {
-	io.WriteString(t.w, s)
+	_, _ = io.WriteString(t.w, s)
 }
 
 func (t *Table) writeRow(i int) {

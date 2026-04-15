@@ -7,7 +7,6 @@ import (
 	"github.com/nekrassov01/mintab"
 )
 
-// Pass by struct `Input`
 func ExampleTable_Load_input() {
 	data := mintab.Input{
 		Header: []string{"Instance", "SG", "Direction", "Protocol", "From", "To", "AddressType", "CidrBlock"},
@@ -50,7 +49,6 @@ func ExampleTable_Load_input() {
 	// +----------+------+-----------+----------+------+-------+-------------+---------------+
 }
 
-// Pass by any struct slices (with `CompressedTextFormat`)
 func ExampleTable_Load_struct() {
 	data := []struct {
 		Instance    string

@@ -9,10 +9,17 @@ import (
 type Format int
 
 const (
-	TextFormat           Format = iota // Text table format.
-	CompressedTextFormat               // Compressed text table format.
-	MarkdownFormat                     // Markdown table format.
-	BacklogFormat                      // Backlog-specific table format.
+	// TextFormat is table format.
+	TextFormat Format = iota
+
+	// CompressedTextFormat is compressed text table format.
+	CompressedTextFormat
+
+	// MarkdownFormat is markdown table format.
+	MarkdownFormat
+
+	// BacklogFormat is backlog-specific table format.
+	BacklogFormat
 )
 
 // MarshalJSON marshals a Format into JSON.

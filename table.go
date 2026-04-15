@@ -6,22 +6,22 @@ import (
 )
 
 const (
-	// Default placeholder when field is empty in text table format.
+	// TextDefaultPlaceholder is the default placeholder when a field is empty in text table format.
 	TextDefaultPlaceholder = "-"
 
-	// Default word delimiter in text table format.
+	// TextDefaultWordDelimiter is the default word delimiter in text table format.
 	TextDefaultWordDelimiter = textNewLine
 
-	// Default placeholder when field is empty in markdown table format.
+	// MarkdownDefaultPlaceholder is the default placeholder when a field is empty in markdown table format.
 	MarkdownDefaultPlaceholder = "\\" + TextDefaultPlaceholder
 
-	// Default word delimiter in markdown table format.
+	// MarkdownDefaultWordDelimiter is the default word delimiter in markdown table format.
 	MarkdownDefaultWordDelimiter = markdownNewLine
 
-	// Default placeholder when field is empty in backlog table format.
+	// BacklogDefaultPlaceholder is the default placeholder when a field is empty in backlog table format.
 	BacklogDefaultPlaceholder = TextDefaultPlaceholder
 
-	// Default word delimiter in backlog table format.
+	// BacklogDefaultWordDelimiter is the default word delimiter in backlog table format.
 	BacklogDefaultWordDelimiter = backlogNewLine
 
 	textNewLine     = "\n"
@@ -29,7 +29,7 @@ const (
 	backlogNewLine  = "&br;"
 )
 
-// Input is a struct for loading values into Table
+// Input is a struct for loading values into Table.
 type Input struct {
 	Header []string // table header
 	Data   [][]any  // matrix with any types
