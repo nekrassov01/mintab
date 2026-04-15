@@ -1,4 +1,4 @@
 package mintab
 
 // Version is the current version.
-const Version = "0.0.57"
+const Version = "0.1.0"
