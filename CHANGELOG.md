@@ -1,6 +1,6 @@
 # Changelog
 
-## [v0.1.3](https://github.com/nekrassov01/mintab/compare/v0.0.57...v0.1.3) - 2026-04-15
+## [v0.1.0](https://github.com/nekrassov01/mintab/compare/v0.0.57...v0.0.58) - 2026-04-15
 
 ## [v0.0.57](https://github.com/nekrassov01/mintab/compare/v0.0.56...v0.0.57) - 2025-01-07
 
