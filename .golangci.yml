@@ -1,34 +1,24 @@
-run:
-  timeout: 5m
+version: "2"
 linters:
+  default: fast
   enable:
-    - dogsled
-    - dupl
-    - errorlint
-    - gocritic
-    - gocyclo
-    - gofmt
-    - gofumpt
+    - errcheck
     - gosec
-    - makezero
-    - misspell
-    - nakedret
-    - predeclared
     - revive
-    - stylecheck
-    - tagliatelle
-    - thelper
-    - tparallel
-    - unconvert
-    - unparam
-    - unused
-    - wastedassign
-    - whitespace
-linters-settings:
-  errcheck:
-    exclude-functions: "io.WriteString"
-issues:
-  exclude-rules:
-    - linters:
-        - dupl
-      path: _test\.go
+  disable:
+    - cyclop
+    - dupl
+    - depguard
+    - funlen
+    - gocognit
+    - lll
+    - maintidx
+    - mnd
+    - nlreturn
+    - testpackage
+    - wsl
+  exclusions:
+    rules:
+      - linters:
+          - revive
+        text: "package-comments"
