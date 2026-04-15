@@ -2,6 +2,9 @@
 
 ## [v0.1.1](https://github.com/nekrassov01/mintab/compare/v0.0.57...v0.1.1) - 2026-04-15
 - Update for 0.1.0 by @nekrassov01 in https://github.com/nekrassov01/mintab/pull/2
+
+## [v0.1.1](https://github.com/nekrassov01/mintab/compare/v0.0.57...v0.1.1) - 2026-04-15
+- Update for 0.1.0 by @nekrassov01 in https://github.com/nekrassov01/mintab/pull/2
 - Improve package release workflow by @nekrassov01 in https://github.com/nekrassov01/mintab/pull/4
 - Improve package release workflow by @nekrassov01 in https://github.com/nekrassov01/mintab/pull/6
 
