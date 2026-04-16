@@ -61,7 +61,7 @@ func (t *Table) loadInput(v Input) error {
 
 func (t *Table) loadStruct(v any) error {
 	rv := reflect.ValueOf(v)
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		rv = rv.Elem()
 	}
 	if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
@@ -132,7 +132,7 @@ func (t *Table) setInputHeader(v Input) error {
 
 func (t *Table) setStructHeader(rv reflect.Value) error {
 	e := rv.Index(0)
-	if e.Kind() == reflect.Ptr {
+	if e.Kind() == reflect.Pointer {
 		e = e.Elem()
 	}
 	if e.Kind() != reflect.Struct {
@@ -198,7 +198,7 @@ func (t *Table) setStructData(rv reflect.Value) error {
 	t.prevRow = make([]string, t.numColumns)
 	for i := 0; i < t.numRows; i++ {
 		e := rv.Index(i)
-		if e.Kind() == reflect.Ptr {
+		if e.Kind() == reflect.Pointer {
 			e = e.Elem()
 		}
 		row := make([][]string, t.numColumns)
@@ -279,7 +279,7 @@ func (t *Table) setBorder() {
 }
 
 func (t *Table) formatField(rv reflect.Value) (string, error) {
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		if rv.IsNil() {
 			return t.placeholder, nil
 		}
@@ -313,21 +313,21 @@ func (t *Table) formatField(rv reflect.Value) (string, error) {
 }
 
 func (t *Table) formatSlice(rv reflect.Value) (string, error) {
-	l := rv.Len()
+	length := rv.Len()
 	switch {
-	case l == 0:
+	case length == 0:
 		return t.placeholder, nil
 	case rv.Type().Elem().Kind() == reflect.Uint8:
 		return string(rv.Bytes()), nil
 	default:
 		t.b.Reset()
 		t.b.Grow(256)
-		for i := 0; i < l; i++ {
+		for i := range length {
 			e := rv.Index(i)
 			if i != 0 {
 				t.b.WriteString(t.wordDelimiter)
 			}
-			if e.Kind() == reflect.Ptr {
+			if e.Kind() == reflect.Pointer {
 				if e.IsNil() {
 					t.b.WriteString(t.placeholder)
 					continue
@@ -361,7 +361,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 			case float64:
 				t.b.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
 			default:
-				t.b.WriteString(fmt.Sprint(v))
+				fmt.Fprint(&t.b, v)
 			}
 		}
 		return t.b.String(), nil

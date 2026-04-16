@@ -89,7 +89,7 @@ var (
 	nestedTestStructSlice         []nestedTestStruct
 	stringerTestStructSlice       []stringerTestStruct
 	nonExportedTestStructSlice    []nonExportedTestStruct
-	nonTypeTestStructSlice        []interface{}
+	nonTypeTestStructSlice        []any
 )
 
 func TestMain(m *testing.M) {
@@ -330,7 +330,7 @@ func setup() {
 		},
 	}
 
-	nonTypeTestStructSlice = []interface{}{
+	nonTypeTestStructSlice = []any{
 		basicTestStruct{
 			InstanceID:   "i-1",
 			InstanceName: "server-1",
