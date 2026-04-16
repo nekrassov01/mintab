@@ -1,7 +1,6 @@
 package mintab
 
 import (
-	"reflect"
 	"testing"
 )
 
@@ -41,27 +40,6 @@ func TestFormat_String(t *testing.T) {
 		t.Run(tt.name, func(t *testing.T) {
 			if got := tt.o.String(); got != tt.want {
 				t.Errorf("Format.String() = %v, want %v", got, tt.want)
-			}
-		})
-	}
-}
-
-func TestFormat_Values(t *testing.T) {
-	tests := []struct {
-		name string
-		tr   Format
-		want []Format
-	}{
-		{
-			name: "all formats",
-			tr:   TextFormat,
-			want: []Format{TextFormat, CompressedTextFormat, MarkdownFormat, BacklogFormat},
-		},
-	}
-	for _, tt := range tests {
-		t.Run(tt.name, func(t *testing.T) {
-			if got := tt.tr.Values(); !reflect.DeepEqual(got, tt.want) {
-				t.Errorf("Format.Values() = %v, want %v", got, tt.want)
 			}
 		})
 	}

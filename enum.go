@@ -43,16 +43,6 @@ func (t Format) String() string {
 	}
 }
 
-// Values returns the list of supported formats.
-func (t Format) Values() []Format {
-	return []Format{
-		TextFormat,
-		CompressedTextFormat,
-		MarkdownFormat,
-		BacklogFormat,
-	}
-}
-
 // ParseFormat parses a string into a Format.
 func ParseFormat(s string) (Format, error) {
 	switch s {
