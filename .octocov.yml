@@ -16,8 +16,6 @@ diff:
     - artifact://${GITHUB_REPOSITORY}
 comment:
   if: is_pull_request
-  hideFooterLink: true
-  deletePrevious: true
 summary:
   if: true
 report:
