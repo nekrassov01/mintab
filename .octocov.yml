@@ -1,6 +1,8 @@
 coverage:
   paths:
-    - coverage.out
+    - coverage-ubuntu-latest
+    - coverage-macos-latest
+    - coverage-windows-latest
 codeToTestRatio:
   code:
     - "**/*.go"
@@ -14,6 +16,8 @@ diff:
     - artifact://${GITHUB_REPOSITORY}
 comment:
   if: is_pull_request
+  hideFooterLink: true
+  deletePrevious: true
 summary:
   if: true
 report:
