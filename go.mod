@@ -1,6 +1,6 @@
 module github.com/nekrassov01/mintab
 
-go 1.22.5
+go 1.26.1
 
 require (
 	github.com/google/go-cmp v0.7.0
