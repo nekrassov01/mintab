@@ -42,6 +42,7 @@ endif
 clean:
 	go clean
 	rm -f $(NAME) coverage.out coverage.html cpu.prof mem.prof $(NAME).test
+	@cd benchmarks && $(MAKE) clean
 
 # --------
 #  check
@@ -56,7 +57,7 @@ cover:
 	go tool cover -html coverage.out -o coverage.html
 
 bench:
-	go test -bench -benchmem -count 5 -benchtime 10000x -cpuprofile cpu.prof -memprofile mem.prof .
+	@cd benchmarks && $(MAKE) bench
 
 lint: deps-lint
 	golangci-lint run --verbose ./...
