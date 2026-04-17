@@ -1,15 +1,13 @@
 package benchmarks
 
 import (
-	"io"
+	"bytes"
 	"testing"
 
 	"github.com/jedib0t/go-pretty/v6/table"
 	"github.com/nekrassov01/mintab"
 	"github.com/olekukonko/tablewriter"
 )
-
-var w = io.Discard
 
 func BenchmarkMintabInput(b *testing.B) {
 	data := mintab.Input{
@@ -23,8 +21,9 @@ func BenchmarkMintabInput(b *testing.B) {
 			{"i-6", "server-6", "shutting-down"},
 		},
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	w := &bytes.Buffer{}
+	for b.Loop() {
+		w.Reset()
 		t := mintab.New(w)
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
@@ -46,8 +45,9 @@ func BenchmarkMintabStruct(b *testing.B) {
 		{InstanceID: "i-5", InstaneceName: "server-5", InstanceState: "stopping"},
 		{InstanceID: "i-6", InstaneceName: "server-6", InstanceState: "shutting-down"},
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	w := &bytes.Buffer{}
+	for b.Loop() {
+		w.Reset()
 		t := mintab.New(w)
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
@@ -99,8 +99,9 @@ func BenchmarkMintabInputLarge(b *testing.B) {
 			{"i-2", "server-2", "vpc-1", "sg-3", "Egress", "-1", 0, 0, "Ipv4", "0.0.0.0/0"},
 		},
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	w := &bytes.Buffer{}
+	for b.Loop() {
+		w.Reset()
 		t := mintab.New(w, mintab.WithMergeFields([]int{1, 2, 3}))
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
@@ -147,8 +148,9 @@ func BenchmarkMintabStructLarge(b *testing.B) {
 		{InstanceID: "i-2", InstanceName: "server-2", VPCID: "vpc-1", SecurityGroupID: "sg-3", FlowDirection: "Ingress", IPProtocol: "tcp", FromPort: 0, ToPort: 65535, AddressType: "PrefixList", CidrBlock: "pl-id/pl-name"},
 		{InstanceID: "i-2", InstanceName: "server-2", VPCID: "vpc-1", SecurityGroupID: "sg-3", FlowDirection: "Egress", IPProtocol: "-1", FromPort: 0, ToPort: 0, AddressType: "Ipv4", CidrBlock: "0.0.0.0/0"},
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	w := &bytes.Buffer{}
+	for b.Loop() {
+		w.Reset()
 		t := mintab.New(w, mintab.WithMergeFields([]int{1, 2, 3}))
 		if err := t.Load(data); err != nil {
 			b.Fatal(err)
@@ -168,12 +170,12 @@ func BenchmarkTableWriter(b *testing.B) {
 		{"i-5", "server-5", "stopping"},
 		{"i-6", "server-6", "shutting-down"},
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+	w := &bytes.Buffer{}
+	for b.Loop() {
+		w.Reset()
 		t := tablewriter.NewWriter(w)
-		t.SetHeader([]string{"InstanceID", "InstanceName", "InstanceState"})
-		t.SetRowLine(true)
-		t.AppendBulk(data)
+		t.Header([]string{"InstanceID", "InstanceName", "InstanceState"})
+		t.Bulk(data)
 		t.Render()
 	}
 }
@@ -187,11 +189,12 @@ func BenchmarkGoPrettyTable(b *testing.B) {
 		{"i-5", "server-5", "stopping"},
 		{"i-6", "server-6", "shutting-down"},
 	}
-	b.ResetTimer()
-	for i := 0; i < b.N; i++ {
+
+	w := &bytes.Buffer{}
+	for b.Loop() {
+		w.Reset()
 		t := table.NewWriter()
 		t.SetOutputMirror(w)
-		t.Style().Options.SeparateRows = true
 		t.AppendHeader(table.Row{"InstanceID", "InstanceName", "InstanceState"})
 		t.AppendRows(data)
 		t.Render()
