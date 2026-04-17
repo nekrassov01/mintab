@@ -33,23 +33,13 @@ func (t Format) String() string {
 	case TextFormat:
 		return "text"
 	case CompressedTextFormat:
-		return "compressed"
+		return "compressedtext"
 	case MarkdownFormat:
 		return "markdown"
 	case BacklogFormat:
 		return "backlog"
 	default:
 		return ""
-	}
-}
-
-// Values returns the list of supported formats.
-func (t Format) Values() []Format {
-	return []Format{
-		TextFormat,
-		CompressedTextFormat,
-		MarkdownFormat,
-		BacklogFormat,
 	}
 }
 

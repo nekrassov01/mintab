@@ -12,7 +12,7 @@ import (
 
 // Load validates v and converts it to a struct Table. v must be passed in one of the following two ways:
 //
-// 1. Struct `Input`
+// 1. Struct `mintab.Input`
 //   - The number of columns in all rows must be the same.
 //   - Header is not allowd to be nil.
 //
@@ -61,7 +61,7 @@ func (t *Table) loadInput(v Input) error {
 
 func (t *Table) loadStruct(v any) error {
 	rv := reflect.ValueOf(v)
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		rv = rv.Elem()
 	}
 	if rv.Kind() != reflect.Slice && rv.Kind() != reflect.Array {
@@ -106,6 +106,9 @@ func (t *Table) setFormat() {
 	if t.wordDelimiter == TextDefaultWordDelimiter {
 		t.wordDelimiter = d
 	}
+	if t.format != TextFormat {
+		t.r = strings.NewReplacer("\n", t.newLine)
+	}
 }
 
 func (t *Table) setInputHeader(v Input) error {
@@ -132,7 +135,7 @@ func (t *Table) setInputHeader(v Input) error {
 
 func (t *Table) setStructHeader(rv reflect.Value) error {
 	e := rv.Index(0)
-	if e.Kind() == reflect.Ptr {
+	if e.Kind() == reflect.Pointer {
 		e = e.Elem()
 	}
 	if e.Kind() != reflect.Struct {
@@ -181,7 +184,7 @@ func (t *Table) setInputData(v Input) error {
 				return err
 			}
 			s = t.merge(s, j)
-			elems := strings.Split(s, "\n")
+			elems := splitLines(s)
 			row[k] = elems
 			t.updateColWidths(elems, k)
 			t.getLineHeight(elems, i)
@@ -198,7 +201,7 @@ func (t *Table) setStructData(rv reflect.Value) error {
 	t.prevRow = make([]string, t.numColumns)
 	for i := 0; i < t.numRows; i++ {
 		e := rv.Index(i)
-		if e.Kind() == reflect.Ptr {
+		if e.Kind() == reflect.Pointer {
 			e = e.Elem()
 		}
 		row := make([][]string, t.numColumns)
@@ -214,7 +217,7 @@ func (t *Table) setStructData(rv reflect.Value) error {
 				return err
 			}
 			s = t.merge(s, j)
-			elems := strings.Split(s, "\n")
+			elems := splitLines(s)
 			row[j] = elems
 			t.updateColWidths(elems, j)
 			t.getLineHeight(elems, i)
@@ -279,7 +282,7 @@ func (t *Table) setBorder() {
 }
 
 func (t *Table) formatField(rv reflect.Value) (string, error) {
-	if rv.Kind() == reflect.Ptr {
+	if rv.Kind() == reflect.Pointer {
 		if rv.IsNil() {
 			return t.placeholder, nil
 		}
@@ -313,21 +316,21 @@ func (t *Table) formatField(rv reflect.Value) (string, error) {
 }
 
 func (t *Table) formatSlice(rv reflect.Value) (string, error) {
-	l := rv.Len()
+	length := rv.Len()
 	switch {
-	case l == 0:
+	case length == 0:
 		return t.placeholder, nil
-	case rv.Type().Elem().Kind() == reflect.Uint8:
+	case rv.Type().Elem().Kind() == reflect.Uint8 && t.isBytesToString:
 		return string(rv.Bytes()), nil
 	default:
 		t.b.Reset()
 		t.b.Grow(256)
-		for i := 0; i < l; i++ {
+		for i := range length {
 			e := rv.Index(i)
 			if i != 0 {
 				t.b.WriteString(t.wordDelimiter)
 			}
-			if e.Kind() == reflect.Ptr {
+			if e.Kind() == reflect.Pointer {
 				if e.IsNil() {
 					t.b.WriteString(t.placeholder)
 					continue
@@ -338,7 +341,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 				t.b.WriteString(s)
 				continue
 			}
-			if e.Kind() == reflect.Slice && e.Type().Elem().Kind() == reflect.Uint8 {
+			if e.Kind() == reflect.Slice && e.Type().Elem().Kind() == reflect.Uint8 && t.isBytesToString {
 				t.b.WriteString(string(e.Bytes()))
 				continue
 			}
@@ -352,16 +355,32 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 				} else {
 					t.b.WriteString(v)
 				}
-			case int, int8, int16, int32, int64:
-				t.b.WriteString(strconv.FormatInt(v.(int64), 10))
-			case uint, uint8, uint16, uint32, uint64:
-				t.b.WriteString(strconv.FormatUint(v.(uint64), 10))
+			case int:
+				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+			case int8:
+				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+			case int16:
+				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+			case int32:
+				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+			case int64:
+				t.b.WriteString(strconv.FormatInt(v, 10))
+			case uint:
+				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+			case uint8:
+				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+			case uint16:
+				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+			case uint32:
+				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+			case uint64:
+				t.b.WriteString(strconv.FormatUint(v, 10))
 			case float32:
 				t.b.WriteString(strconv.FormatFloat(float64(v), 'f', -1, 32))
 			case float64:
 				t.b.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
 			default:
-				t.b.WriteString(fmt.Sprint(v))
+				fmt.Fprint(&t.b, v)
 			}
 		}
 		return t.b.String(), nil
@@ -373,6 +392,26 @@ func getStringer(rv reflect.Value) string {
 		return s.String()
 	}
 	return ""
+}
+
+func splitLines(s string) []string {
+	if strings.IndexByte(s, '\n') < 0 {
+		return []string{s}
+	}
+	elems := make([]string, 0, strings.Count(s, "\n")+1)
+	start := 0
+	for i := 0; i < len(s); i++ {
+		if s[i] == '\n' {
+			elems = append(elems, s[start:i])
+			start = i + 1
+		}
+	}
+	if start == len(s) {
+		elems = append(elems, "")
+	} else if start < len(s) {
+		elems = append(elems, s[start:])
+	}
+	return elems
 }
 
 func (t *Table) sanitize(s string) string {
@@ -388,8 +427,14 @@ func (t *Table) sanitize(s string) string {
 	if t.format == TextFormat {
 		return s
 	}
-	rep := strings.NewReplacer("\n", t.newLine)
-	return rep.Replace(s)
+	if !strings.Contains(s, "\n") {
+		return s
+	}
+	if t.r != nil {
+		return t.r.Replace(s)
+	}
+	// fallback (should not reach here)
+	return strings.ReplaceAll(s, "\n", t.newLine)
 }
 
 func (t *Table) escape(s string) string {

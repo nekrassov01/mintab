@@ -127,9 +127,9 @@ func (t *Table) writeField(s string, w int) {
 	if !isN {
 		t.b.WriteString(s)
 	}
-	p := w - runewidth.StringWidth(s)
-	if p > 0 {
-		for i := 0; i < p; i++ {
+	pad := w - runewidth.StringWidth(s)
+	if pad > 0 {
+		for range pad {
 			t.b.WriteByte(' ')
 		}
 	}

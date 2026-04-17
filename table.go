@@ -37,37 +37,38 @@ type Input struct {
 
 // Table represents a table structure for rendering data.
 type Table struct {
-	w                    io.Writer       // Destination for table output
-	b                    strings.Builder // Internal string builder
-	format               Format          // Output table format: text|compressed-text|markdown|backlog
-	header               []string        // Table header after parsing
-	data                 [][][]string    // Matrix after parsing with each field divided by new lines
-	newLine              string          // New line string representation: "\n"|"<br>"|"&br;"
-	placeholder          string          // Placeholder for empty fields
-	wordDelimiter        string          // Delimiter for words within a field
-	colWidths            []int           // Max widths of each columns
-	lineHeights          []int           // Heights of lines with fields containing line breaks
-	numColumns           int             // Number of columns
-	numColumnsFirstRow   int             // Number of columns of the first data row
-	numRows              int             // Number of rows
-	border               string          // Border line based on column widths
-	tableWidth           int             // Table full width
-	marginWidth          int             // Margin size around the field
-	marginWidthBothSides int             // Twice of margin size
-	margin               string          // Whitespaces around the field
-	hasHeader            bool            // Whether header rendering
-	isEscape             bool            // Whether HTML escaping (mainly designed for markdown)
-	isMerge              bool            // Track whether to merge fields
-	prevRow              []string        // Retain previous row
-	mergedFields         []int           // Indices of columns to merge
-	ignoredFields        []int           // Indices of columns to ignore
+	w                    io.Writer         // Destination for table output
+	b                    strings.Builder   // Internal string builder
+	r                    *strings.Replacer // Replacer for new lines in fields
+	format               Format            // Output table format: text|compressed-text|markdown|backlog
+	header               []string          // Table header after parsing
+	data                 [][][]string      // Matrix after parsing with each field divided by new lines
+	newLine              string            // New line string representation: "\n"|"<br>"|"&br;"
+	placeholder          string            // Placeholder for empty fields
+	wordDelimiter        string            // Delimiter for words within a field
+	colWidths            []int             // Max widths of each columns
+	lineHeights          []int             // Heights of lines with fields containing line breaks
+	numColumns           int               // Number of columns
+	numColumnsFirstRow   int               // Number of columns of the first data row
+	numRows              int               // Number of rows
+	border               string            // Border line based on column widths
+	tableWidth           int               // Table full width
+	marginWidth          int               // Margin size around the field
+	marginWidthBothSides int               // Twice of margin size
+	margin               string            // Whitespaces around the field
+	hasHeader            bool              // Whether header rendering
+	isEscape             bool              // Whether HTML escaping (mainly designed for markdown)
+	isMerge              bool              // Track whether to merge fields
+	isBytesToString      bool              // Whether []uint8 should be treated as string
+	prevRow              []string          // Retain previous row
+	mergedFields         []int             // Indices of columns to merge
+	ignoredFields        []int             // Indices of columns to ignore
 }
 
 // New instantiates a new Table with the writer and options.
 func New(w io.Writer, opts ...Option) *Table {
 	t := &Table{
 		w:                    w,
-		b:                    strings.Builder{},
 		format:               TextFormat,
 		newLine:              textNewLine,
 		placeholder:          TextDefaultPlaceholder,
@@ -75,6 +76,7 @@ func New(w io.Writer, opts ...Option) *Table {
 		marginWidth:          1,
 		marginWidthBothSides: 2,
 		hasHeader:            true,
+		isBytesToString:      true,
 	}
 	for _, opt := range opts {
 		opt(t)
@@ -146,5 +148,12 @@ func WithIgnoreFields(indices []int) Option {
 func WithEscape(has bool) Option {
 	return func(t *Table) {
 		t.isEscape = has
+	}
+}
+
+// WithBytesAsString controls how []uint8 is interpreted.
+func WithBytesAsString(has bool) Option {
+	return func(t *Table) {
+		t.isBytesToString = has
 	}
 }

@@ -3,7 +3,6 @@ package mintab
 import (
 	"bytes"
 	"net"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -89,13 +88,12 @@ var (
 	nestedTestStructSlice         []nestedTestStruct
 	stringerTestStructSlice       []stringerTestStruct
 	nonExportedTestStructSlice    []nonExportedTestStruct
-	nonTypeTestStructSlice        []interface{}
+	nonTypeTestStructSlice        []any
 )
 
 func TestMain(m *testing.M) {
 	setup()
-	code := m.Run()
-	os.Exit(code)
+	m.Run()
 }
 
 func setup() {
@@ -330,7 +328,7 @@ func setup() {
 		},
 	}
 
-	nonTypeTestStructSlice = []interface{}{
+	nonTypeTestStructSlice = []any{
 		basicTestStruct{
 			InstanceID:   "i-1",
 			InstanceName: "server-1",
@@ -1121,6 +1119,7 @@ func TestNew(t *testing.T) {
 				colWidths:            nil,
 				hasHeader:            true,
 				isEscape:             false,
+				isBytesToString:      true,
 			},
 		},
 		{
@@ -1154,6 +1153,7 @@ func TestNew(t *testing.T) {
 				colWidths:            nil,
 				hasHeader:            false,
 				isEscape:             true,
+				isBytesToString:      true,
 			},
 		},
 	}

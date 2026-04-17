@@ -1,9 +1,8 @@
-
 export GO111MODULE=on
 
 .PHONY: bench
 bench:
-	go test -run=^$$ -bench=. -benchmem -count 5 -cpuprofile=cpu.prof -memprofile=mem.prof
+	go test -bench . -benchmem -count 5 -benchtime 10000x -cpuprofile cpu.prof -memprofile mem.prof .
 
 .PHONY: clean
 clean:

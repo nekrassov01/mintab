@@ -1,12 +1,20 @@
-mintab
-======
+<p align="center">
+  <h2 align="center">MINTAB</h2>
+  <p align="center">The minimal ASCII table utilities for Go
+</p>
+  <p align="center">
+    <a href="https://github.com/nekrassov01/mintab/actions/workflows/ci.yml"><img src="https://github.com/nekrassov01/mintab/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+    <a href="https://pkg.go.dev/github.com/nekrassov01/mintab"><img src="https://pkg.go.dev/badge/github.com/nekrassov01/mintab.svg" alt="Go Reference" /></a>
+    <a href="https://goreportcard.com/report/github.com/nekrassov01/mintab"><img src="https://goreportcard.com/badge/github.com/nekrassov01/mintab" alt="Go Report Card" /></a>
+    <img src="https://img.shields.io/github/license/nekrassov01/mintab" alt="LICENSE" />
+    <a href="https://deepwiki.com/nekrassov01/mintab"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" /></a>
+  </p>
+</p>
 
-[![CI](https://github.com/nekrassov01/mintab/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nekrassov01/mintab/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/nekrassov01/mintab/graph/badge.svg?token=RIV62CQILM)](https://codecov.io/gh/nekrassov01/mintab)
-[![Go Reference](https://pkg.go.dev/badge/github.com/nekrassov01/mintab.svg)](https://pkg.go.dev/github.com/nekrassov01/mintab)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nekrassov01/mintab)](https://goreportcard.com/report/github.com/nekrassov01/mintab)
+Overview
+--------
 
-mintab is a minimum ASCII table utilities for Go
+This is a lightweight, simple utility for outputting basic table representations as strings. Because its functionality has been intentionally kept to a minimum, it runs faster and more efficiently than other similar packages. While it does not support nested structures, you can pass slices of structures directly.
 
 Motivation
 ----------
@@ -127,37 +135,40 @@ Support
 Benchmark
 ---------
 
-mintab is memory-efficient.
+> [!NOTE]
+> These benchmarks measure end-to-end table rendering cost, including table construction, data loading, and writing the rendered output to an in-memory buffer. Exact output formatting differs by library, so the results reflect real-world total cost rather than feature-normalized rendering cost.
+>
+> Libraries such as `tablewriter` and `go-pretty` offer richer formatting and customization capabilities, whereas mintab intentionally optimizes for a much narrower goal: memory-efficient output of simple ASCII tables with minimal processing and allocation overhead. These results should therefore be interpreted as design-tradeoff benchmarks, not as a claim of equivalent functionality across libraries.
 
 ```text
 $ make bench
-go test -run=^$ -bench=. -benchmem -count 5 -cpuprofile=cpu.prof -memprofile=mem.prof
+go test -bench . -benchmem -count 5 -benchtime 10000x -cpuprofile cpu.prof -memprofile mem.prof .
 goos: darwin
 goarch: arm64
 pkg: benchmarks
 cpu: Apple M2
-BenchmarkMintabInput-8             38288             30660 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabInput-8             39964             30058 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabInput-8             38894             29954 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabInput-8             39504             30917 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabInput-8             39993             29877 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabStruct-8            37072             31838 ns/op            2920 B/op         80 allocs/op
-BenchmarkMintabStruct-8            38244             32118 ns/op            2920 B/op         80 allocs/op
-BenchmarkMintabStruct-8            38517             31612 ns/op            2920 B/op         80 allocs/op
-BenchmarkMintabStruct-8            37584             31750 ns/op            2920 B/op         80 allocs/op
-BenchmarkMintabStruct-8            38352             31989 ns/op            2920 B/op         80 allocs/op
-BenchmarkTableWriter-8             12877             95667 ns/op           11454 B/op        639 allocs/op
-BenchmarkTableWriter-8             12712             95992 ns/op           11457 B/op        639 allocs/op
-BenchmarkTableWriter-8             12834             95187 ns/op           11443 B/op        639 allocs/op
-BenchmarkTableWriter-8             12716             95045 ns/op           11420 B/op        639 allocs/op
-BenchmarkTableWriter-8             12680             94409 ns/op           11449 B/op        639 allocs/op
-BenchmarkGoPrettyTable-8           65367             16973 ns/op            6540 B/op        192 allocs/op
-BenchmarkGoPrettyTable-8           68565             17483 ns/op            6540 B/op        192 allocs/op
-BenchmarkGoPrettyTable-8           70461             17172 ns/op            6540 B/op        192 allocs/op
-BenchmarkGoPrettyTable-8           65881             17300 ns/op            6540 B/op        192 allocs/op
-BenchmarkGoPrettyTable-8           70099             17335 ns/op            6540 B/op        192 allocs/op
+BenchmarkMintabInput-8             10000              5080 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3248 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3239 ns/op            2489 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3191 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3068 ns/op            2488 B/op         41 allocs/op
+BenchmarkMintabStruct-8            10000              4489 ns/op            2752 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4292 ns/op            2752 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4108 ns/op            2752 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4453 ns/op            2752 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4133 ns/op            2752 B/op         59 allocs/op
+BenchmarkTableWriter-8             10000             81593 ns/op          486508 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             81795 ns/op          486508 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             80367 ns/op          486509 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             87810 ns/op          486508 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             81315 ns/op          486507 B/op       1028 allocs/op
+BenchmarkGoPrettyTable-8           10000             11775 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             11703 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             11770 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             11687 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             11702 ns/op            8101 B/op        143 allocs/op
 PASS
-ok      benchmarks      33.220s
+ok      benchmarks      5.578s
 ```
 
 Notes
