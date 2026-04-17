@@ -3,7 +3,6 @@ package mintab
 import (
 	"bytes"
 	"net"
-	"os"
 	"reflect"
 	"strings"
 	"testing"
@@ -94,8 +93,7 @@ var (
 
 func TestMain(m *testing.M) {
 	setup()
-	code := m.Run()
-	os.Exit(code)
+	m.Run()
 }
 
 func setup() {
@@ -1121,6 +1119,7 @@ func TestNew(t *testing.T) {
 				colWidths:            nil,
 				hasHeader:            true,
 				isEscape:             false,
+				isBytesToString:      true,
 			},
 		},
 		{
@@ -1154,6 +1153,7 @@ func TestNew(t *testing.T) {
 				colWidths:            nil,
 				hasHeader:            false,
 				isEscape:             true,
+				isBytesToString:      true,
 			},
 		},
 	}

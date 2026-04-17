@@ -59,6 +59,7 @@ type Table struct {
 	hasHeader            bool              // Whether header rendering
 	isEscape             bool              // Whether HTML escaping (mainly designed for markdown)
 	isMerge              bool              // Track whether to merge fields
+	isBytesToString      bool              // Whether []uint8 should be treated as string
 	prevRow              []string          // Retain previous row
 	mergedFields         []int             // Indices of columns to merge
 	ignoredFields        []int             // Indices of columns to ignore
@@ -75,6 +76,7 @@ func New(w io.Writer, opts ...Option) *Table {
 		marginWidth:          1,
 		marginWidthBothSides: 2,
 		hasHeader:            true,
+		isBytesToString:      true,
 	}
 	for _, opt := range opts {
 		opt(t)
@@ -146,5 +148,12 @@ func WithIgnoreFields(indices []int) Option {
 func WithEscape(has bool) Option {
 	return func(t *Table) {
 		t.isEscape = has
+	}
+}
+
+// WithBytesAsString controls how []uint8 is interpreted.
+func WithBytesAsString(has bool) Option {
+	return func(t *Table) {
+		t.isBytesToString = has
 	}
 }
