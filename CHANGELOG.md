@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.4](https://github.com/nekrassov01/mintab/compare/v0.1.3...v0.1.4) - 2026-04-17
+- Add sync pool to reuse string builders and rows by @nekrassov01 in https://github.com/nekrassov01/mintab/pull/19
+
 ## [v0.1.3](https://github.com/nekrassov01/mintab/compare/v0.1.2...v0.1.3) - 2026-04-17
 - Improve line break replacement, etc by @nekrassov01 in https://github.com/nekrassov01/mintab/pull/17
 
