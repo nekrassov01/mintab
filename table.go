@@ -3,6 +3,7 @@ package mintab
 import (
 	"io"
 	"strings"
+	"sync"
 )
 
 const (
@@ -38,7 +39,6 @@ type Input struct {
 // Table represents a table structure for rendering data.
 type Table struct {
 	w                    io.Writer         // Destination for table output
-	b                    strings.Builder   // Internal string builder
 	r                    *strings.Replacer // Replacer for new lines in fields
 	format               Format            // Output table format: text|compressed-text|markdown|backlog
 	header               []string          // Table header after parsing
@@ -156,4 +156,17 @@ func WithBytesAsString(has bool) Option {
 	return func(t *Table) {
 		t.isBytesToString = has
 	}
+}
+
+var bufPool = sync.Pool{
+	New: func() any {
+		return new(strings.Builder)
+	},
+}
+
+var rowPool = sync.Pool{
+	New: func() any {
+		s := make([]string, 0, 16)
+		return &s
+	},
 }

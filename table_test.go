@@ -4,7 +4,6 @@ import (
 	"bytes"
 	"net"
 	"reflect"
-	"strings"
 	"testing"
 	"time"
 
@@ -1104,7 +1103,6 @@ func TestNew(t *testing.T) {
 			},
 			want: &Table{
 				w:                    &bytes.Buffer{},
-				b:                    strings.Builder{},
 				header:               nil,
 				format:               TextFormat,
 				newLine:              textNewLine,
@@ -1138,7 +1136,6 @@ func TestNew(t *testing.T) {
 			},
 			want: &Table{
 				w:                    &bytes.Buffer{},
-				b:                    strings.Builder{},
 				header:               nil,
 				format:               MarkdownFormat,
 				newLine:              textNewLine, // change after setFormat()
@@ -1229,6 +1226,35 @@ func TestWithEmptyFieldPlacehplder(t *testing.T) {
 			opt(table)
 			if table.placeholder != tt.want {
 				t.Errorf("\ngot\n%v\nset\n%v\nwant\n%v\n", tt.placeholder, table.placeholder, tt.want)
+			}
+		})
+	}
+}
+
+func TestWithBytesAsString(t *testing.T) {
+	tests := []struct {
+		name          string
+		bytesAsString bool
+		want          bool
+	}{
+		{
+			name:          "default",
+			bytesAsString: true,
+			want:          true,
+		},
+		{
+			name:          "disabled",
+			bytesAsString: false,
+			want:          false,
+		},
+	}
+	for _, tt := range tests {
+		t.Run(tt.name, func(t *testing.T) {
+			table := &Table{}
+			opt := WithBytesAsString(tt.bytesAsString)
+			opt(table)
+			if table.isBytesToString != tt.want {
+				t.Errorf("\ngot\n%v\nset\n%v\nwant\n%v\n", tt.bytesAsString, table.isBytesToString, tt.want)
 			}
 		})
 	}
