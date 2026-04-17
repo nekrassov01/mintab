@@ -147,28 +147,28 @@ goos: darwin
 goarch: arm64
 pkg: benchmarks
 cpu: Apple M2
-BenchmarkMintabInput-8             10000              5080 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabInput-8             10000              3248 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabInput-8             10000              3239 ns/op            2489 B/op         41 allocs/op
-BenchmarkMintabInput-8             10000              3191 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabInput-8             10000              3068 ns/op            2488 B/op         41 allocs/op
-BenchmarkMintabStruct-8            10000              4489 ns/op            2752 B/op         59 allocs/op
-BenchmarkMintabStruct-8            10000              4292 ns/op            2752 B/op         59 allocs/op
-BenchmarkMintabStruct-8            10000              4108 ns/op            2752 B/op         59 allocs/op
-BenchmarkMintabStruct-8            10000              4453 ns/op            2752 B/op         59 allocs/op
-BenchmarkMintabStruct-8            10000              4133 ns/op            2752 B/op         59 allocs/op
-BenchmarkTableWriter-8             10000             81593 ns/op          486508 B/op       1028 allocs/op
-BenchmarkTableWriter-8             10000             81795 ns/op          486508 B/op       1028 allocs/op
-BenchmarkTableWriter-8             10000             80367 ns/op          486509 B/op       1028 allocs/op
-BenchmarkTableWriter-8             10000             87810 ns/op          486508 B/op       1028 allocs/op
-BenchmarkTableWriter-8             10000             81315 ns/op          486507 B/op       1028 allocs/op
-BenchmarkGoPrettyTable-8           10000             11775 ns/op            8101 B/op        143 allocs/op
-BenchmarkGoPrettyTable-8           10000             11703 ns/op            8101 B/op        143 allocs/op
-BenchmarkGoPrettyTable-8           10000             11770 ns/op            8101 B/op        143 allocs/op
-BenchmarkGoPrettyTable-8           10000             11687 ns/op            8101 B/op        143 allocs/op
-BenchmarkGoPrettyTable-8           10000             11702 ns/op            8101 B/op        143 allocs/op
+BenchmarkMintabInput-8             10000              5387 ns/op            2458 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3466 ns/op            2457 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3020 ns/op            2459 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3151 ns/op            2458 B/op         41 allocs/op
+BenchmarkMintabInput-8             10000              3113 ns/op            2457 B/op         41 allocs/op
+BenchmarkMintabStruct-8            10000              4133 ns/op            2721 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4128 ns/op            2721 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4123 ns/op            2721 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4861 ns/op            2721 B/op         59 allocs/op
+BenchmarkMintabStruct-8            10000              4508 ns/op            2721 B/op         59 allocs/op
+BenchmarkTableWriter-8             10000             81258 ns/op          486509 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             81979 ns/op          486509 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             82759 ns/op          486509 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             81796 ns/op          486509 B/op       1028 allocs/op
+BenchmarkTableWriter-8             10000             82738 ns/op          486509 B/op       1028 allocs/op
+BenchmarkGoPrettyTable-8           10000             12609 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             12333 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             11787 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             12472 ns/op            8101 B/op        143 allocs/op
+BenchmarkGoPrettyTable-8           10000             11902 ns/op            8101 B/op        143 allocs/op
 PASS
-ok      benchmarks      5.578s
+ok      benchmarks      8.533s
 ```
 
 Notes
