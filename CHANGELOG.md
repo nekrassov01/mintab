@@ -1,5 +1,8 @@
 # Changelog
 
+## [v0.1.3](https://github.com/nekrassov01/mintab/compare/v0.1.2...v0.1.3) - 2026-04-17
+- Improve line break replacement, etc by @nekrassov01 in https://github.com/nekrassov01/mintab/pull/17
+
 ## [v0.1.2](https://github.com/nekrassov01/mintab/compare/v0.1.1...v0.1.2) - 2026-04-16
 
 ## [v0.1.1](https://github.com/nekrassov01/mintab/compare/v0.1.0...v0.1.1) - 2026-04-16
