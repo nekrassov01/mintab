@@ -2,6 +2,7 @@ package mintab
 
 import (
 	"io"
+	"strings"
 	"unicode"
 
 	"github.com/mattn/go-runewidth"
@@ -20,26 +21,30 @@ func (t *Table) printHeader() {
 	if !t.hasHeader || t.numColumns == 0 {
 		return
 	}
-	t.b.Reset()
+	b := bufPool.Get().(*strings.Builder)
+	b.Reset()
 	switch t.format {
 	case TextFormat, CompressedTextFormat:
-		t.b.Grow(t.tableWidth * 2)
-		t.b.WriteString(t.border)
+		b.Grow(t.tableWidth * 2)
+		b.WriteString(t.border)
 	case MarkdownFormat:
-		t.b.Grow(t.tableWidth)
+		b.Grow(t.tableWidth)
 	case BacklogFormat:
-		t.b.Grow(t.tableWidth + 1)
+		b.Grow(t.tableWidth + 1)
 	}
-	t.b.WriteString("|")
+	b.WriteString("|")
 	for i, h := range t.header {
-		t.writeField(h, t.colWidths[i])
-		t.b.WriteString("|")
+		t.writeField(b, h, t.colWidths[i])
+		b.WriteString("|")
 	}
 	if t.format == BacklogFormat {
-		t.b.WriteString("h")
+		b.WriteString("h")
 	}
-	t.b.WriteString("\n")
-	t.print(t.b.String())
+	b.WriteString("\n")
+	s := b.String()
+	b.Reset()
+	bufPool.Put(b)
+	t.print(s)
 }
 
 func (t *Table) printData() {
@@ -52,27 +57,31 @@ func (t *Table) printData() {
 		}
 	}
 	for i, r := range t.data {
-		t.b.Reset()
+		b := bufPool.Get().(*strings.Builder)
+		b.Reset()
 		if i > 0 {
 			switch t.format {
 			case TextFormat:
-				t.b.Grow(t.tableWidth * 2)
-				t.writeDataBorder(r)
+				b.Grow(t.tableWidth * 2)
+				t.writeDataBorder(b, r)
 			case CompressedTextFormat:
 				if r[0][0] == "" || len(t.mergedFields) == 0 {
-					t.b.Grow(t.tableWidth)
+					b.Grow(t.tableWidth)
 				} else {
-					t.b.Grow(t.tableWidth * 2)
-					t.b.WriteString(t.border)
+					b.Grow(t.tableWidth * 2)
+					b.WriteString(t.border)
 				}
 			case MarkdownFormat, BacklogFormat:
-				t.b.Grow(t.tableWidth)
+				b.Grow(t.tableWidth)
 			}
 		} else {
-			t.b.Grow(t.tableWidth)
+			b.Grow(t.tableWidth)
 		}
-		t.writeRow(i)
-		t.print(t.b.String())
+		t.writeRow(b, i)
+		s := b.String()
+		b.Reset()
+		bufPool.Put(b)
+		t.print(s)
 	}
 	if t.format == TextFormat || t.format == CompressedTextFormat {
 		t.printBorder()
@@ -80,63 +89,67 @@ func (t *Table) printData() {
 }
 
 func (t *Table) printBorder() {
-	t.b.Reset()
-	t.b.Grow(t.tableWidth)
-	t.b.WriteString(t.border)
-	t.print(t.b.String())
+	b := bufPool.Get().(*strings.Builder)
+	b.Reset()
+	b.Grow(t.tableWidth)
+	b.WriteString(t.border)
+	s := b.String()
+	b.Reset()
+	bufPool.Put(b)
+	t.print(s)
 }
 
 func (t *Table) print(s string) {
 	_, _ = io.WriteString(t.w, s)
 }
 
-func (t *Table) writeRow(i int) {
+func (t *Table) writeRow(b *strings.Builder, i int) {
 	for j := 0; j < t.lineHeights[i]; j++ {
-		t.b.WriteString("|")
+		b.WriteString("|")
 		for k, elems := range t.data[i] {
 			if j < len(elems) {
-				t.writeField(elems[j], t.colWidths[k])
+				t.writeField(b, elems[j], t.colWidths[k])
 			} else {
-				t.writeField("", t.colWidths[k])
+				t.writeField(b, "", t.colWidths[k])
 			}
-			t.b.WriteString("|")
+			b.WriteString("|")
 		}
-		t.b.WriteString("\n")
+		b.WriteString("\n")
 	}
 }
 
-func (t *Table) writeDataBorder(row [][]string) {
+func (t *Table) writeDataBorder(b *strings.Builder, row [][]string) {
 	sep := "+"
 	for i, field := range row {
-		t.b.WriteString(sep)
+		b.WriteString(sep)
 		v := " "
 		if field[0] != "" {
 			v = "-"
 		}
 		for j := 0; j < t.colWidths[i]+t.marginWidthBothSides; j++ {
-			t.b.WriteString(v)
+			b.WriteString(v)
 		}
 	}
-	t.b.WriteString(sep)
-	t.b.WriteString("\n")
+	b.WriteString(sep)
+	b.WriteString("\n")
 }
 
-func (t *Table) writeField(s string, w int) {
-	t.b.WriteString(t.margin)
+func (t *Table) writeField(b *strings.Builder, s string, w int) {
+	b.WriteString(t.margin)
 	isN := isNum(s)
 	if !isN {
-		t.b.WriteString(s)
+		b.WriteString(s)
 	}
 	pad := w - runewidth.StringWidth(s)
 	if pad > 0 {
 		for range pad {
-			t.b.WriteByte(' ')
+			b.WriteByte(' ')
 		}
 	}
 	if isN {
-		t.b.WriteString(s)
+		b.WriteString(s)
 	}
-	t.b.WriteString(t.margin)
+	b.WriteString(t.margin)
 }
 
 func isNum(s string) bool {

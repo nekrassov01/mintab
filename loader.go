@@ -267,17 +267,17 @@ func (t *Table) setBorder() {
 	default:
 		sep = "+"
 	}
-	t.b.Reset()
-	t.b.Grow(256)
+	var b strings.Builder
+	b.Grow(256)
 	for _, w := range t.colWidths {
-		t.b.WriteString(sep)
+		b.WriteString(sep)
 		for i := 0; i < w+t.marginWidthBothSides; i++ {
-			t.b.WriteByte('-')
+			b.WriteByte('-')
 		}
 	}
-	t.b.WriteString(sep)
-	t.b.WriteString("\n")
-	t.border = t.b.String()
+	b.WriteString(sep)
+	b.WriteString("\n")
+	t.border = b.String()
 	t.tableWidth = len(t.border)
 }
 
@@ -323,67 +323,72 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 	case rv.Type().Elem().Kind() == reflect.Uint8 && t.isBytesToString:
 		return string(rv.Bytes()), nil
 	default:
-		t.b.Reset()
-		t.b.Grow(256)
+		b := bufPool.Get().(*strings.Builder)
+		b.Reset()
+		b.Grow(256)
 		for i := range length {
 			e := rv.Index(i)
 			if i != 0 {
-				t.b.WriteString(t.wordDelimiter)
+				b.WriteString(t.wordDelimiter)
 			}
 			if e.Kind() == reflect.Pointer {
 				if e.IsNil() {
-					t.b.WriteString(t.placeholder)
+					b.WriteString(t.placeholder)
 					continue
 				}
 				e = e.Elem()
 			}
 			if s := getStringer(e); s != "" {
-				t.b.WriteString(s)
+				b.WriteString(s)
 				continue
 			}
 			if e.Kind() == reflect.Slice && e.Type().Elem().Kind() == reflect.Uint8 && t.isBytesToString {
-				t.b.WriteString(string(e.Bytes()))
+				b.WriteString(string(e.Bytes()))
 				continue
 			}
 			if e.Kind() == reflect.Slice || e.Kind() == reflect.Array || e.Kind() == reflect.Struct {
+				bufPool.Put(b)
 				return "", fmt.Errorf("cannot load input: nested fields not supported")
 			}
 			switch v := e.Interface().(type) {
 			case string:
 				if v == "" {
-					t.b.WriteString(t.placeholder)
+					b.WriteString(t.placeholder)
 				} else {
-					t.b.WriteString(v)
+					b.WriteString(v)
 				}
 			case int:
-				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+				b.WriteString(strconv.FormatInt(int64(v), 10))
 			case int8:
-				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+				b.WriteString(strconv.FormatInt(int64(v), 10))
 			case int16:
-				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+				b.WriteString(strconv.FormatInt(int64(v), 10))
 			case int32:
-				t.b.WriteString(strconv.FormatInt(int64(v), 10))
+				b.WriteString(strconv.FormatInt(int64(v), 10))
 			case int64:
-				t.b.WriteString(strconv.FormatInt(v, 10))
+				b.WriteString(strconv.FormatInt(v, 10))
 			case uint:
-				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+				b.WriteString(strconv.FormatUint(uint64(v), 10))
 			case uint8:
-				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+				b.WriteString(strconv.FormatUint(uint64(v), 10))
 			case uint16:
-				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+				b.WriteString(strconv.FormatUint(uint64(v), 10))
 			case uint32:
-				t.b.WriteString(strconv.FormatUint(uint64(v), 10))
+				b.WriteString(strconv.FormatUint(uint64(v), 10))
 			case uint64:
-				t.b.WriteString(strconv.FormatUint(v, 10))
+				b.WriteString(strconv.FormatUint(v, 10))
 			case float32:
-				t.b.WriteString(strconv.FormatFloat(float64(v), 'f', -1, 32))
+				b.WriteString(strconv.FormatFloat(float64(v), 'f', -1, 32))
 			case float64:
-				t.b.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
+				b.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
 			default:
-				fmt.Fprint(&t.b, v)
+				fmt.Fprint(b, v)
 			}
 		}
-		return t.b.String(), nil
+		s := b.String()
+		b.Reset()
+		bufPool.Put(b)
+		return s, nil
 	}
 }
 
@@ -398,20 +403,31 @@ func splitLines(s string) []string {
 	if strings.IndexByte(s, '\n') < 0 {
 		return []string{s}
 	}
-	elems := make([]string, 0, strings.Count(s, "\n")+1)
+	c := strings.Count(s, "\n") + 1
+	p := rowPool.Get().(*[]string)
+	b := *p
+	if cap(b) < c {
+		b = make([]string, 0, c)
+	} else {
+		b = b[:0]
+	}
 	start := 0
 	for i := 0; i < len(s); i++ {
 		if s[i] == '\n' {
-			elems = append(elems, s[start:i])
+			b = append(b, s[start:i])
 			start = i + 1
 		}
 	}
 	if start == len(s) {
-		elems = append(elems, "")
+		b = append(b, "")
 	} else if start < len(s) {
-		elems = append(elems, s[start:])
+		b = append(b, s[start:])
 	}
-	return elems
+	r := make([]string, len(b))
+	copy(r, b)
+	*p = b[:0]
+	rowPool.Put(p)
+	return r
 }
 
 func (t *Table) sanitize(s string) string {
