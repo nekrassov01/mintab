@@ -12,7 +12,7 @@ import (
 
 // Load validates v and converts it to a struct Table. v must be passed in one of the following two ways:
 //
-// 1. Struct `Input`
+// 1. Struct `mintab.Input`
 //   - The number of columns in all rows must be the same.
 //   - Header is not allowd to be nil.
 //
@@ -105,6 +105,9 @@ func (t *Table) setFormat() {
 	}
 	if t.wordDelimiter == TextDefaultWordDelimiter {
 		t.wordDelimiter = d
+	}
+	if t.format != TextFormat {
+		t.r = strings.NewReplacer("\n", t.newLine)
 	}
 }
 
@@ -361,7 +364,7 @@ func (t *Table) formatSlice(rv reflect.Value) (string, error) {
 			case float64:
 				t.b.WriteString(strconv.FormatFloat(v, 'f', -1, 64))
 			default:
-				fmt.Fprint(&t.b, v)
+				t.b.WriteString(fmt.Sprint(v))
 			}
 		}
 		return t.b.String(), nil
@@ -388,8 +391,14 @@ func (t *Table) sanitize(s string) string {
 	if t.format == TextFormat {
 		return s
 	}
-	rep := strings.NewReplacer("\n", t.newLine)
-	return rep.Replace(s)
+	if !strings.Contains(s, "\n") {
+		return s
+	}
+	if t.r != nil {
+		return t.r.Replace(s)
+	}
+	// fallback (should not reach here)
+	return strings.ReplaceAll(s, "\n", t.newLine)
 }
 
 func (t *Table) escape(s string) string {
