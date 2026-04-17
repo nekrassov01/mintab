@@ -1,12 +1,20 @@
-mintab
-======
+<p align="center">
+  <h2 align="center">MINTAB</h2>
+  <p align="center">The minimal ASCII table utilities for Go
+</p>
+  <p align="center">
+    <a href="https://github.com/nekrassov01/mintab/actions/workflows/ci.yml"><img src="https://github.com/nekrassov01/mintab/actions/workflows/ci.yml/badge.svg?branch=main" alt="CI" /></a>
+    <a href="https://pkg.go.dev/github.com/nekrassov01/mintab"><img src="https://pkg.go.dev/badge/github.com/nekrassov01/mintab.svg" alt="Go Reference" /></a>
+    <a href="https://goreportcard.com/report/github.com/nekrassov01/mintab"><img src="https://goreportcard.com/badge/github.com/nekrassov01/mintab" alt="Go Report Card" /></a>
+    <img src="https://img.shields.io/github/license/nekrassov01/mintab" alt="LICENSE" />
+    <a href="https://deepwiki.com/nekrassov01/mintab"><img src="https://deepwiki.com/badge.svg" alt="Ask DeepWiki" /></a>
+  </p>
+</p>
 
-[![CI](https://github.com/nekrassov01/mintab/actions/workflows/ci.yml/badge.svg?branch=main)](https://github.com/nekrassov01/mintab/actions/workflows/ci.yml)
-[![codecov](https://codecov.io/gh/nekrassov01/mintab/graph/badge.svg?token=RIV62CQILM)](https://codecov.io/gh/nekrassov01/mintab)
-[![Go Reference](https://pkg.go.dev/badge/github.com/nekrassov01/mintab.svg)](https://pkg.go.dev/github.com/nekrassov01/mintab)
-[![Go Report Card](https://goreportcard.com/badge/github.com/nekrassov01/mintab)](https://goreportcard.com/report/github.com/nekrassov01/mintab)
+Overview
+--------
 
-mintab is a minimal ASCII table utilities for Go
+This is a lightweight, simple utility for outputting basic table representations as strings. Because its functionality has been intentionally kept to a minimum, it runs faster and more efficiently than other similar packages. While it does not support nested structures, you can pass slices of structures directly.
 
 Motivation
 ----------
