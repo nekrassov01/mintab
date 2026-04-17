@@ -33,7 +33,7 @@ func (t Format) String() string {
 	case TextFormat:
 		return "text"
 	case CompressedTextFormat:
-		return "compressed"
+		return "compressedtext"
 	case MarkdownFormat:
 		return "markdown"
 	case BacklogFormat:

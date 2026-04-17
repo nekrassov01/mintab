@@ -16,9 +16,9 @@ func TestFormat_String(t *testing.T) {
 			want: "text",
 		},
 		{
-			name: "compressed",
+			name: "compressedtext",
 			o:    CompressedTextFormat,
-			want: "compressed",
+			want: "compressedtext",
 		},
 		{
 			name: "markdown",
@@ -62,8 +62,8 @@ func TestParseFormat(t *testing.T) {
 			wantErr: false,
 		},
 		{
-			name:    "parse compressed",
-			args:    args{s: "compressed"},
+			name:    "parse compressedtext",
+			args:    args{s: "compressedtext"},
 			want:    CompressedTextFormat,
 			wantErr: false,
 		},
